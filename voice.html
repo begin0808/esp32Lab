@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ESP32 語音控制</title>
+    <meta name="description" content="用手機或電腦的語音，透過 MQTT 控制 ESP32 上的 LED。" />
+    <link rel="stylesheet" href="/src/voice.css" />
+  </head>
+  <body>
+    <main class="page">
+      <h1>ESP32 語音控制</h1>
+
+      <form id="channel-form" class="row">
+        <label for="channel">通道名稱</label>
+        <div class="fields">
+          <input id="channel" type="text" placeholder="序列埠監控窗顯示的名稱" autocomplete="off" autocapitalize="off" spellcheck="false" />
+          <button id="channel-connect" class="btn">連線</button>
+        </div>
+        <details id="broker-settings" class="advanced">
+          <summary>進階：自訂 MQTT 伺服器</summary>
+          <div class="broker-fields">
+            <label for="broker-host">伺服器位址</label>
+            <input id="broker-host" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" />
+            <label for="broker-port">WSS 連接埠</label>
+            <input id="broker-port" type="text" inputmode="numeric" autocomplete="off" />
+            <label for="broker-path">路徑</label>
+            <input id="broker-path" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" />
+          </div>
+          <p class="hint">這一頁只能使用加密的 WSS 連線，改完按「連線」生效。開發板程式的 BROKER、MQTT_PORT 要指向同一台伺服器，但連接埠通常不同，例如 1883。</p>
+          <button id="broker-reset" class="btn" type="button">還原預設</button>
+        </details>
+      </form>
+
+      <p id="link-status" class="status" data-state="idle" role="status">尚未連線</p>
+      <p id="board-status" class="status" data-state="idle" role="status">開發板：尚未回報</p>
+
+      <button id="voice" class="btn big voice" disabled>🎤 按一下，對麥克風說出指令</button>
+
+      <div class="commands">
+        <button class="btn on" data-command="on" disabled>開燈</button>
+        <button class="btn off" data-command="off" disabled>關燈</button>
+        <button class="btn blink" data-command="blink" disabled>閃爍</button>
+      </div>
+
+      <form id="text-form" class="row">
+        <label for="text-command">文字指令</label>
+        <div class="fields">
+          <input id="text-command" type="text" placeholder="也可以用鍵盤的麥克風輸入" autocomplete="off" disabled />
+          <button id="text-send" class="btn" disabled>送出</button>
+        </div>
+      </form>
+
+      <p id="message" class="message" aria-live="polite"></p>
+
+      <footer class="footer">
+        指令會經過 MQTT 伺服器（預設是公用的 broker.emqx.io），知道通道名稱的人都能控制，請勿用於重要設備，也不要在通道名稱填入個人資料。
+      </footer>
+    </main>
+
+    <script type="module" src="/src/voice.ts"></script>
+  </body>
+</html>

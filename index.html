@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ESP32 MicroPython 線上編輯器</title>
+    <meta name="description" content="免安裝的 ESP32 MicroPython 編輯器：貼上程式碼，透過 USB 直接上傳到開發板。" />
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <h1>ESP32 MicroPython 線上編輯器</h1>
+        <p id="status" class="status" data-state="idle" role="status">尚未連接開發板</p>
+      </div>
+      <div class="actions">
+        <div class="font-size" role="group" aria-label="程式碼字體大小">
+          <span>字體</span>
+          <button id="font-down" class="btn" aria-label="縮小字體">A−</button>
+          <output id="font-value" aria-live="polite"></output>
+          <button id="font-up" class="btn" aria-label="放大字體">A+</button>
+        </div>
+        <a id="voice-link" class="btn" href="./voice.html" target="_blank" rel="noopener">語音控制頁</a>
+        <a id="pinout-link" class="btn" href="./images/nodemcu-32s-pinout.png" target="_blank" rel="noopener">腳位圖</a>
+        <a id="driver-link" class="btn" href="https://www.silabs.com/software-and-tools/usb-to-uart-bridge-vcp-drivers?tab=downloads" target="_blank" rel="noopener">CP210x 驅動程式</a>
+        <button id="connect" class="btn">連接開發板</button>
+        <button id="install" class="btn" disabled>安裝韌體</button>
+        <button id="upload" class="btn primary" disabled>上傳並執行</button>
+        <button id="stop" class="btn" disabled>停止</button>
+      </div>
+    </header>
+
+    <div id="unsupported" class="banner danger" hidden>
+      這個瀏覽器不支援 Web Serial，無法連接開發板。請改用電腦版的 Chrome 或 Edge。
+    </div>
+    <div id="arduino-warning" class="banner warn" hidden>
+      <span>這段程式看起來是 Arduino C++，不能直接在 MicroPython 上執行。</span>
+      <button id="copy-convert" class="btn small">複製「改寫成 MicroPython」提示詞</button>
+    </div>
+
+    <div id="progress-wrap" class="progress" hidden>
+      <div id="progress-label"></div>
+      <progress id="progress" max="100" value="0"></progress>
+    </div>
+
+    <main id="workspace" class="workspace">
+      <section class="panel" aria-label="程式編輯器">
+        <div class="panel-head">
+          <label class="select">
+            範例
+            <select id="examples"></select>
+          </label>
+          <div class="tools">
+            <button id="copy-prompt" class="btn small">複製 Gemini 提示詞</button>
+            <button id="open-file" class="btn small">開啟檔案</button>
+            <button id="save-file" class="btn small">下載 main.py</button>
+            <input id="file-input" type="file" accept=".py,.txt" hidden />
+          </div>
+        </div>
+        <div id="editor" class="editor"></div>
+      </section>
+
+      <div id="splitter" class="splitter" role="separator" aria-orientation="vertical" aria-label="調整程式碼與監控窗的寬度" title="拖曳調整寬度，連按兩下還原" tabindex="0"></div>
+
+      <section class="panel" aria-label="序列埠監控窗">
+        <div class="panel-head">
+          <strong>序列埠監控窗</strong>
+          <div class="tools">
+            <button id="reset" class="btn small" disabled>重新啟動</button>
+            <button id="clear" class="btn small">清除</button>
+          </div>
+        </div>
+
+        <div id="ip-card" class="ip-card" hidden>
+          <div>
+            <span class="ip-label">手機連同一個 Wi-Fi 後，用瀏覽器開啟</span>
+            <a id="ip-link" class="ip-value" target="_blank" rel="noopener"></a>
+          </div>
+          <button id="copy-ip" class="btn small">複製網址</button>
+        </div>
+
+        <div id="error-card" class="error-card" hidden>
+          <span>程式發生錯誤。可以把錯誤訊息和程式碼一起貼給 Gemini 修正。</span>
+          <button id="copy-error" class="btn small">複製給 Gemini</button>
+        </div>
+
+        <pre id="monitor" class="monitor" tabindex="0" aria-live="off"></pre>
+        <form id="repl-form" class="repl-form">
+          <input id="repl-input" type="text" placeholder="輸入 MicroPython 指令後按 Enter" autocomplete="off" disabled />
+          <button class="btn small" id="repl-send" disabled>傳送</button>
+        </form>
+      </section>
+    </main>
+
+    <dialog id="install-dialog" class="dialog">
+      <form method="dialog">
+        <h2>安裝 MicroPython 韌體</h2>
+        <p><strong>開發板上現有的程式和檔案都會被清除。</strong>第一次使用，或從 Arduino 切換過來時才需要安裝。</p>
+        <ul>
+          <li>版本：<span id="firmware-version"></span></li>
+          <li>如果一直連不上，請<strong>按住板子上的 IO0（BOOT）鍵</strong>再重試。</li>
+          <li>安裝期間請不要拔除 USB 線。</li>
+        </ul>
+        <div class="dialog-actions">
+          <button class="btn" value="cancel">取消</button>
+          <button class="btn danger" value="confirm">清除並安裝</button>
+        </div>
+      </form>
+    </dialog>
+
+    <footer class="footer">
+      程式碼只會留在這台電腦的瀏覽器和你的開發板上，不會上傳到任何伺服器。內含 <a href="https://micropython.org/" target="_blank" rel="noopener">MicroPython</a> 韌體（MIT 授權）。腳位圖來源：<a href="https://www.ioxhop.com/" target="_blank" rel="noopener">ioxhop</a>（<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>）。
+    </footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
