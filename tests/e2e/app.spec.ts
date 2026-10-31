@@ -315,11 +315,12 @@ test("MQTT example gets its own channel when loaded", async ({ page }) => {
   expect(code).toContain("/voice.html");
 });
 
-for (const path of ["/", "/voice.html"]) {
+for (const path of ["/", "/voice.html", "/help.html"]) {
   test(`shows the copyright links on ${path}`, async ({ page }) => {
     await page.goto(path);
     const copyright = page.locator(".copyright");
     await expect(copyright).toContainText("© 2026 Studio0808 智造實驗室. All rights reserved.");
+    await expect(copyright).toContainText("如有建議或報錯，歡迎來信");
     await expect(copyright.getByRole("link", { name: "Studio0808 智造實驗室" })).toHaveAttribute("href", "https://begin0808.github.io/studio0808/");
     await expect(copyright.getByRole("link", { name: "寫信給我" })).toHaveAttribute(
       "href",
@@ -468,6 +469,49 @@ test("help page opens in a new tab and follows the chosen style", async ({ page,
   await page.locator("#style-picker").selectOption("mat");
   await expect(help.locator("html")).toHaveAttribute("data-style", "mat");
   await expect(help.locator("#style-picker")).toHaveValue("mat");
+});
+
+test("marks the site as a beta version and asks for feedback", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("h1 .beta")).toHaveText("測試 Beta 版");
+  await page.goto("/help.html");
+  const notice = page.locator("#beta-notice");
+  await expect(notice).toContainText("尚未逐一實測");
+  await expect(notice.getByRole("link", { name: "寫信告訴我" })).toHaveAttribute(
+    "href",
+    "https://mail.google.com/mail/?view=cm&fs=1&to=begin0808@gmail.com",
+  );
+});
+
+for (const [id, path] of [["help-link", "/help.html"], ["voice-link", "/voice.html"]]) {
+  test(`returns from ${path} to the editor that opened it, without reloading it`, async ({ page, context }) => {
+    await page.goto("/");
+    await page.locator("#editor .cm-content").fill('print("保留")\n');
+    await page.evaluate(() => ((globalThis as any).sameEditor = true));
+    await openSettings(page);
+    const [opened] = await Promise.all([context.waitForEvent("page"), page.locator(`#${id}`).click()]);
+    await opened.waitForLoadState();
+    await Promise.all([opened.waitForEvent("close"), opened.locator("#home-link").click()]);
+    expect(context.pages()).toEqual([page]);
+    await page.bringToFront();
+    expect(await page.evaluate(() => (globalThis as any).sameEditor)).toBe(true);
+    await expect(page.locator("#editor .cm-content")).toContainText("保留");
+  });
+
+  test(`${path} opened on its own links to the editor`, async ({ page }) => {
+    await page.goto(path);
+    await page.locator("#home-link").click();
+    await expect(page.locator("#connect")).toBeVisible();
+  });
+}
+
+test("voice page returns to the help page's own opener, not the editor, only when it should", async ({ page, context }) => {
+  // A help tab opened from the voice page has no editor to go back to, so it navigates instead of closing.
+  await page.goto("/voice.html");
+  const [help] = await Promise.all([context.waitForEvent("page"), page.locator("#help-link").click()]);
+  await help.waitForLoadState();
+  await help.locator("#home-link").click();
+  await expect(help.locator("#connect")).toBeVisible();
 });
 
 test("voice page links to the help page", async ({ page }) => {

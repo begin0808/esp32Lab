@@ -26,10 +26,13 @@
           <p class="updated">內容更新：2026 年 10 月 31 日</p>
         </div>
       </div>
-      <label class="style-picker">
-        風格
-        <select id="style-picker"></select>
-      </label>
+      <div class="help-actions">
+        <a id="home-link" class="home-link" href="./index.html"><span aria-hidden="true">←</span> 回程式編輯頁</a>
+        <label class="style-picker">
+          風格
+          <select id="style-picker"></select>
+        </label>
+      </div>
     </header>
 
     <main class="doc">
@@ -42,6 +45,8 @@
         <a href="#privacy">隱私與安全</a>
         <a href="#faq">常見問題</a>
       </nav>
+
+      <p id="beta-notice" class="tip warn"><strong>本網站目前是測試 Beta 版，仍在持續開發中。</strong>開發板和範例的組合很多，尚未逐一實測，使用時可能會遇到問題。如果發現錯誤，或有希望新增的功能，歡迎<a href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=begin0808@gmail.com" target="_blank" rel="noopener">寫信告訴我</a>。</p>
 
       <section id="start">
         <h2>開始使用</h2>
@@ -294,11 +299,14 @@
         <details><summary>語音控制頁顯示「開發板沒有回應」或「離線」</summary><p>確認開發板程式正在執行、監控窗顯示已連上 MQTT 伺服器，以及頁面和程式裡的通道名稱完全相同。校園網路可能會擋 1883 連接埠，可以改用手機熱點測試。</p></details>
         <details><summary>按下「停止」後，程式之後還會自動執行嗎？</summary><p>會。「停止」只中斷目前的執行，<code>main.py</code> 還在板子上，下次通電或重新啟動時會再次執行。</p></details>
       </section>
+
+      <p class="help-bottom"><a class="home-link" href="./index.html"><span aria-hidden="true">←</span> 回程式編輯頁</a></p>
     </main>
 
     <footer class="footer">
       <div class="copyright">
         <span>© 2026 <a href="https://begin0808.github.io/studio0808/" target="_blank" rel="noopener">Studio0808 智造實驗室</a>. All rights reserved.</span>
+        <span class="contact-note">如有建議或報錯，歡迎來信</span>
         <a class="contact-link" href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=begin0808@gmail.com" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>寫信給我
         </a>

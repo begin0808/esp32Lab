@@ -32,6 +32,17 @@ body {
   font-weight: 900;
 }
 
+.beta {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--go-bg);
+  color: var(--go-text);
+  font-size: 12px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
 .status {
   margin: 2px 0 0;
   color: var(--page-muted);

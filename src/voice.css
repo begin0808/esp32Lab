@@ -189,6 +189,9 @@ input:focus-visible {
 }
 
 .help-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
   margin: 0 0 8px;
   font-size: 14px;
   font-weight: 600;

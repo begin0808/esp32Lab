@@ -113,6 +113,10 @@
   flex: none;
 }
 
+.contact-note {
+  font-weight: 600;
+}
+
 .footer a svg[fill="#1877f2"] {
   border-radius: 50%;
   background: #ffffff;
