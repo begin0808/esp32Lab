@@ -20,7 +20,7 @@
   <body>
     <header class="help-top">
       <div class="brand">
-        <img class="brand-logo" src="/icons/logo.svg" alt="" width="46" height="46" />
+        <img class="brand-logo" src="/icons/logo.svg" alt="" width="40" height="40" />
         <div>
           <h1>ESP32 Lab 使用說明</h1>
           <p class="updated">內容更新：2026 年 10 月 31 日</p>
@@ -46,6 +46,8 @@
         <a href="#faq">常見問題</a>
       </nav>
 
+      <p id="micropython-notice" class="tip"><strong>本網站採用 MicroPython，用 Python 語法寫程式，不是 Arduino C++。</strong>開發板要先安裝 MicroPython 韌體，安裝時會清除板子上原有的 Arduino 程式。Arduino 程式不能直接執行，貼上時畫面會出現提示，可以複製提示詞請 Gemini 改寫。</p>
+
       <p id="beta-notice" class="tip warn"><strong>本網站目前是測試 Beta 版，仍在持續開發中。</strong>開發板和範例的組合很多，尚未逐一實測，使用時可能會遇到問題。如果發現錯誤，或有希望新增的功能，歡迎<a href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=begin0808@gmail.com" target="_blank" rel="noopener">寫信告訴我</a>。</p>
 
       <section id="start">
@@ -58,7 +60,6 @@
           <li><strong>準備程式：</strong>選內建範例，或按「複製 Gemini 提示詞」，填入接線和功能後貼給 Gemini，再把產生的 MicroPython 程式貼回編輯器。</li>
           <li><strong>上傳並執行：</strong>按「上傳並執行」，程式會存成板子上的 <code>main.py</code>，之後通電就會自動執行。輸出和錯誤訊息會顯示在序列埠監控窗。</li>
         </ol>
-        <p class="tip"><strong>這個網站使用 MicroPython，不能直接執行 Arduino C++ 程式。</strong>貼上 Arduino 程式時，畫面會出現提示，可以複製提示詞請 Gemini 改寫。</p>
 
         <h3>內建範例</h3>
         <p>下表是 ESP32（包含 ESP32-S、ESP-WROOM-32 模組）的預設接線。在編輯器的「晶片」選單選擇 S2、S3 或 C3 後再選範例，程式和開頭的接線說明會自動換成該晶片適用的腳位。連接開發板時，網站也會自動切換晶片選單。</p>

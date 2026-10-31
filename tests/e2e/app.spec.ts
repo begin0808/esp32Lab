@@ -475,6 +475,8 @@ test("marks the site as a beta version and asks for feedback", async ({ page }) 
   await page.goto("/");
   await expect(page.locator("h1 .beta")).toHaveText("測試 Beta 版");
   await page.goto("/help.html");
+  // The choice of MicroPython decides everything else, so it comes before any section.
+  await expect(page.locator(".doc > .tip").first()).toContainText("本網站採用 MicroPython");
   const notice = page.locator("#beta-notice");
   await expect(notice).toContainText("尚未逐一實測");
   await expect(notice.getByRole("link", { name: "寫信告訴我" })).toHaveAttribute(
