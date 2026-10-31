@@ -39,4 +39,10 @@ export function setupStylePicker(picker: HTMLSelectElement): void {
       // The chosen style still applies until the page is closed.
     }
   });
+  // A help page left open in another tab follows the style chosen in the editor.
+  window.addEventListener("storage", (event) => {
+    if (event.key !== STYLE_KEY) return;
+    picker.value = readStyle();
+    applyStyle(picker.value);
+  });
 }

@@ -443,6 +443,51 @@ for (const [path, icon] of [
   });
 }
 
+test("help page opens in a new tab and follows the chosen style", async ({ page, context }) => {
+  await page.goto("/");
+  await page.locator("#style-picker").selectOption("blocks");
+
+  const [help] = await Promise.all([context.waitForEvent("page"), page.locator("#help-link").click()]);
+  await help.waitForLoadState();
+  await expect(help).toHaveTitle(/使用說明/);
+  await expect(help.locator("html")).toHaveAttribute("data-style", "blocks");
+  await expect(help.locator("#style-picker")).toHaveValue("blocks");
+
+  // Changing the style in the editor also updates the help page that is already open.
+  await page.locator("#style-picker").selectOption("mat");
+  await expect(help.locator("html")).toHaveAttribute("data-style", "mat");
+  await expect(help.locator("#style-picker")).toHaveValue("mat");
+});
+
+test("voice page links to the help page", async ({ page }) => {
+  await page.goto("/voice.html");
+  await expect(page.locator("#help-link")).toHaveAttribute("href", "./help.html");
+});
+
+for (const id of STYLE_IDS) {
+  test(`help page reads well in style ${id}`, async ({ page, request }) => {
+    await page.addInitScript((style) => localStorage.setItem("esp32-mp-style", style), id);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/help.html");
+    await expect(page.locator("html")).toHaveAttribute("data-style", id);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+
+    for (const anchor of await page.locator(".toc a").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("href")!))) {
+      await expect(page.locator(anchor)).toHaveCount(1);
+    }
+    for (const badge of await page.locator(".badge").all()) {
+      const colors = await badge.evaluate((node) => {
+        const style = getComputedStyle(node);
+        return [style.color, style.backgroundColor];
+      });
+      expect(contrast(colors[0], colors[1])).toBeGreaterThanOrEqual(4.5);
+    }
+    for (const href of await page.locator('.doc a[href^="./"]').evaluateAll((nodes) => nodes.map((node) => (node as HTMLAnchorElement).href))) {
+      expect((await request.get(href)).ok(), href).toBe(true);
+    }
+  });
+}
+
 test("opens the pinout image and driver page in new tabs", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("#driver-link")).toHaveAttribute("href", "https://www.silabs.com/software-and-tools/usb-to-uart-bridge-vcp-drivers?tab=downloads");

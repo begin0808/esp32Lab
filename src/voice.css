@@ -188,6 +188,12 @@ input:focus-visible {
   font-size: 15px;
 }
 
+.help-line {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
 .copyright,
 .contact-link {
   display: inline-flex;
