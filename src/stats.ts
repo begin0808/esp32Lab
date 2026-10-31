@@ -1,6 +1,8 @@
 const STATS_SITE = "https://esp32lab.goatcounter.com";
 const LIVE_HOST = "begin0808.github.io";
-const EDITOR_PATH = "/esp32Lab/";
+// The all-time count keeps a "not found" for 4 hours. An explicit start from before launch covers
+// the same visits, and the server stores its result separately.
+const EDITOR_COUNT = "/counter//esp32Lab.json?start=2026-01-01";
 
 /**
  * Sends only the page path and where the visitor came from. The voice page's query holds an MQTT
@@ -21,7 +23,7 @@ async function showVisitCount(): Promise<void> {
   const node = document.getElementById("visit-count");
   if (!node) return;
   try {
-    const response = await fetch(`${STATS_SITE}/counter/${EDITOR_PATH}.json`);
+    const response = await fetch(STATS_SITE + EDITOR_COUNT);
     if (!response.ok) return;
     const { count } = (await response.json()) as { count?: unknown };
     if (typeof count !== "string" || !/[1-9]/.test(count)) return;

@@ -378,7 +378,9 @@ for (const path of ["/", "/voice.html", "/help.html"]) {
     });
     await page.goto(path);
     await expect(page.locator("#visit-count")).toHaveText("累計瀏覽 1,234 人次");
-    expect(requests).toEqual(["https://esp32lab.goatcounter.com/counter//esp32Lab/.json"]);
+    expect(requests).toEqual(["https://esp32lab.goatcounter.com/counter//esp32Lab.json?start=2026-01-01"]);
+    const isLast = await page.locator("#visit-count").evaluate((node) => node.nextElementSibling === null);
+    expect(isLast).toBe(true);
   });
 
   test(`leaves out the visit count on ${path} when it is unavailable`, async ({ page }) => {

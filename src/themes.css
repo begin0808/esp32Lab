@@ -113,6 +113,11 @@
   flex: none;
 }
 
+.visit-count {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .contact-note {
   font-weight: 600;
 }
