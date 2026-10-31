@@ -14,17 +14,20 @@ PASSWORD = "YOUR_WIFI_PASSWORD"
 
 LED_PIN = 18
 
-# 通道名稱要和語音控制頁輸入的一樣，每塊板子請用不同的名稱
-CHANNEL = "{{CHANNEL}}"
+# MQTT 主題名稱要和語音控制頁輸入的一樣，每塊板子請用不同的名稱
+TOPIC_NAME = "{{CHANNEL}}"
 VOICE_PAGE = "{{VOICE_PAGE}}"
 
 # 要換 MQTT 伺服器時，語音控制頁的進階設定也要改成同一台
 # 這裡用未加密的 TCP 連接埠（通常是 1883），語音控制頁則用 WSS 連接埠
 BROKER = "broker.emqx.io"
 MQTT_PORT = 1883
+# 伺服器要求登入時才填。1883 連接埠不加密，請用這台伺服器專用的密碼，不要和其他帳號共用
+MQTT_USER = ""
+MQTT_PASSWORD = ""
 
-COMMAND_TOPIC = "esp32-mp-class/{}/command".format(CHANNEL).encode()
-STATE_TOPIC = "esp32-mp-class/{}/state".format(CHANNEL).encode()
+COMMAND_TOPIC = "esp32-mp-class/{}/command".format(TOPIC_NAME).encode()
+STATE_TOPIC = "esp32-mp-class/{}/state".format(TOPIC_NAME).encode()
 
 led = Pin(LED_PIN, Pin.OUT, value=0)
 mode = "off"
@@ -59,7 +62,7 @@ def on_message(topic, message):
 
 def connect_mqtt():
     client_id = b"esp32-" + binascii.hexlify(machine.unique_id())
-    client = MQTTClient(client_id, BROKER, port=MQTT_PORT, keepalive=60)
+    client = MQTTClient(client_id, BROKER, port=MQTT_PORT, user=MQTT_USER, password=MQTT_PASSWORD, keepalive=60)
     client.set_callback(on_message)
     # 開發板斷線時，由伺服器通知語音控制頁
     client.set_last_will(STATE_TOPIC, b"offline", retain=True)
@@ -67,7 +70,7 @@ def connect_mqtt():
     client.subscribe(COMMAND_TOPIC)
     print("已連上 MQTT 伺服器")
     print("語音控制頁：", VOICE_PAGE)
-    print("通道名稱：", CHANNEL)
+    print("MQTT 主題名稱：", TOPIC_NAME)
     return client
 
 

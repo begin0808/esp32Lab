@@ -23,6 +23,7 @@ import webLed from "./examples/web_led.py?raw";
 import mqttLed from "./examples/mqtt_led.py?raw";
 import dht11Alarm from "./examples/dht11_alarm.py?raw";
 import telegramLed from "./examples/telegram_led.py?raw";
+import sheetsDht11 from "./examples/sheets_dht11.py?raw";
 import buttonLed from "./examples/button_led.py?raw";
 import breathingLed from "./examples/breathing_led.py?raw";
 import knobLed from "./examples/knob_led.py?raw";
@@ -76,6 +77,7 @@ const EXAMPLE_GROUPS = [
       { name: "語音控制 LED（MQTT）", code: mqttLed },
       { name: "DHT11 溫濕度警報", code: dht11Alarm },
       { name: "Telegram 機器人控制 LED", code: telegramLed },
+      { name: "DHT11 資料存到 Google 試算表", code: sheetsDht11 },
     ],
   },
 ];

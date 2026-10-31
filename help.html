@@ -23,7 +23,7 @@
         <img class="brand-logo" src="/icons/logo.svg" alt="" width="40" height="40" />
         <div>
           <h1>ESP32 Lab 使用說明</h1>
-          <p class="updated">內容更新：2026 年 10 月 31 日</p>
+          <p class="updated">內容更新：2026 年 11 月 1 日</p>
         </div>
       </div>
       <div class="help-actions">
@@ -38,15 +38,17 @@
     <main class="doc">
       <nav class="toc" aria-label="本頁目錄">
         <a href="#start">開始使用</a>
+        <a href="#languages">MicroPython 與 Arduino</a>
         <a href="#boards">支援的開發板</a>
         <a href="#parts">電子元件與感測器</a>
         <a href="#wiring">接線注意事項</a>
         <a href="#voice">手機與語音控制</a>
+        <a href="#google-sheets">Google 試算表</a>
         <a href="#privacy">隱私與安全</a>
         <a href="#faq">常見問題</a>
       </nav>
 
-      <p id="micropython-notice" class="tip"><strong>本網站採用 MicroPython，用 Python 語法寫程式，不是 Arduino C++。</strong>開發板要先安裝 MicroPython 韌體，安裝時會清除板子上原有的 Arduino 程式。Arduino 程式不能直接執行，貼上時畫面會出現提示，可以複製提示詞請 Gemini 改寫。</p>
+      <p id="micropython-notice" class="tip"><strong>本網站採用 MicroPython，用 Python 語法寫程式，不是 Arduino C++。</strong>開發板要先安裝 MicroPython 韌體，安裝時會清除板子上原有的 Arduino 程式。Arduino 程式不能直接執行，貼上時畫面會出現提示，可以複製提示詞請 Gemini 改寫。兩者的差異請看 <a href="#languages">MicroPython 與 Arduino 的差異</a>。</p>
 
       <p id="beta-notice" class="tip warn"><strong>本網站目前是測試 Beta 版，仍在持續開發中。</strong>開發板和範例的組合很多，尚未逐一實測，使用時可能會遇到問題。如果發現錯誤，或有希望新增的功能，歡迎<a href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=begin0808@gmail.com" target="_blank" rel="noopener">寫信告訴我</a>。</p>
 
@@ -86,9 +88,32 @@
               <tr><td>語音控制 LED（MQTT）</td><td>用語音控制頁說「開燈」、「關燈」、「閃爍」</td><td>外接 LED 接 GPIO 18</td><td>板子和手機都要能上網</td></tr>
               <tr><td>DHT11 溫濕度警報</td><td>手機網頁每 2 秒更新，濕度超過 50% 發出警報</td><td>DHT11 DATA 接 GPIO 4</td><td>手機和板子要同一個 Wi-Fi</td></tr>
               <tr><td>Telegram 機器人控制 LED</td><td>傳 /on、/off、/status 控制 LED，按按鈕時通知手機</td><td>LED GPIO 18、按鈕 GPIO 19</td><td>板子要能上網</td></tr>
+              <tr><td>DHT11 資料存到 Google 試算表</td><td>每分鐘把溫度和濕度新增成一列，步驟見 <a href="#google-sheets">Google 試算表</a></td><td>DATA GPIO 4</td><td>板子要能上網</td></tr>
             </tbody>
           </table>
         </div>
+      </section>
+
+      <section id="languages">
+        <h2>MicroPython 與 Arduino 的差異</h2>
+        <p>兩者都能控制 ESP32，沒有哪一個絕對比較好。本網站選擇 MicroPython，是因為不用安裝軟體，改完程式幾秒就能看到結果，錯誤訊息也容易看懂，適合課堂和快速實驗。</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col"></th><th scope="col">MicroPython（本網站）</th><th scope="col">Arduino C++</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">語言</th><td>Python，語法簡短，容易入門</td><td>C++，要宣告型別，語法較嚴格</td></tr>
+              <tr><th scope="row">開發環境</th><td>開啟瀏覽器就能使用，要先安裝一次韌體</td><td>要安裝 Arduino IDE 和開發板套件，電腦還原後要重裝</td></tr>
+              <tr><th scope="row">修改後上傳</th><td>不用編譯，通常幾秒完成</td><td>每次都要編譯再燒錄，等待時間較長</td></tr>
+              <tr><th scope="row">找錯誤</th><td>錯誤訊息會指出行號，也可以在監控窗直接輸入指令測試</td><td>編譯時能先抓到語法錯誤，執行時的問題多半靠序列埠輸出追查</td></tr>
+              <tr><th scope="row">執行速度</th><td>較慢，一般感測和控制通常夠用</td><td>快很多，適合大量運算和高速處理</td></tr>
+              <tr><th scope="row">記憶體</th><td>直譯器本身會佔用空間，可用的較少</td><td>可用的較多，比較適合大型程式</td></tr>
+              <tr><th scope="row">時間精準度</th><td>記憶體回收可能造成短暫停頓，不適合要求精準時序的工作</td><td>時間控制較精準</td></tr>
+              <tr><th scope="row">函式庫</th><td>常用功能已內建，其他模組可能要自己找程式碼</td><td>數量很多，大部分模組都找得到</td></tr>
+              <tr><th scope="row">適合用途</th><td>入門教學、搭配 AI 寫程式、感測器和物聯網實驗</td><td>相機影像、高速訊號處理、大型或要長期穩定運作的專案</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>同一塊板子可以換來換去，只是一次只能用一種：用 Arduino IDE 燒錄後，MicroPython 和板子上的檔案會被覆蓋；想換回來，再到本網站按「安裝韌體」即可。</p>
       </section>
 
       <section id="boards">
@@ -241,11 +266,13 @@
         <h3>語音控制步驟</h3>
         <ol>
           <li>範例選「語音控制 LED（MQTT）」，填入 Wi-Fi 名稱和密碼，按「上傳並執行」。</li>
-          <li>監控窗顯示「已連上 MQTT 伺服器」後，記下<strong>通道名稱</strong>。</li>
-          <li>開啟<a href="./voice.html" target="_blank" rel="noopener">語音控制頁</a>，輸入通道名稱後按「連線」。</li>
+          <li>監控窗顯示「已連上 MQTT 伺服器」後，記下 <strong>MQTT 主題名稱</strong>。</li>
+          <li>開啟<a href="./voice.html" target="_blank" rel="noopener">語音控制頁</a>，輸入主題名稱後按「連線」。</li>
           <li>按語音按鈕，允許使用麥克風，然後說「開燈」、「關燈」或「閃爍」。</li>
         </ol>
         <p>語音不能用時，可以按開燈、關燈按鈕，或在文字指令欄用手機鍵盤的麥克風輸入。Windows 電腦也可以按 <kbd>Win</kbd> + <kbd>H</kbd> 語音輸入。</p>
+        <p><strong>主題名稱和 MQTT Topic：</strong>你輸入的名稱會組成兩個 Topic。以 <code>led-1</code> 為例，指令走 <code>esp32-mp-class/led-1/command</code>，開發板回報走 <code>esp32-mp-class/led-1/state</code>，其他 MQTT 工具也可以訂閱或發布這兩個 Topic。</p>
+        <p><strong>使用自己的 MQTT 伺服器：</strong>打開語音控制頁的「進階」，填入伺服器位址、WSS 連接埠、路徑、帳號和密碼；程式裡的 <code>BROKER</code>、<code>MQTT_PORT</code>、<code>MQTT_USER</code>、<code>MQTT_PASSWORD</code> 也要改成同一台。語音控制頁不會儲存密碼，重新整理後要再輸入一次。開發板預設走不加密的 1883 連接埠，帳號密碼可能被同網路的人看到，請使用這台伺服器專用的密碼。</p>
 
         <h3 id="telegram">Telegram 機器人</h3>
         <ol>
@@ -259,14 +286,39 @@
         <p class="tip warn"><strong>Wi-Fi 只支援 2.4GHz。</strong>ESP32 連不上 5GHz 網路。</p>
       </section>
 
+      <section id="google-sheets">
+        <h2>把感測器資料存到 Google 試算表</h2>
+        <p>範例「DHT11 資料存到 Google 試算表」每分鐘會把時間、溫度和濕度新增成一列。Google Apps Script 是免費服務，但要先設定一次。這個範例已用模擬硬體和模擬 Google 回應測試，尚未接實體 Google 試算表測試。</p>
+        <ol>
+          <li>到 Google 試算表建立新檔案，在第一列輸入標題：<strong>時間、溫度、濕度</strong>。</li>
+          <li>點選「擴充功能」→「Apps Script」，把原本的內容換成下面的程式後儲存：
+            <pre class="code-block" tabindex="0">function doGet(e) {
+  var temp = Number(e.parameter.temp);
+  var hum = Number(e.parameter.hum);
+  if (isNaN(temp) || isNaN(hum)) {
+    return ContentService.createTextOutput("bad data");
+  }
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
+  sheet.appendRow([new Date(), temp, hum]);
+  return ContentService.createTextOutput("ok");
+}</pre>
+          </li>
+          <li>點選「部署」→「新增部署作業」，類型選「網頁應用程式」。執行身分選「我」，存取權選「<strong>所有人</strong>」，再依畫面完成授權。</li>
+          <li>複製部署後的網址，結尾是 <code>/exec</code>。先在瀏覽器網址列的網址後面加上 <code>?temp=25&amp;hum=60</code> 開啟，畫面顯示 <code>ok</code>、試算表多一列，就代表設定正確。測試完可以刪除這一列。</li>
+          <li>範例選「DHT11 資料存到 Google 試算表」，填入 Wi-Fi 名稱、密碼和 <code>SCRIPT_URL</code>，按「上傳並執行」。</li>
+        </ol>
+        <p class="tip warn"><strong>網址等於試算表的寫入權限。</strong>知道網址的人都能新增資料，不要投影或分享。不小心外洩時，請到「部署」→「管理部署作業」封存這個部署，再建立新的部署。</p>
+        <p>學校的 Google 帳號可能不允許把存取權設成「所有人」，這時請改用個人帳號。之後修改 Apps Script，要在「管理部署作業」選編輯並發布新版本，才會生效。</p>
+      </section>
+
       <section id="privacy">
         <h2>隱私與安全</h2>
         <ul>
           <li><strong>程式碼：</strong>網站不會把程式碼上傳到伺服器。程式碼只存在這個瀏覽器和你的開發板上。GitHub 只提供網站檔案，可能記錄 IP 這類連線資訊，但收不到你的程式碼。</li>
           <li><strong>Wi-Fi 密碼：</strong>密碼寫在程式裡，所以會以明文存在瀏覽器和開發板的 <code>main.py</code>。使用共用電腦或借出開發板前，請先刪除密碼，做法見下方「共用電腦與開發板」。</li>
-          <li><strong>貼給 Gemini 前：</strong>「複製給 Gemini」和「改寫成 MicroPython」會自動隱藏常見的 Wi-Fi 和 Token 寫法，但不保證全部偵測得到。自己全選複製程式時不會隱藏，請先刪除密碼。</li>
+          <li><strong>貼給 Gemini 前：</strong>「複製給 Gemini」和「改寫成 MicroPython」會自動隱藏常見的 Wi-Fi、帳號密碼、Token 和 Apps Script 網址寫法，但不保證全部偵測得到。自己全選複製程式時不會隱藏，請先刪除密碼。</li>
           <li><strong>截圖和投影：</strong>編輯器會顯示密碼，投影或分享畫面前請先遮住。上課建議使用專用 Wi-Fi 或手機熱點。</li>
-          <li><strong>語音控制：</strong>指令會經過公用 MQTT 伺服器，沒有加密保護和權限控管，知道通道名稱的人都能控制。只適合 LED 這類低風險實驗，不要控制插座或門鎖，也不要在通道名稱填入個人資料。</li>
+          <li><strong>語音控制：</strong>指令會經過公用 MQTT 伺服器，沒有加密保護和權限控管，知道主題名稱的人都能控制。只適合 LED 這類低風險實驗，不要控制插座或門鎖，也不要在主題名稱填入個人資料。</li>
           <li><strong>語音辨識：</strong>語音由瀏覽器和其語音服務辨識，通常需要連網。</li>
           <li><strong>Telegram Bot Token：</strong>Token 等於機器人的密碼，拿到的人可以冒用機器人，不要投影或分享。不小心外洩時，請到 @BotFather 傳 <code>/revoke</code> 換一組。範例不驗證伺服器憑證，不要用來控制重要設備。</li>
         </ul>
@@ -275,7 +327,7 @@
         <p class="tip warn"><strong>關閉網頁不會清除程式碼。</strong>程式碼和裡面的 Wi-Fi 密碼會留在瀏覽器，下一個用同一台電腦、同一個瀏覽器帳號的人打開網站就看得到。</p>
         <p>離開電腦或交還開發板前，請照下面做：</p>
         <ol>
-          <li><strong>想留下程式：</strong>先刪除程式裡的 Wi-Fi 名稱、密碼和 Bot Token，再按「下載 main.py」。下載的檔案不會自動隱藏這些資料。</li>
+          <li><strong>想留下程式：</strong>先刪除程式裡的 Wi-Fi 名稱、密碼、MQTT 帳號密碼、Bot Token 和 Apps Script 網址，再按「下載 main.py」。下載的檔案不會自動隱藏這些資料。</li>
           <li><strong>清除瀏覽器：</strong>刪除編輯器裡的全部內容。編輯器會自動儲存，所以舊內容會一起被取代。</li>
           <li><strong>清除開發板：</strong>上傳不含密碼的程式，會覆蓋板子上的 <code>main.py</code>；要清除板子上所有檔案，請重新安裝韌體。</li>
         </ol>
@@ -297,7 +349,9 @@
         <details><summary>顯示 Wi-Fi 連線失敗</summary><p>確認名稱和密碼完全正確（包含大小寫），並確認是 2.4GHz 網路。</p></details>
         <details><summary>手機打不開 192.168.x.x 的網頁</summary><p>確認手機和開發板連同一個 Wi-Fi，也關閉手機的行動數據試試。校園網路可能禁止裝置互連，可以改用手機熱點，或語音控制頁（MQTT）。</p></details>
         <details><summary>沒有跳出麥克風權限，語音不能用</summary><p>確認開啟的是 HTTPS 的語音控制頁，不是 <code>http://192.168.x.x</code>。如果之前拒絕過，請到瀏覽器的網站設定改成允許。</p></details>
-        <details><summary>語音控制頁顯示「開發板沒有回應」或「離線」</summary><p>確認開發板程式正在執行、監控窗顯示已連上 MQTT 伺服器，以及頁面和程式裡的通道名稱完全相同。校園網路可能會擋 1883 連接埠，可以改用手機熱點測試。</p></details>
+        <details><summary>語音控制頁顯示「開發板沒有回應」或「離線」</summary><p>確認開發板程式正在執行、監控窗顯示已連上 MQTT 伺服器，以及頁面和程式裡的主題名稱完全相同。校園網路可能會擋 1883 連接埠，可以改用手機熱點測試。</p></details>
+        <details><summary>語音控制頁顯示「MQTT 帳號或密碼不正確」</summary><p>確認帳號密碼和伺服器設定相同，以及這個帳號有權限使用 <code>esp32-mp-class/</code> 開頭的 Topic。密碼不會儲存，重新整理後要再輸入一次。</p></details>
+        <details><summary>Google 試算表範例顯示「Google 沒有回傳 ok」</summary><p>通常是部署時存取權沒有選「所有人」，或學校帳號不允許。請先用瀏覽器的無痕視窗開啟網址測試，應該要顯示 <code>ok</code>。資料沒有增加時，也請確認網址結尾是 <code>/exec</code>。</p></details>
         <details><summary>按下「停止」後，程式之後還會自動執行嗎？</summary><p>會。「停止」只中斷目前的執行，<code>main.py</code> 還在板子上，下次通電或重新啟動時會再次執行。</p></details>
       </section>
 

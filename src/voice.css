@@ -183,6 +183,11 @@ input:focus-visible {
   font-size: 11px;
 }
 
+.topic-preview {
+  margin: 6px 0 0;
+  overflow-wrap: anywhere;
+}
+
 .footer {
   color: var(--muted);
   font-size: 11px;

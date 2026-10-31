@@ -145,6 +145,19 @@ kbd {
   font-size: 0.92em;
 }
 
+.code-block {
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--code-gutter);
+  color: var(--code-text);
+  font-family: var(--font-code);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
 .tip {
   padding: 10px 14px;
   border-radius: 6px;

@@ -48,6 +48,7 @@ export interface BrokerSettings {
   host: string;
   port: number;
   path: string;
+  username?: string;
 }
 
 export const DEFAULT_BROKER: BrokerSettings = { host: "broker.emqx.io", port: 8084, path: "/mqtt" };
@@ -104,12 +105,13 @@ ${boardLines}
 
 const WIFI_PLACEHOLDER = "YOUR_WIFI_SETTING";
 
-/** Prompts leave the student's computer, so Wi-Fi details and bot tokens must not go with them. */
+/** Prompts leave the student's computer, so Wi-Fi details, accounts, bot tokens and script addresses must not go with them. */
 export function hideWifiSettings(code: string): string {
   const quoted = `"[^"\\n]*"|'[^'\\n]*'`;
   return code
-    .replace(new RegExp(`(\\w*(?:ssid|pass(?:word|wd|phrase)?|pwd|psk|token)\\w*(?:\\[\\s*\\])?\\s*=\\s*)(?:${quoted})`, "gi"), `$1"${WIFI_PLACEHOLDER}"`)
-    .replace(new RegExp(`(\\.(?:connect|begin)\\(\\s*)(?:${quoted})(\\s*,\\s*)(?:${quoted})`, "g"), `$1"${WIFI_PLACEHOLDER}"$2"${WIFI_PLACEHOLDER}"`);
+    .replace(new RegExp(`(\\w*(?:ssid|pass(?:word|wd|phrase)?|pwd|psk|token|user)\\w*(?:\\[\\s*\\])?\\s*=\\s*)(?:${quoted})`, "gi"), `$1"${WIFI_PLACEHOLDER}"`)
+    .replace(new RegExp(`(\\.(?:connect|begin)\\(\\s*)(?:${quoted})(\\s*,\\s*)(?:${quoted})`, "g"), `$1"${WIFI_PLACEHOLDER}"$2"${WIFI_PLACEHOLDER}"`)
+    .replace(/https:\/\/script\.google(?:usercontent)?\.com\/[^"'\s]*/g, "YOUR_SCRIPT_URL");
 }
 
 export function arduinoConvertPrompt(code: string): string {

@@ -233,7 +233,8 @@ test("voice page sends spoken commands and shows the board's reply", async ({ pa
 
   await page.locator("#channel").fill("abc");
   await page.locator("#channel-connect").click();
-  await expect(page.locator("#link-status")).toContainText("已連線，通道：abc");
+  await expect(page.locator("#link-status")).toContainText("已連線，主題：abc");
+  await expect(page.locator("#topic-preview")).toContainText("esp32-mp-class/abc/command");
 
   await page.locator("#voice").click();
   await expect(page.locator("#board-status")).toContainText("LED 開啟");
@@ -281,7 +282,7 @@ test("voice page connects to a custom broker and remembers it", async ({ page })
   await page.locator("#broker-port").fill("9001");
   await page.locator("#broker-path").fill("/ws");
   await page.locator("#channel-connect").click();
-  await expect(page.locator("#link-status")).toContainText("已連線，通道：my-room");
+  await expect(page.locator("#link-status")).toContainText("已連線，主題：my-room");
   expect(urls).toEqual(["wss://my.broker.test:9001/ws"]);
 
   await page.reload();
@@ -292,6 +293,59 @@ test("voice page connects to a custom broker and remembers it", async ({ page })
   await page.locator("#broker-reset").click();
   await page.locator("#channel-connect").click();
   await expect.poll(() => urls.at(-1)).toBe("wss://broker.emqx.io:8084/mqtt");
+});
+
+test("voice page logs in to a broker without saving the password", async ({ page }) => {
+  const logins: string[] = [];
+  await page.routeWebSocket(/my\.broker\.test/, (socket) => {
+    socket.onMessage((message) => {
+      const data = Buffer.from(message as Buffer);
+      if (data[0] >> 4 === 1) {
+        const login = data.toString("latin1");
+        logins.push(login);
+        socket.send(Buffer.from([0x20, 2, 0, login.includes("right-pass") ? 0 : 4]));
+      }
+      if (data[0] >> 4 === 8) socket.send(Buffer.from([0x90, 3, data[2], data[3], 0]));
+    });
+  });
+
+  await page.goto("/voice.html");
+  await page.locator("#broker-settings summary").click();
+  await page.locator("#channel").fill("my-room");
+  await page.locator("#broker-host").fill("my.broker.test");
+
+  await page.locator("#broker-password").fill("right-pass");
+  await page.locator("#channel-connect").click();
+  await expect(page.locator("#message")).toContainText("也要填帳號");
+  expect(logins).toEqual([]);
+
+  await page.locator("#broker-user").fill("teacher");
+  await page.locator("#broker-password").fill("wrong-pass");
+  await page.locator("#channel-connect").click();
+  await expect(page.locator("#link-status")).toContainText("帳號或密碼不正確");
+  await expect(page.locator("#voice")).toBeDisabled();
+  await page.waitForTimeout(3500);
+  expect(logins).toHaveLength(1);
+
+  await page.locator("#broker-password").fill("right-pass");
+  await page.locator("#channel-connect").click();
+  await expect(page.locator("#link-status")).toContainText("已連線");
+  expect(logins[1]).toContain("teacher");
+  expect(logins[1]).toContain("right-pass");
+
+  const stored = await page.evaluate(() => JSON.stringify(localStorage));
+  expect(stored).toContain("teacher");
+  expect(stored).not.toContain("pass");
+
+  await page.reload();
+  await expect(page.locator("#broker-settings")).toHaveAttribute("open");
+  await expect(page.locator("#broker-user")).toHaveValue("teacher");
+  await expect(page.locator("#message")).toContainText("請輸入 MQTT 密碼");
+  await expect(page.locator("#link-status")).toContainText("尚未連線");
+  expect(logins).toHaveLength(2);
+
+  await page.locator("#broker-reset").click();
+  await expect(page.locator("#broker-user")).toHaveValue("");
 });
 
 test("voice page reports a broker it cannot reach", async ({ page }) => {
@@ -311,7 +365,7 @@ test("MQTT example gets its own channel when loaded", async ({ page }) => {
   await page.locator("#examples").selectOption({ label: "語音控制 LED（MQTT）" });
   const code = await page.evaluate(() => localStorage.getItem("esp32-mp-code"));
   expect(code).not.toContain("{{");
-  expect(code).toMatch(/CHANNEL = "led-[0-9a-f]{12}"/);
+  expect(code).toMatch(/TOPIC_NAME = "led-[0-9a-f]{12}"/);
   expect(code).toContain("/voice.html");
 });
 
@@ -548,10 +602,12 @@ for (const id of STYLE_IDS) {
 test("offers every example, grouped, and loads the wiring notes into the editor", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("#examples optgroup")).toHaveCount(4);
-  await expect(page.locator("#examples optgroup option")).toHaveCount(19);
+  await expect(page.locator("#examples optgroup option")).toHaveCount(20);
   page.on("dialog", (dialog) => dialog.accept());
   await page.locator("#examples").selectOption({ label: "SSD1306 OLED 顯示器" });
   await expect(page.locator("#editor .cm-content")).toContainText("class SSD1306");
+  await page.locator("#examples").selectOption({ label: "DHT11 資料存到 Google 試算表" });
+  await expect(page.locator("#editor .cm-content")).toContainText("YOUR_SCRIPT_URL");
   await page.locator("#examples").selectOption({ label: "MAX7219 點矩陣" });
   await expect(page.locator("#editor .cm-content")).toContainText("class MAX7219");
 });

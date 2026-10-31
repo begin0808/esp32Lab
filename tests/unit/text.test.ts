@@ -19,6 +19,16 @@ import {
 } from "../../src/text";
 
 describe("hideWifiSettings", () => {
+  it("hides an MQTT account and an Apps Script address", () => {
+    const code = 'MQTT_USER = "teacher"\nMQTT_PASSWORD = "m0sq"\nSCRIPT_URL = "https://script.google.com/macros/s/ABC123/exec"\nurl = "https://example.com/data"\n';
+    const hidden = hideWifiSettings(code);
+    expect(hidden).not.toContain("teacher");
+    expect(hidden).not.toContain("m0sq");
+    expect(hidden).not.toContain("ABC123");
+    expect(hidden).toContain('SCRIPT_URL = "YOUR_SCRIPT_URL"');
+    expect(hidden).toContain('url = "https://example.com/data"');
+  });
+
   it("hides a Telegram bot token", () => {
     const hidden = hideWifiSettings('BOT_TOKEN = "123456:ABC-secret"\nCHAT_ID = "777"\n');
     expect(hidden).not.toContain("ABC-secret");
