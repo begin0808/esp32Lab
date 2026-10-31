@@ -18,9 +18,17 @@
   }
 
   class FakeBoard {
-    constructor({ hasMicroPython = true, runOutput = "IP: 192.168.1.105\r\n" } = {}) {
+    constructor({
+      hasMicroPython = true,
+      runOutput = "IP: 192.168.1.105\r\n",
+      machine = "Generic ESP32 module with ESP32",
+      usb = { usbVendorId: 0x10c4, usbProductId: 0xea60 },
+    } = {}) {
       this.hasMicroPython = hasMicroPython;
       this.runOutput = runOutput;
+      this.machine = machine;
+      this.usb = usb;
+      this.softResets = 0;
       this.files = {};
       this.mode = "friendly";
       this.command = [];
@@ -67,12 +75,16 @@
         this.emit("raw REPL; CTRL-B to exit\r\n>");
       } else if (byte === 0x03) {
         this.emit("\r\n>>> ");
+      } else if (byte === 0x04) {
+        this.softResets++;
+        this.emit("MPY: soft reboot\r\n");
+        if (this.files["/main.py"]) setTimeout(() => this.emit(this.runOutput), 20);
       }
     }
 
     run(code) {
       if (code.includes("os.uname()")) {
-        this.emit("v1.29.0|Generic ESP32 module with ESP32|4194304\r\n" + END);
+        this.emit(`v1.29.0|${this.machine}|4194304\r\n` + END);
       } else if (code.includes("'wb'")) {
         this.tempData = [];
         this.emit(END);
@@ -130,13 +142,14 @@
       this.writable = null;
     }
 
-    async setSignals({ requestToSend }) {
+    async setSignals({ dataTerminalReady, requestToSend }) {
+      this.board.dtr = dataTerminalReady;
       if (this.rts && requestToSend === false) this.board.reset();
       this.rts = requestToSend;
     }
 
     getInfo() {
-      return { usbVendorId: 0x10c4, usbProductId: 0xea60 };
+      return this.board.usb;
     }
   }
 

@@ -2,7 +2,8 @@ import { basicSetup, EditorView } from "codemirror";
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { python } from "@codemirror/lang-python";
 import { tags } from "@lezer/highlight";
-import { FIRMWARE, installFirmware } from "./flasher";
+import { adaptExamplePins, chipFromMachine, CHIPS, FIRMWARE_VERSION, isChipId, type ChipId } from "./chips";
+import { installFirmware } from "./flasher";
 import { RawRepl, ReplExecError, ReplTimeoutError } from "./repl";
 import { SerialLink } from "./serial";
 import { setupStylePicker } from "./theme";
@@ -12,7 +13,7 @@ import {
   fillExample,
   findLastTraceback,
   fixErrorPrompt,
-  GEMINI_PROMPT,
+  geminiPrompt,
   looksLikeArduino,
   randomChannel,
   stripTerminalCodes,
@@ -21,15 +22,65 @@ import blink from "./examples/blink.py?raw";
 import webLed from "./examples/web_led.py?raw";
 import mqttLed from "./examples/mqtt_led.py?raw";
 import dht11Alarm from "./examples/dht11_alarm.py?raw";
+import buttonLed from "./examples/button_led.py?raw";
+import breathingLed from "./examples/breathing_led.py?raw";
+import knobLed from "./examples/knob_led.py?raw";
+import buzzerSong from "./examples/buzzer_song.py?raw";
+import servoSweep from "./examples/servo_sweep.py?raw";
+import lightSensor from "./examples/light_sensor.py?raw";
+import pirAlarm from "./examples/pir_alarm.py?raw";
+import ultrasonic from "./examples/ultrasonic.py?raw";
+import dht11Serial from "./examples/dht11_serial.py?raw";
+import ds18b20 from "./examples/ds18b20.py?raw";
+import ws2812Rainbow from "./examples/ws2812_rainbow.py?raw";
+import oledSsd1306 from "./examples/oled_ssd1306.py?raw";
+import lcd1602 from "./examples/lcd1602_i2c.py?raw";
+import max7219 from "./examples/max7219_matrix.py?raw";
 
-const EXAMPLES = [
-  { name: "LED 閃爍", code: blink },
-  { name: "手機控制 LED（同一個 Wi-Fi）", code: webLed },
-  { name: "語音控制 LED（MQTT）", code: mqttLed },
-  { name: "DHT11 溫濕度警報", code: dht11Alarm },
+const EXAMPLE_GROUPS = [
+  {
+    label: "基礎輸出與輸入",
+    examples: [
+      { name: "LED 閃爍", code: blink },
+      { name: "按鈕開關 LED", code: buttonLed },
+      { name: "呼吸燈（PWM）", code: breathingLed },
+      { name: "可變電阻調亮度", code: knobLed },
+      { name: "無源蜂鳴器播放小星星", code: buzzerSong },
+      { name: "SG90 伺服馬達來回轉動", code: servoSweep },
+    ],
+  },
+  {
+    label: "感測器",
+    examples: [
+      { name: "光敏電阻自動夜燈", code: lightSensor },
+      { name: "人體紅外線警報（HC-SR501）", code: pirAlarm },
+      { name: "超音波測距（HC-SR04）", code: ultrasonic },
+      { name: "DHT11 溫濕度（監控窗）", code: dht11Serial },
+      { name: "DS18B20 溫度計", code: ds18b20 },
+    ],
+  },
+  {
+    label: "顯示與燈光",
+    examples: [
+      { name: "WS2812 全彩 LED 彩虹", code: ws2812Rainbow },
+      { name: "SSD1306 OLED 顯示器", code: oledSsd1306 },
+      { name: "I2C LCD 1602 顯示器", code: lcd1602 },
+      { name: "MAX7219 點矩陣", code: max7219 },
+    ],
+  },
+  {
+    label: "Wi-Fi 與語音",
+    examples: [
+      { name: "手機控制 LED（同一個 Wi-Fi）", code: webLed },
+      { name: "語音控制 LED（MQTT）", code: mqttLed },
+      { name: "DHT11 溫濕度警報", code: dht11Alarm },
+    ],
+  },
 ];
+const EXAMPLES = EXAMPLE_GROUPS.flatMap((group) => group.examples);
 
 const STORAGE_KEY = "esp32-mp-code";
+const CHIP_KEY = "esp32-mp-chip";
 const MONITOR_LIMIT = 200_000;
 const FONT_SIZE_KEY = "esp32-mp-font-size";
 const FONT_SIZE_DEFAULT = 16;
@@ -61,6 +112,7 @@ const ui = {
   progressLabel: el("progress-label"),
   progress: el<HTMLProgressElement>("progress"),
   examples: el<HTMLSelectElement>("examples"),
+  chip: el<HTMLSelectElement>("chip"),
   copyPrompt: el<HTMLButtonElement>("copy-prompt"),
   openFile: el<HTMLButtonElement>("open-file"),
   saveFile: el<HTMLButtonElement>("save-file"),
@@ -199,6 +251,36 @@ function onCodeChanged(): void {
   ui.arduinoWarning.hidden = !looksLikeArduino(code);
 }
 
+function readChip(): ChipId {
+  try {
+    const saved = localStorage.getItem(CHIP_KEY);
+    if (isChipId(saved)) return saved;
+  } catch {
+    // Fall through to the default when the browser blocks storage.
+  }
+  return "esp32";
+}
+
+function selectedChip() {
+  return CHIPS[ui.chip.value as ChipId];
+}
+
+function setChip(id: ChipId): void {
+  ui.chip.value = id;
+  try {
+    localStorage.setItem(CHIP_KEY, id);
+  } catch {
+    // The choice still applies until the page is closed.
+  }
+}
+
+/** The board's own answer overrides the menu, because examples need the pins of the real chip. */
+function followDetectedChip(id: ChipId): void {
+  if (id === ui.chip.value) return;
+  setChip(id);
+  systemMessage(`偵測到 ${CHIPS[id].label}，之後選範例會使用這種晶片的腳位。編輯器裡現有的程式不會自動修改。`);
+}
+
 function setStatus(text: string, state: "idle" | "ready" | "busy" | "error"): void {
   ui.status.textContent = text;
   ui.status.dataset.state = state;
@@ -329,6 +411,8 @@ async function detectFirmware(): Promise<void> {
     const flash = info.flashBytes ? `，快閃記憶體 ${Math.round(info.flashBytes / 1048576)} MB` : "";
     setStatus(`已連接：${info.machine}${flash}，MicroPython ${info.release}`, "ready");
     systemMessage(`開發板就緒：${info.machine}${flash}，MicroPython ${info.release}`);
+    const chip = chipFromMachine(info.machine);
+    if (chip) followDetectedChip(chip.id);
   } catch (error) {
     if (!(error instanceof ReplTimeoutError)) throw error;
     hasFirmware = false;
@@ -406,8 +490,8 @@ async function install(): Promise<void> {
   try {
     await link.close();
     hasFirmware = false;
-    systemMessage(`開始安裝 ${FIRMWARE.version}`);
-    await installFirmware(port, {
+    systemMessage(`開始安裝 ${FIRMWARE_VERSION}，會依晶片自動選擇韌體`);
+    const chip = await installFirmware(port, {
       onLog: (line) => appendMonitor(`${line}\n`, "system"),
       onStage: (label) => {
         setStatus(label, "busy");
@@ -416,11 +500,24 @@ async function install(): Promise<void> {
       onProgress: (fraction) => showProgress("正在寫入韌體", fraction),
     });
     systemMessage("韌體安裝完成");
+    followDetectedChip(chip.id);
   } catch (error) {
     setStatus("韌體安裝失敗", "error");
-    systemMessage(`韌體安裝失敗：${failureMessage(error)}。連不上時，請按住 IO0 鍵再重試。`);
+    systemMessage(
+      link.isNativeUsb
+        ? `韌體安裝失敗：${failureMessage(error)}。請按住 BOOT 鍵，按一下 RST 鍵，再放開 BOOT 鍵，然後重新按「連接開發板」並再裝一次。`
+        : `韌體安裝失敗：${failureMessage(error)}。連不上時，請按住 IO0 鍵再重試。`,
+    );
   } finally {
     hideProgress();
+  }
+
+  // Built-in USB disappears when the chip restarts, so the old port cannot be reopened.
+  if (link.isNativeUsb) {
+    setStatus("請按一下板子上的 RST 鍵，再按「連接開發板」", "idle");
+    systemMessage("請按一下板子上的 RST 鍵，等 2 秒，再按「連接開發板」並重新選擇序列埠。");
+    setBusy(false);
+    return;
   }
 
   try {
@@ -487,16 +584,29 @@ ui.replForm.addEventListener("submit", (event) => {
   guarded(() => link.write(new TextEncoder().encode(`${command}\r\n`)))();
 });
 
-ui.examples.append(new Option("選擇範例…", ""), ...EXAMPLES.map((example, index) => new Option(example.name, String(index))));
+ui.examples.append(
+  new Option("選擇範例…", ""),
+  ...EXAMPLE_GROUPS.map((group) => {
+    const optgroup = document.createElement("optgroup");
+    optgroup.label = group.label;
+    optgroup.append(...group.examples.map((example) => new Option(example.name, String(EXAMPLES.indexOf(example)))));
+    return optgroup;
+  }),
+);
 ui.examples.addEventListener("change", () => {
   const example = EXAMPLES[Number(ui.examples.value)];
   if (ui.examples.value !== "" && example && confirm(`要用「${example.name}」取代目前的程式嗎？`)) {
-    setCode(fillExample(example.code, randomChannel(), new URL("voice.html", location.href).href));
+    const code = fillExample(example.code, randomChannel(), new URL("voice.html", location.href).href);
+    setCode(adaptExamplePins(code, selectedChip()));
   }
   ui.examples.value = "";
 });
 
-ui.copyPrompt.addEventListener("click", () => void copyText(GEMINI_PROMPT, ui.copyPrompt));
+ui.chip.append(...Object.values(CHIPS).map((chip) => new Option(chip.label, chip.id)));
+ui.chip.value = readChip();
+ui.chip.addEventListener("change", () => setChip(ui.chip.value as ChipId));
+
+ui.copyPrompt.addEventListener("click", () => void copyText(geminiPrompt(selectedChip().promptLines), ui.copyPrompt));
 ui.copyConvert.addEventListener("click", () => void copyText(arduinoConvertPrompt(getCode()), ui.copyConvert));
 ui.copyIp.addEventListener("click", () => void copyText(ui.ipLink.href, ui.copyIp));
 ui.copyError.addEventListener("click", () => {
@@ -537,7 +647,7 @@ ui.splitter.addEventListener("keydown", (event) => {
 });
 
 setupStylePicker(el<HTMLSelectElement>("style-picker"));
-ui.firmwareVersion.textContent = FIRMWARE.version;
+ui.firmwareVersion.textContent = `${FIRMWARE_VERSION}（依晶片自動選擇）`;
 setFontSize(readFontSize());
 setEditorWidth(readEditorWidth());
 ui.splitter.setAttribute("aria-valuemin", String(EDITOR_WIDTH_MIN));

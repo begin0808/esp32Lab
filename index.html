@@ -65,6 +65,10 @@
       <section class="panel" aria-label="程式編輯器">
         <div class="panel-head">
           <label class="select">
+            晶片
+            <select id="chip"></select>
+          </label>
+          <label class="select">
             範例
             <select id="examples"></select>
           </label>
@@ -117,6 +121,7 @@
         <ul>
           <li>版本：<span id="firmware-version"></span></li>
           <li>如果一直連不上，請<strong>按住板子上的 IO0（BOOT）鍵</strong>再重試。</li>
+          <li>ESP32-S2、S3、C3 的 USB 直接接晶片時，如果連不上，請按住 BOOT 鍵、按一下 RST 鍵、放開 BOOT 鍵，再重新連接開發板。</li>
           <li>安裝期間請不要拔除 USB 線。</li>
         </ul>
         <div class="dialog-actions">

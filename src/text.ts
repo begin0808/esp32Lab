@@ -84,11 +84,11 @@ export function stripTerminalCodes(text: string): string {
   return text.replace(/\x1b\[[0-9;]*[A-Za-z]/g, "");
 }
 
-export const GEMINI_PROMPT = `請用 MicroPython 幫我寫 ESP32 程式，不要用 Arduino C++。
+export function geminiPrompt(boardLines: string): string {
+  return `請用 MicroPython 幫我寫 ESP32 程式，不要用 Arduino C++。
 
 硬體與環境：
-- 開發板：NodeMCU ESP-32S（經典 ESP32，MicroPython v1.29.0）
-- 板載 LED：GPIO 2
+${boardLines}
 - 接線：（請改成你的接線，例如：外接 LED 接 GPIO 18、DHT11 訊號線接 GPIO 4）
 
 程式要求：
@@ -100,6 +100,7 @@ export const GEMINI_PROMPT = `請用 MicroPython 幫我寫 ESP32 程式，不要
 
 我想做的功能：
 （請在這裡描述你想做的功能）`;
+}
 
 const WIFI_PLACEHOLDER = "YOUR_WIFI_SETTING";
 

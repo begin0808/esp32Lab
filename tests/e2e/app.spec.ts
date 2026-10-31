@@ -488,6 +488,65 @@ for (const id of STYLE_IDS) {
   });
 }
 
+test("offers every example, grouped, and loads the wiring notes into the editor", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("#examples optgroup")).toHaveCount(4);
+  await expect(page.locator("#examples optgroup option")).toHaveCount(18);
+  page.on("dialog", (dialog) => dialog.accept());
+  await page.locator("#examples").selectOption({ label: "SSD1306 OLED 顯示器" });
+  await expect(page.locator("#editor .cm-content")).toContainText("class SSD1306");
+  await page.locator("#examples").selectOption({ label: "MAX7219 點矩陣" });
+  await expect(page.locator("#editor .cm-content")).toContainText("class MAX7219");
+});
+
+test("moves example pins to the chosen chip", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/");
+  page.on("dialog", (dialog) => dialog.accept());
+  await expect(page.locator("#chip")).toHaveValue("esp32");
+  await page.locator("#chip").selectOption({ label: "ESP32-C3" });
+  await page.locator("#examples").selectOption({ label: "按鈕開關 LED" });
+  await expect(page.locator("#editor .cm-content")).toContainText("LED_PIN = 4");
+  await expect(page.locator("#editor .cm-content")).toContainText("BUTTON_PIN = 5");
+
+  await page.locator("#copy-prompt").click();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain("開發板：ESP32-C3");
+
+  await page.reload();
+  await expect(page.locator("#chip")).toHaveValue("esp32c3");
+});
+
+test("runs over built-in USB without resetting the port", async ({ page }) => {
+  await mockSerial(page, {
+    machine: "Generic ESP32S3 module with ESP32S3",
+    usb: { usbVendorId: 0x303a, usbProductId: 0x4001 },
+  });
+  await page.goto("/");
+  await page.locator("#connect").click();
+  await expect(page.locator("#status")).toContainText("ESP32S3");
+  await expect(page.locator("#chip")).toHaveValue("esp32s3");
+  await expect(page.locator("#monitor")).toContainText("之後選範例會使用這種晶片的腳位");
+  expect(await page.evaluate(() => (globalThis as any).board.dtr)).toBe(true);
+
+  await page.locator("#editor .cm-content").fill('print("IP 測試")\n');
+  await page.locator("#upload").click();
+  await expect(page.locator("#ip-link")).toHaveText("http://192.168.1.105");
+  const board = await page.evaluate(() => {
+    const { resets, softResets } = (globalThis as any).board;
+    return { resets, softResets };
+  });
+  expect(board).toEqual({ resets: 0, softResets: 1 });
+});
+
+test("keeps DTR low on a board with a USB-to-serial chip", async ({ page }) => {
+  await mockSerial(page);
+  await page.goto("/");
+  await page.locator("#connect").click();
+  await expect(page.locator("#status")).toContainText("Generic ESP32 module");
+  expect(await page.evaluate(() => (globalThis as any).board.dtr)).toBe(false);
+  await expect(page.locator("#chip")).toHaveValue("esp32");
+});
+
 test("opens the pinout image and driver page in new tabs", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("#driver-link")).toHaveAttribute("href", "https://www.silabs.com/software-and-tools/usb-to-uart-bridge-vcp-drivers?tab=downloads");

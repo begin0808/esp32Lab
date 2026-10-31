@@ -41,7 +41,7 @@ npm run build      # 輸出到 dist/
 
 ## 更換韌體版本
 
-把新的 `.bin` 放進 `public/firmware/`，再更新 [src/flasher.ts](src/flasher.ts) 的 `FIRMWARE` 網址和 SHA-256。
+把新的 `.bin` 放進 `public/firmware/`，再更新 [src/chips.ts](src/chips.ts) 裡各晶片的網址和 SHA-256。
 
 ## 授權
 
