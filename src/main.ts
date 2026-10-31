@@ -1,8 +1,11 @@
 import { basicSetup, EditorView } from "codemirror";
+import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { python } from "@codemirror/lang-python";
+import { tags } from "@lezer/highlight";
 import { FIRMWARE, installFirmware } from "./flasher";
 import { RawRepl, ReplExecError, ReplTimeoutError } from "./repl";
 import { SerialLink } from "./serial";
+import { setupStylePicker } from "./theme";
 import {
   arduinoConvertPrompt,
   findDeviceIp,
@@ -103,11 +106,20 @@ function save(code: string): void {
   }
 }
 
+// Colours come from the page's style, so the code follows whichever style is chosen.
+const codeHighlight = HighlightStyle.define([
+  { tag: tags.comment, color: "var(--code-comment)" },
+  { tag: [tags.keyword, tags.bool, tags.null], color: "var(--code-keyword)" },
+  { tag: [tags.string, tags.special(tags.string)], color: "var(--code-string)" },
+  { tag: tags.number, color: "var(--code-number)" },
+]);
+
 const editor = new EditorView({
   doc: readSaved() ?? blink,
   extensions: [
     basicSetup,
     python(),
+    syntaxHighlighting(codeHighlight),
     // Large fonts are common here, and sideways scrolling makes code hard to follow.
     EditorView.lineWrapping,
     EditorView.updateListener.of((update) => {
@@ -524,6 +536,7 @@ ui.splitter.addEventListener("keydown", (event) => {
   setEditorWidth(Number(ui.splitter.getAttribute("aria-valuenow")) + step);
 });
 
+setupStylePicker(el<HTMLSelectElement>("style-picker"));
 ui.firmwareVersion.textContent = FIRMWARE.version;
 setFontSize(readFontSize());
 setEditorWidth(readEditorWidth());

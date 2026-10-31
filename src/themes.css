@@ -1,0 +1,147 @@
+:root {
+  color-scheme: light;
+  --code-font-size: 16px;
+  --editor-width: 60%;
+
+  --font-system: "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --font-code: Consolas, "Cascadia Mono", "Noto Sans TC", "Microsoft JhengHei", monospace;
+
+  --surface: #ffffff;
+  --text: #14211d;
+  --muted: #4d5b56;
+  --border: #b9c4bf;
+  --input-bg: #ffffff;
+  --accent-text: #c2410c;
+  --link: #0a55ad;
+
+  --danger: #b3261e;
+  --danger-bg: #fde8e6;
+  --success: #17692f;
+  --success-bg: #e8f5ec;
+  --warn-bg: #fff4d6;
+  --warn-text: #5c4300;
+  --busy: #e08e00;
+  --focus: #1a73e8;
+
+  --code-bg: #ffffff;
+  --code-text: #14211d;
+  --code-gutter: #f1f4f2;
+  --code-gutter-text: #4d5b56;
+  --code-active-line: #eef3ff;
+}
+
+/* A. Cutting mat: the green grid on every maker bench, with yellow tape marking what matters. */
+:root,
+:root[data-style="mat"] {
+  --font-ui: var(--font-system);
+  --font-display: var(--font-system);
+  --page-bg: #17705f;
+  --page-pattern: linear-gradient(#ffffff26 1px, transparent 1px), linear-gradient(90deg, #ffffff26 1px, transparent 1px);
+  --page-pattern-size: 24px 24px;
+  --page-title: #ffffff;
+  --page-text: #ffffff;
+  --page-muted: #e3f5ef;
+  --page-link: #ffffff;
+  --status-idle: #b9d6cd;
+  --status-ready: #ffd23f;
+  --btn-bg: #ffffff;
+  --btn-text: #14211d;
+  --btn-border: 0 solid transparent;
+  --btn-radius: 4px;
+  --btn-shadow: 0 2px 0 #0b3d33;
+  --go-bg: #ffd23f;
+  --go-text: #14211d;
+  --panel-border: 0 solid transparent;
+  --panel-radius: 6px;
+  --panel-shadow: 0 4px 0 #0b3d33;
+  --head-bg: #ffd23f;
+  --head-alt-bg: #ffd23f;
+  --head-text: #14211d;
+  --head-border: 0 solid transparent;
+  --monitor-bg: #17201d;
+  --monitor-text: #ffe6a6;
+  --monitor-system: #9fd2ff;
+  --code-keyword: #0a5fc4;
+  --code-string: #a8290f;
+  --code-comment: #586661;
+  --code-number: #7a3bbd;
+}
+
+/* B. Building blocks: thick outlines, hard shadows and primary colours. */
+:root[data-style="blocks"] {
+  --font-ui: "Huninn", var(--font-system);
+  --font-display: "Huninn", var(--font-system);
+  --page-bg: #a9dcff;
+  --page-pattern: radial-gradient(#ffffff99 3px, transparent 3.5px);
+  --page-pattern-size: 26px 26px;
+  --page-title: #101218;
+  --page-text: #101218;
+  --page-muted: #1d2733;
+  --page-link: #0a3d91;
+  --status-idle: #5a6170;
+  --status-ready: #137a36;
+  --btn-bg: #ffffff;
+  --btn-text: #101218;
+  --btn-border: 2.5px solid #101218;
+  --btn-radius: 12px;
+  --btn-shadow: 3px 3px 0 #101218;
+  --go-bg: #ffd400;
+  --go-text: #101218;
+  --panel-border: 3px solid #101218;
+  --panel-radius: 16px;
+  --panel-shadow: 6px 6px 0 #101218;
+  --head-bg: #ffb3c9;
+  --head-alt-bg: #b9ef9f;
+  --head-text: #101218;
+  --head-border: 3px solid #101218;
+  --monitor-bg: #1e2159;
+  --monitor-text: #ffffff;
+  --monitor-system: #a8e1ff;
+  --code-keyword: #0f4fd1;
+  --code-string: #b3123f;
+  --code-comment: #565d6c;
+  --code-number: #7a1fc2;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-logo {
+  flex: none;
+}
+
+.footer a svg[fill="#1877f2"] {
+  border-radius: 50%;
+  background: #ffffff;
+}
+
+.page a {
+  color: var(--link);
+}
+
+body {
+  background-color: var(--page-bg);
+  background-image: var(--page-pattern);
+  background-size: var(--page-pattern-size);
+  color: var(--page-text);
+  font-family: var(--font-ui);
+}
+
+.style-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--page-text);
+}
+
+.style-picker select {
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--input-bg);
+  color: var(--text);
+  font: inherit;
+}

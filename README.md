@@ -42,3 +42,5 @@ npm run build      # 輸出到 dist/
 ## 授權
 
 `public/firmware/` 內是未經修改的 [MicroPython](https://micropython.org/) 官方韌體，以 MIT 授權發布，見同資料夾的 LICENSE 檔。
+
+「積木玩具」風格使用的 Huninn 字體以 SIL Open Font License 1.1 授權，見 `public/fonts/`。

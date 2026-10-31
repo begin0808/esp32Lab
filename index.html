@@ -5,15 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ESP32 Lab 線上實驗室</title>
     <meta name="description" content="免安裝，開瀏覽器就能寫程式、燒錄 ESP32：貼上 MicroPython 程式碼，透過 USB 直接上傳到開發板。" />
+    <script>
+      // Runs before the first paint so a saved style never flashes the default one.
+      try {
+        document.documentElement.dataset.style = localStorage.getItem("esp32-mp-style") || "mat";
+      } catch {}
+    </script>
+    <link rel="icon" href="/icons/logo.svg" type="image/svg+xml" />
+    <link rel="icon" href="/icons/logo-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/icons/logo-180.png" />
+    <link rel="stylesheet" href="/src/themes.css" />
     <link rel="stylesheet" href="/src/styles.css" />
   </head>
   <body>
     <header class="topbar">
       <div class="brand">
-        <h1>ESP32 Lab 線上實驗室</h1>
-        <p id="status" class="status" data-state="idle" role="status">尚未連接開發板</p>
+        <img class="brand-logo" src="/icons/logo.svg" alt="" width="46" height="46" />
+        <div>
+          <h1>ESP32 Lab 線上實驗室</h1>
+          <p id="status" class="status" data-state="idle" role="status">尚未連接開發板</p>
+        </div>
       </div>
       <div class="actions">
+        <label class="style-picker">
+          風格
+          <select id="style-picker"></select>
+        </label>
         <div class="font-size" role="group" aria-label="程式碼字體大小">
           <span>字體</span>
           <button id="font-down" class="btn" aria-label="縮小字體">A−</button>

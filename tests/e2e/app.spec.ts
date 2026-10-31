@@ -323,6 +323,126 @@ for (const path of ["/", "/voice.html"]) {
   });
 }
 
+const STYLE_IDS = ["mat", "blocks"];
+
+/** WCAG contrast of two computed "rgb(r, g, b)" colours. */
+function contrast(first: string, second: string): number {
+  const luminance = (color: string) => {
+    const [r, g, b] = color.match(/[\d.]+/g)!.slice(0, 3).map((value) => {
+      const channel = Number(value) / 255;
+      return channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const [lighter, darker] = [luminance(first), luminance(second)].sort((a, b) => b - a);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+test("switches style across pages without touching the code", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("html")).toHaveAttribute("data-style", "mat");
+  await page.locator("#editor .cm-content").fill('print("保留")\n');
+
+  for (const id of STYLE_IDS) {
+    await page.locator("#style-picker").selectOption(id);
+    await expect(page.locator("html")).toHaveAttribute("data-style", id);
+    await expect(page.locator("#editor .cm-content")).toContainText("保留");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+  }
+
+  await page.locator("#style-picker").selectOption("blocks");
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-style", "blocks");
+  await expect(page.locator("#style-picker")).toHaveValue("blocks");
+  await page.goto("/voice.html");
+  await expect(page.locator("html")).toHaveAttribute("data-style", "blocks");
+});
+
+test("falls back to the default when a removed style was saved", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("esp32-mp-style", "pcb"));
+  await page.goto("/");
+  await expect(page.locator("html")).toHaveAttribute("data-style", "mat");
+  await expect(page.locator("#style-picker")).toHaveValue("mat");
+  await expect(page.locator("#style-picker option")).toHaveText(["切割墊工作台", "積木玩具"]);
+});
+
+test("downloads a style's font only when that style is chosen", async ({ page }) => {
+  const fonts: string[] = [];
+  page.on("request", (request) => {
+    if (/\.woff2?($|\?)/.test(request.url())) fonts.push(request.url());
+  });
+  await page.goto("/", { waitUntil: "networkidle" });
+  await page.waitForTimeout(300);
+  expect(fonts).toEqual([]);
+
+  await page.locator("#style-picker").selectOption("blocks");
+  await expect.poll(() => fonts.some((url) => url.includes("huninn"))).toBe(true);
+});
+
+for (const id of STYLE_IDS) {
+  test(`style ${id} keeps text readable`, async ({ page }) => {
+    await page.addInitScript((style) => localStorage.setItem("esp32-mp-style", style), id);
+    await page.goto("/");
+    await expect(page.locator("html")).toHaveAttribute("data-style", id);
+
+    const read = (name: string) =>
+      page.evaluate((token) => {
+        const probe = document.createElement("span");
+        probe.style.color = `var(${token})`;
+        document.body.append(probe);
+        const color = getComputedStyle(probe).color;
+        probe.remove();
+        return color;
+      }, name);
+
+    for (const [text, background] of [
+      ["--text", "--surface"],
+      ["--muted", "--surface"],
+      ["--code-text", "--code-bg"],
+      ["--code-keyword", "--code-bg"],
+      ["--code-string", "--code-bg"],
+      ["--code-comment", "--code-bg"],
+      ["--code-number", "--code-bg"],
+      ["--code-gutter-text", "--code-gutter"],
+      ["--monitor-text", "--monitor-bg"],
+      ["--monitor-system", "--monitor-bg"],
+      ["--head-text", "--head-bg"],
+      ["--head-text", "--head-alt-bg"],
+      ["--btn-text", "--btn-bg"],
+      ["--go-text", "--go-bg"],
+      ["--page-title", "--page-bg"],
+      ["--page-text", "--page-bg"],
+      ["--page-muted", "--page-bg"],
+      ["--page-link", "--page-bg"],
+      ["--accent-text", "--surface"],
+      ["--link", "--surface"],
+    ]) {
+      expect(contrast(await read(text), await read(background)), `${id}: ${text} on ${background}`).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+}
+
+for (const [path, icon] of [
+  ["/", "logo"],
+  ["/voice.html", "voice"],
+]) {
+  test(`shows the ${icon} logo in the tab and header of ${path}`, async ({ page, request }) => {
+    await page.goto(path);
+    const links = page.locator('link[rel="icon"], link[rel="apple-touch-icon"]');
+    await expect(links).toHaveCount(3);
+    for (const href of await links.evaluateAll((nodes) => nodes.map((node) => (node as HTMLLinkElement).href))) {
+      expect(href).toContain(`/icons/${icon}`);
+      expect((await request.get(href)).ok()).toBe(true);
+    }
+    const width = await page.locator(".brand-logo").evaluate(async (node) => {
+      const image = node as HTMLImageElement;
+      await image.decode();
+      return image.naturalWidth;
+    });
+    expect(width).toBeGreaterThan(0);
+  });
+}
+
 test("opens the pinout image and driver page in new tabs", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("#driver-link")).toHaveAttribute("href", "https://www.silabs.com/software-and-tools/usb-to-uart-bridge-vcp-drivers?tab=downloads");

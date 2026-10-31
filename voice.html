@@ -5,11 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ESP32 語音控制｜ESP32 Lab 線上實驗室</title>
     <meta name="description" content="用手機或電腦的語音，透過 MQTT 控制 ESP32 上的 LED。" />
+    <script>
+      // Runs before the first paint so a saved style never flashes the default one.
+      try {
+        document.documentElement.dataset.style = localStorage.getItem("esp32-mp-style") || "mat";
+      } catch {}
+    </script>
+    <link rel="icon" href="/icons/voice.svg" type="image/svg+xml" />
+    <link rel="icon" href="/icons/voice-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/icons/voice-180.png" />
+    <link rel="stylesheet" href="/src/themes.css" />
     <link rel="stylesheet" href="/src/voice.css" />
   </head>
   <body>
     <main class="page">
-      <h1>ESP32 語音控制</h1>
+      <div class="page-top">
+        <div class="brand">
+          <img class="brand-logo" src="/icons/voice.svg" alt="" width="44" height="44" />
+          <h1>ESP32 語音控制</h1>
+        </div>
+        <label class="style-picker">
+          風格
+          <select id="style-picker"></select>
+        </label>
+      </div>
 
       <form id="channel-form" class="row">
         <label for="channel">通道名稱</label>

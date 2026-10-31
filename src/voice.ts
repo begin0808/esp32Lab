@@ -10,6 +10,7 @@ import {
   type BrokerSettings,
   type LedCommand,
 } from "./text";
+import { setupStylePicker } from "./theme";
 
 const CHANNEL_KEY = "esp32-mp-voice-channel";
 const BROKER_KEY = "esp32-mp-voice-broker";
@@ -223,6 +224,8 @@ ui.textForm.addEventListener("submit", (event) => {
   ui.textCommand.value = "";
   if (text) runText(text);
 });
+
+setupStylePicker(el<HTMLSelectElement>("style-picker"));
 
 const initialChannel = new URLSearchParams(location.search).get("ch") ?? readSavedChannel();
 const initialBroker = readSavedBroker();
