@@ -315,6 +315,7 @@
         <h2>隱私與安全</h2>
         <ul>
           <li><strong>程式碼：</strong>網站不會把程式碼上傳到伺服器。程式碼只存在這個瀏覽器和你的開發板上。GitHub 只提供網站檔案，可能記錄 IP 這類連線資訊，但收不到你的程式碼。</li>
+          <li><strong>瀏覽統計：</strong>網站用 <a href="https://www.goatcounter.com/" target="_blank" rel="noopener">GoatCounter</a> 統計頁面瀏覽人次，頁尾顯示的是編輯器頁面的累計人次。每次開啟頁面時，只會送出頁面路徑、頁面標題和來源網站，GoatCounter 也會收到瀏覽器必然帶上的 IP 和瀏覽器資訊，用來估算不重複的訪客。統計不使用 Cookie，也不會送出程式碼、Wi-Fi 密碼、序列埠內容或 MQTT 主題名稱。</li>
           <li><strong>Wi-Fi 密碼：</strong>密碼寫在程式裡，所以會以明文存在瀏覽器和開發板的 <code>main.py</code>。使用共用電腦或借出開發板前，請先刪除密碼，做法見下方「共用電腦與開發板」。</li>
           <li><strong>貼給 Gemini 前：</strong>「複製給 Gemini」和「改寫成 MicroPython」會自動隱藏常見的 Wi-Fi、帳號密碼、Token 和 Apps Script 網址寫法，但不保證全部偵測得到。自己全選複製程式時不會隱藏，請先刪除密碼。</li>
           <li><strong>截圖和投影：</strong>編輯器會顯示密碼，投影或分享畫面前請先遮住。上課建議使用專用 Wi-Fi 或手機熱點。</li>
@@ -361,6 +362,7 @@
     <footer class="footer">
       <div class="copyright">
         <span>© 2026 <a href="https://begin0808.github.io/studio0808/" target="_blank" rel="noopener">Studio0808 智造實驗室</a>. All rights reserved.</span>
+        <span id="visit-count" hidden></span>
         <span class="contact-note">如有建議或報錯，歡迎來信</span>
         <a class="contact-link" href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=begin0808@gmail.com" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>寫信給我

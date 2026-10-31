@@ -6,6 +6,7 @@ import { adaptExamplePins, chipFromMachine, CHIPS, FIRMWARE_VERSION, isChipId, t
 import { installFirmware } from "./flasher";
 import { RawRepl, ReplExecError, ReplTimeoutError } from "./repl";
 import { SerialLink } from "./serial";
+import { setupStats } from "./stats";
 import { setupStylePicker } from "./theme";
 import {
   arduinoConvertPrompt,
@@ -587,6 +588,8 @@ ui.replForm.addEventListener("submit", (event) => {
   ui.replInput.value = "";
   guarded(() => link.write(new TextEncoder().encode(`${command}\r\n`)))();
 });
+
+setupStats();
 
 ui.examples.append(
   new Option("選擇範例…", ""),

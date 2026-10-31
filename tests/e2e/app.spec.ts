@@ -370,6 +370,27 @@ test("MQTT example gets its own channel when loaded", async ({ page }) => {
 });
 
 for (const path of ["/", "/voice.html", "/help.html"]) {
+  test(`shows the visit count on ${path} without recording a local visit`, async ({ page }) => {
+    const requests: string[] = [];
+    await page.route("https://esp32lab.goatcounter.com/**", (route) => {
+      requests.push(route.request().url());
+      return route.fulfill({ json: { count: "1,234" }, headers: { "Access-Control-Allow-Origin": "*" } });
+    });
+    await page.goto(path);
+    await expect(page.locator("#visit-count")).toHaveText("累計瀏覽 1,234 人次");
+    expect(requests).toEqual(["https://esp32lab.goatcounter.com/counter//esp32Lab/.json"]);
+  });
+
+  test(`leaves out the visit count on ${path} when it is unavailable`, async ({ page }) => {
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    await page.route("https://esp32lab.goatcounter.com/**", (route) => route.abort());
+    await page.goto(path);
+    await page.waitForLoadState("networkidle");
+    await expect(page.locator("#visit-count")).toBeHidden();
+    expect(errors).toEqual([]);
+  });
+
   test(`shows the copyright links on ${path}`, async ({ page }) => {
     await page.goto(path);
     const copyright = page.locator(".copyright");

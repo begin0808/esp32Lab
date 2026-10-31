@@ -45,6 +45,10 @@ npm run build      # 輸出到 dist/
 
 把新的 `.bin` 放進 `public/firmware/`，再更新 [src/chips.ts](src/chips.ts) 裡各晶片的網址和 SHA-256。
 
+## 瀏覽統計
+
+[src/stats.ts](src/stats.ts) 把正式網址的頁面瀏覽記錄到 GoatCounter，並在頁尾顯示編輯器頁面的累計人次。頁面會暫存含 Wi-Fi 密碼的程式碼，所以不載入第三方 JavaScript，也不送出網址參數。本機開發和測試不會計入。
+
 ## 授權
 
 `public/firmware/` 內是未經修改的 [MicroPython](https://micropython.org/) 官方韌體，以 MIT 授權發布，見同資料夾的 LICENSE 檔。
