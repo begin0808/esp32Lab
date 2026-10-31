@@ -21,7 +21,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 12px 16px;
+  padding: 8px 16px;
 }
 
 .brand h1 {
@@ -247,7 +247,7 @@ input:focus-visible,
   display: grid;
   grid-template-columns: minmax(0, var(--editor-width)) 14px minmax(0, 1fr);
   min-height: 0;
-  padding: 12px 16px;
+  padding: 2px 16px 6px;
 }
 
 .splitter {
@@ -448,7 +448,7 @@ input:focus-visible,
   align-items: center;
   justify-content: space-between;
   gap: 6px 24px;
-  padding: 8px 16px 12px;
+  padding: 4px 16px 8px;
   color: var(--page-muted);
   font-size: 11px;
 }

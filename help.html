@@ -93,7 +93,7 @@
             <thead><tr><th scope="col">開發板</th><th scope="col">USB 晶片</th><th scope="col">狀態</th><th scope="col">說明</th></tr></thead>
             <tbody>
               <tr><td>NodeMCU-32S（ESP-WROOM-32）</td><td>CP2102</td><td><span class="badge tested">已實測</span></td><td>已實測安裝韌體、上傳程式、Wi-Fi 和 MQTT。可參考<a href="./images/nodemcu-32s-pinout.png" target="_blank" rel="noopener">腳位圖</a>。</td></tr>
-              <tr><td>ESP32-S 開發板</td><td>CH340C</td><td><span class="badge expected">應可使用</span></td><td>晶片同為 ESP32，但尚未實測。腳位排列可能和上面的腳位圖不同，請對照板子上的標示。</td></tr>
+              <tr><td>ESP32-S 開發板</td><td>CH340</td><td><span class="badge tested">已實測</span></td><td>已實測安裝韌體、上傳 LED 閃爍程式和停止程式，這塊板子的 Wi-Fi 尚未實測。腳位排列可能和上面的腳位圖不同，請對照板子上的標示。</td></tr>
               <tr><td>其他 ESP32-WROOM-32 開發板</td><td>依板子而定</td><td><span class="badge expected">應可使用</span></td><td>快閃記憶體要有 4 MB 以上。尚未逐款實測。</td></tr>
               <tr><td>ESP32-S2 開發板</td><td>內建 USB 或依板子而定</td><td><span class="badge expected">待實測</span></td><td>網站已支援，但還沒接實體板子測試。</td></tr>
               <tr><td>ESP32-S3 開發板</td><td>內建 USB 或依板子而定</td><td><span class="badge expected">待實測</span></td><td>網站已支援，但還沒接實體板子測試。使用八線 PSRAM 的版本（例如型號含 R8）可能用不到 PSRAM。</td></tr>
@@ -278,6 +278,7 @@
 
       <section id="faq">
         <h2>常見問題</h2>
+        <details><summary>安裝韌體時出現 Serial data stream stopped</summary><p>這時通常還沒開始清除，板子沒有損壞，會繼續執行原本的程式。請重新整理網頁、拔掉再插回 USB 線，重新連接後再裝一次，實測的 CH340 板就是這樣裝好的。還是失敗時，改插電腦本體的 USB 孔、換一條 USB 線，或按住 IO0 鍵、按一下 EN 鍵、放開 IO0 鍵後再安裝。</p></details>
         <details><summary>晶片選錯了，上傳後板子會壞掉嗎？</summary><p>選單選錯不會影響韌體，安裝時網站會自己偵測晶片。上傳的程式也不會改動韌體，但腳位可能不對。ESP32 選成 S2、S3 或 C3 時，範例可能用到 GPIO 6–11，板子可能當機或一直重新啟動。這種情況只要重新選對晶片和範例後上傳；上傳不了時，請按住 IO0 鍵重新安裝韌體。真正可能損壞板子的是接線，例如把 5V 接到 GPIO、電源短路，或腳位輸出時直接接到電源或 GND。</p></details>
         <details><summary>可以用 ESP32-CAM 拍照嗎？</summary><p>目前不行。MicroPython 官方韌體沒有相機模組，要改用第三方編譯的韌體才能拍照，網站沒有內建。</p></details>
         <details><summary>ESP32-S2、S3、C3 安裝韌體時連不上，或裝完沒有反應</summary><p>USB 直接接晶片的板子，重新啟動時序列埠會暫時消失。連不上時，請按住 BOOT 鍵、按一下 RST 鍵、放開 BOOT 鍵，再重新按「連接開發板」並安裝。裝完後按一下 RST 鍵，等 2 秒再連接。板子有兩個 USB 孔時，可以改接標示 UART 或 COM 的那一個。</p></details>
