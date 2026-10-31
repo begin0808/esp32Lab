@@ -101,6 +101,16 @@ export const GEMINI_PROMPT = `請用 MicroPython 幫我寫 ESP32 程式，不要
 我想做的功能：
 （請在這裡描述你想做的功能）`;
 
+const WIFI_PLACEHOLDER = "YOUR_WIFI_SETTING";
+
+/** Prompts leave the student's computer, so Wi-Fi names and passwords must not go with them. */
+export function hideWifiSettings(code: string): string {
+  const quoted = `"[^"\\n]*"|'[^'\\n]*'`;
+  return code
+    .replace(new RegExp(`(\\w*(?:ssid|pass(?:word|wd|phrase)?|pwd|psk)\\w*(?:\\[\\s*\\])?\\s*=\\s*)(?:${quoted})`, "gi"), `$1"${WIFI_PLACEHOLDER}"`)
+    .replace(new RegExp(`(\\.(?:connect|begin)\\(\\s*)(?:${quoted})(\\s*,\\s*)(?:${quoted})`, "g"), `$1"${WIFI_PLACEHOLDER}"$2"${WIFI_PLACEHOLDER}"`);
+}
+
 export function arduinoConvertPrompt(code: string): string {
   return `請把下面的 Arduino C++ 程式改寫成 ESP32 用的 MicroPython（v1.29.0），功能和腳位都要保持一樣。
 
@@ -111,7 +121,7 @@ export function arduinoConvertPrompt(code: string): string {
 - 註解用繁體中文
 
 程式碼：
-${code}`;
+${hideWifiSettings(code)}`;
 }
 
 export function fixErrorPrompt(code: string, traceback: string): string {
@@ -121,5 +131,5 @@ export function fixErrorPrompt(code: string, traceback: string): string {
 ${traceback}
 
 程式碼：
-${code}`;
+${hideWifiSettings(code)}`;
 }

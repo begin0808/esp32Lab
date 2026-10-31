@@ -1,12 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { isFlashTooSmall, verifySha256 } from "../../src/flasher";
 import {
+  arduinoConvertPrompt,
   brokerUrl,
   commandTopic,
   DEFAULT_BROKER,
   fillExample,
   findDeviceIp,
   findLastTraceback,
+  fixErrorPrompt,
+  hideWifiSettings,
   isValidBroker,
   isValidChannel,
   looksLikeArduino,
@@ -14,6 +17,35 @@ import {
   randomChannel,
   stripTerminalCodes,
 } from "../../src/text";
+
+describe("hideWifiSettings", () => {
+  it("hides MicroPython settings but keeps the rest of the code", () => {
+    const code = 'SSID = "home"\nPASSWORD = "s3cret"\nLED_PIN = 12\nprint("hi")\n';
+    const hidden = hideWifiSettings(code);
+    expect(hidden).not.toContain("home");
+    expect(hidden).not.toContain("s3cret");
+    expect(hidden).toContain("LED_PIN = 12");
+    expect(hidden).toContain('print("hi")');
+  });
+
+  it("hides Arduino settings and values passed directly", () => {
+    const code = 'const char* ssid = "home";\nconst char* password = "s3cret";\nchar wifi_pass[] = "abc";\nWiFi.begin("home2", "pw2");\nwlan.connect("home3", \'pw3\')\n';
+    const hidden = hideWifiSettings(code);
+    for (const secret of ["home", "s3cret", "abc", "pw2", "pw3"]) expect(hidden).not.toContain(secret);
+    expect(hidden).toContain("WiFi.begin(");
+  });
+
+  it("is used by the prompts sent to Gemini", () => {
+    const code = 'PASSWORD = "s3cret"\n';
+    expect(fixErrorPrompt(code, "NameError")).not.toContain("s3cret");
+    expect(arduinoConvertPrompt(code)).not.toContain("s3cret");
+  });
+
+  it("leaves unrelated code alone", () => {
+    const code = 'client.connect()\nmode = "off"\nsock.connect(addr)\n';
+    expect(hideWifiSettings(code)).toBe(code);
+  });
+});
 
 describe("parseVoiceCommand", () => {
   it("understands spoken commands", () => {

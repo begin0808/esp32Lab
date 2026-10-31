@@ -367,9 +367,30 @@ input:focus-visible,
 }
 
 .footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 24px;
   padding: 8px 16px 12px;
   color: var(--muted);
   font-size: 13px;
+}
+
+.copyright,
+.contact-link {
+  display: inline-flex;
+  align-items: center;
+}
+
+.copyright {
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-left: auto;
+}
+
+.contact-link {
+  gap: 4px;
 }
 
 @media (max-width: 900px), (max-height: 640px) {

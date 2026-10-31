@@ -308,6 +308,21 @@ test("MQTT example gets its own channel when loaded", async ({ page }) => {
   expect(code).toContain("/voice.html");
 });
 
+for (const path of ["/", "/voice.html"]) {
+  test(`shows the copyright links on ${path}`, async ({ page }) => {
+    await page.goto(path);
+    const copyright = page.locator(".copyright");
+    await expect(copyright).toContainText("© 2026 Studio0808 智造實驗室. All rights reserved.");
+    await expect(copyright.getByRole("link", { name: "Studio0808 智造實驗室" })).toHaveAttribute("href", "https://begin0808.github.io/studio0808/");
+    await expect(copyright.getByRole("link", { name: "寫信給我" })).toHaveAttribute(
+      "href",
+      "https://mail.google.com/mail/?view=cm&fs=1&to=begin0808@gmail.com",
+    );
+    await expect(copyright.getByRole("link", { name: "Facebook" })).toHaveAttribute("href", "https://www.facebook.com/begin.li.1/");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+  });
+}
+
 test("opens the pinout image and driver page in new tabs", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("#driver-link")).toHaveAttribute("href", "https://www.silabs.com/software-and-tools/usb-to-uart-bridge-vcp-drivers?tab=downloads");

@@ -185,3 +185,19 @@ input:focus-visible {
   color: var(--muted);
   font-size: 15px;
 }
+
+.copyright,
+.contact-link {
+  display: inline-flex;
+  align-items: center;
+}
+
+.copyright {
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-top: 14px;
+}
+
+.contact-link {
+  gap: 4px;
+}
