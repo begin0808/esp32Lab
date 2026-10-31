@@ -59,7 +59,7 @@ export async function installFirmware(port: SerialPort, callbacks: FlashCallback
     // Refuse before erasing anything: a board without a matching firmware must stay untouched.
     const chip = chipFromName(loader.chip.CHIP_NAME);
     if (!chip) {
-      throw new Error(`這塊板子是 ${loader.chip.CHIP_NAME}，目前只支援經典 ESP32、ESP32-S2、S3 和 C3`);
+      throw new Error(`這塊板子是 ${loader.chip.CHIP_NAME}，目前只支援 ESP32、ESP32-S2、S3 和 C3`);
     }
     const flashSize = await loader.detectFlashSize();
     if (isFlashTooSmall(flashSize)) {

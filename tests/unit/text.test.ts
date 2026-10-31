@@ -19,6 +19,12 @@ import {
 } from "../../src/text";
 
 describe("hideWifiSettings", () => {
+  it("hides a Telegram bot token", () => {
+    const hidden = hideWifiSettings('BOT_TOKEN = "123456:ABC-secret"\nCHAT_ID = "777"\n');
+    expect(hidden).not.toContain("ABC-secret");
+    expect(hidden).toContain('CHAT_ID = "777"');
+  });
+
   it("hides MicroPython settings but keeps the rest of the code", () => {
     const code = 'SSID = "home"\nPASSWORD = "s3cret"\nLED_PIN = 12\nprint("hi")\n';
     const hidden = hideWifiSettings(code);

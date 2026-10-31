@@ -56,7 +56,7 @@
         <p class="tip"><strong>這個網站使用 MicroPython，不能直接執行 Arduino C++ 程式。</strong>貼上 Arduino 程式時，畫面會出現提示，可以複製提示詞請 Gemini 改寫。</p>
 
         <h3>內建範例</h3>
-        <p>下表是經典 ESP32 的預設接線。在編輯器的「晶片」選單選擇 S2、S3 或 C3 後再選範例，程式和開頭的接線說明會自動換成該晶片適用的腳位。連接開發板時，網站也會自動切換晶片選單。</p>
+        <p>下表是 ESP32（包含 ESP32-S、ESP-WROOM-32 模組）的預設接線。在編輯器的「晶片」選單選擇 S2、S3 或 C3 後再選範例，程式和開頭的接線說明會自動換成該晶片適用的腳位。連接開發板時，網站也會自動切換晶片選單。</p>
         <div class="table-wrap">
           <table>
             <thead><tr><th scope="col">範例</th><th scope="col">功能</th><th scope="col">預設接線</th><th scope="col">需要 Wi-Fi</th></tr></thead>
@@ -79,6 +79,7 @@
               <tr><td>手機控制 LED（同一個 Wi-Fi）</td><td>手機網頁按鈕或文字指令控制 LED</td><td>外接 LED 接 GPIO 18</td><td>手機和板子要同一個 Wi-Fi</td></tr>
               <tr><td>語音控制 LED（MQTT）</td><td>用語音控制頁說「開燈」、「關燈」、「閃爍」</td><td>外接 LED 接 GPIO 18</td><td>板子和手機都要能上網</td></tr>
               <tr><td>DHT11 溫濕度警報</td><td>手機網頁每 2 秒更新，濕度超過 50% 發出警報</td><td>DHT11 DATA 接 GPIO 4</td><td>手機和板子要同一個 Wi-Fi</td></tr>
+              <tr><td>Telegram 機器人控制 LED</td><td>傳 /on、/off、/status 控制 LED，按按鈕時通知手機</td><td>LED GPIO 18、按鈕 GPIO 19</td><td>板子要能上網</td></tr>
             </tbody>
           </table>
         </div>
@@ -86,17 +87,18 @@
 
       <section id="boards">
         <h2>支援的開發板</h2>
-        <p>網站內建 MicroPython v1.29.0 的<strong>經典 ESP32、ESP32-S2、S3 和 C3</strong> 韌體，安裝時會自動偵測晶片並選擇對應版本。快閃記憶體至少要 4 MB。其他晶片或容量不足時，網站會在清除資料前停止安裝。</p>
+        <p>網站內建 MicroPython v1.29.0 的 <strong>ESP32、ESP32-S2、S3 和 C3</strong> 韌體，安裝時會自動偵測晶片並選擇對應版本。ESP32-S、ESP-WROOM-32 模組裡的晶片是 ESP32，和 ESP32-S2、S3 是不同的晶片。快閃記憶體至少要 4 MB。其他晶片或容量不足時，網站會在清除資料前停止安裝。</p>
         <div class="table-wrap">
           <table>
             <thead><tr><th scope="col">開發板</th><th scope="col">USB 晶片</th><th scope="col">狀態</th><th scope="col">說明</th></tr></thead>
             <tbody>
               <tr><td>NodeMCU-32S（ESP-WROOM-32）</td><td>CP2102</td><td><span class="badge tested">已實測</span></td><td>已實測安裝韌體、上傳程式、Wi-Fi 和 MQTT。可參考<a href="./images/nodemcu-32s-pinout.png" target="_blank" rel="noopener">腳位圖</a>。</td></tr>
-              <tr><td>ESP32-S 開發板</td><td>CH340C</td><td><span class="badge expected">應可使用</span></td><td>同為經典 ESP32，但尚未實測。腳位排列可能和上面的腳位圖不同，請對照板子上的標示。</td></tr>
+              <tr><td>ESP32-S 開發板</td><td>CH340C</td><td><span class="badge expected">應可使用</span></td><td>晶片同為 ESP32，但尚未實測。腳位排列可能和上面的腳位圖不同，請對照板子上的標示。</td></tr>
               <tr><td>其他 ESP32-WROOM-32 開發板</td><td>依板子而定</td><td><span class="badge expected">應可使用</span></td><td>快閃記憶體要有 4 MB 以上。尚未逐款實測。</td></tr>
               <tr><td>ESP32-S2 開發板</td><td>內建 USB 或依板子而定</td><td><span class="badge expected">待實測</span></td><td>網站已支援，但還沒接實體板子測試。</td></tr>
               <tr><td>ESP32-S3 開發板</td><td>內建 USB 或依板子而定</td><td><span class="badge expected">待實測</span></td><td>網站已支援，但還沒接實體板子測試。使用八線 PSRAM 的版本（例如型號含 R8）可能用不到 PSRAM。</td></tr>
               <tr><td>ESP32-C3 開發板</td><td>內建 USB 或依板子而定</td><td><span class="badge expected">待實測</span></td><td>網站已支援，但還沒接實體板子測試。MicroPython 官方說明此韌體適用晶片版本 3 以上，安裝時監控窗會顯示版本。</td></tr>
+              <tr><td>ESP32-CAM</td><td>板子本身沒有 USB，要接底板或 USB 轉序列埠模組</td><td><span class="badge expected">相機不能用</span></td><td>晶片是 ESP32，韌體應可安裝，但尚未實測。內建韌體<strong>沒有相機功能，也用不到板上的 PSRAM</strong>，只能當一般 ESP32 使用。多數範例使用的腳位沒有引出，要自行改腳位。</td></tr>
               <tr><td>ESP32-C6、H2、C2、C5、P4 等</td><td>依板子而定</td><td><span class="badge no">不支援</span></td><td>網站沒有內建這些晶片的韌體，安裝時會自動停止，不會清除板子。</td></tr>
               <tr><td>ESP8266、Arduino UNO 等</td><td>依板子而定</td><td><span class="badge no">不支援</span></td><td>不是 ESP32，網站無法安裝韌體。</td></tr>
             </tbody>
@@ -174,7 +176,7 @@
 
       <section id="wiring">
         <h2>接線注意事項</h2>
-        <p>下面的腳位表適用於<strong>經典 ESP32</strong>，其他晶片請看本章最後的表格。</p>
+        <p>下面的腳位表適用於 <strong>ESP32（包含 ESP32-S、ESP-WROOM-32 模組）</strong>，其他晶片請看本章最後的表格。</p>
         <p class="tip warn"><strong>接線或改線前，請先拔掉 USB 線。</strong>接錯電壓或短路可能會燒毀開發板。</p>
         <ul>
           <li><strong>GPIO 只能接受 3.3V：</strong>不要把 5V 訊號直接接到 GPIO。</li>
@@ -196,7 +198,7 @@
         </div>
 
         <h3>ESP32-S2、S3、C3 的腳位</h3>
-        <p>這些晶片的腳位編號和經典 ESP32 不同，<strong>上面的腳位圖不適用</strong>，請對照你的板子標示。下表是選範例時預設使用的腳位。</p>
+        <p>這些晶片的腳位編號和 ESP32 不同，<strong>上面的腳位圖不適用</strong>，請對照你的板子標示。下表是選範例時預設使用的腳位。</p>
         <div class="table-wrap">
           <table>
             <thead><tr><th scope="col">用途</th><th scope="col">S2、S3</th><th scope="col">C3</th></tr></thead>
@@ -217,7 +219,7 @@
 
       <section id="voice">
         <h2>手機與語音控制</h2>
-        <p>網站有兩種手機控制方式：</p>
+        <p>網站有兩種手機網頁控制方式，也可以用本章最後的 Telegram 機器人控制：</p>
         <div class="table-wrap">
           <table>
             <thead><tr><th scope="col"></th><th scope="col">開發板上的網頁</th><th scope="col">語音控制頁（MQTT）</th></tr></thead>
@@ -238,6 +240,16 @@
           <li>按語音按鈕，允許使用麥克風，然後說「開燈」、「關燈」或「閃爍」。</li>
         </ol>
         <p>語音不能用時，可以按開燈、關燈按鈕，或在文字指令欄用手機鍵盤的麥克風輸入。Windows 電腦也可以按 <kbd>Win</kbd> + <kbd>H</kbd> 語音輸入。</p>
+
+        <h3 id="telegram">Telegram 機器人</h3>
+        <ol>
+          <li>在 Telegram 搜尋 <strong>@BotFather</strong>，傳 <code>/newbot</code>，依指示取名後會拿到 <strong>Bot Token</strong>。</li>
+          <li>範例選「Telegram 機器人控制 LED」，填入 Wi-Fi 名稱、密碼和 <code>BOT_TOKEN</code>，按「上傳並執行」。</li>
+          <li>傳任一則訊息給你的機器人，監控窗會顯示 <strong>CHAT_ID</strong>。把號碼填進程式，再上傳一次。</li>
+          <li>傳 <code>/on</code>、<code>/off</code> 或 <code>/status</code> 控制 LED；按下按鈕時，手機會收到通知。</li>
+        </ol>
+        <p>板子約每 2 秒查一次新訊息，反應會有幾秒延遲。只有 <code>CHAT_ID</code> 指定的聊天室能控制板子，開機前累積的舊指令不會執行。校園網路封鎖 Telegram 時，板子會連不上，可以改用手機熱點。</p>
+
         <p class="tip warn"><strong>Wi-Fi 只支援 2.4GHz。</strong>ESP32 連不上 5GHz 網路。</p>
       </section>
 
@@ -246,17 +258,18 @@
         <ul>
           <li><strong>程式碼：</strong>網站不會把程式碼上傳到伺服器。程式碼只存在這個瀏覽器和你的開發板上。GitHub 只提供網站檔案，可能記錄 IP 這類連線資訊，但收不到你的程式碼。</li>
           <li><strong>Wi-Fi 密碼：</strong>密碼寫在程式裡，所以會以明文存在瀏覽器和開發板的 <code>main.py</code>。使用共用電腦或借出開發板前，請先刪除密碼，做法見下方「共用電腦與開發板」。</li>
-          <li><strong>貼給 Gemini 前：</strong>「複製給 Gemini」和「改寫成 MicroPython」會自動隱藏常見的 Wi-Fi 寫法，但不保證全部偵測得到。自己全選複製程式時不會隱藏，請先刪除密碼。</li>
+          <li><strong>貼給 Gemini 前：</strong>「複製給 Gemini」和「改寫成 MicroPython」會自動隱藏常見的 Wi-Fi 和 Token 寫法，但不保證全部偵測得到。自己全選複製程式時不會隱藏，請先刪除密碼。</li>
           <li><strong>截圖和投影：</strong>編輯器會顯示密碼，投影或分享畫面前請先遮住。上課建議使用專用 Wi-Fi 或手機熱點。</li>
           <li><strong>語音控制：</strong>指令會經過公用 MQTT 伺服器，沒有加密保護和權限控管，知道通道名稱的人都能控制。只適合 LED 這類低風險實驗，不要控制插座或門鎖，也不要在通道名稱填入個人資料。</li>
           <li><strong>語音辨識：</strong>語音由瀏覽器和其語音服務辨識，通常需要連網。</li>
+          <li><strong>Telegram Bot Token：</strong>Token 等於機器人的密碼，拿到的人可以冒用機器人，不要投影或分享。不小心外洩時，請到 @BotFather 傳 <code>/revoke</code> 換一組。範例不驗證伺服器憑證，不要用來控制重要設備。</li>
         </ul>
 
         <h3 id="shared-computer">共用電腦與開發板</h3>
         <p class="tip warn"><strong>關閉網頁不會清除程式碼。</strong>程式碼和裡面的 Wi-Fi 密碼會留在瀏覽器，下一個用同一台電腦、同一個瀏覽器帳號的人打開網站就看得到。</p>
         <p>離開電腦或交還開發板前，請照下面做：</p>
         <ol>
-          <li><strong>想留下程式：</strong>先刪除程式裡的 Wi-Fi 名稱和密碼，再按「下載 main.py」。下載的檔案不會自動隱藏密碼。</li>
+          <li><strong>想留下程式：</strong>先刪除程式裡的 Wi-Fi 名稱、密碼和 Bot Token，再按「下載 main.py」。下載的檔案不會自動隱藏這些資料。</li>
           <li><strong>清除瀏覽器：</strong>刪除編輯器裡的全部內容。編輯器會自動儲存，所以舊內容會一起被取代。</li>
           <li><strong>清除開發板：</strong>上傳不含密碼的程式，會覆蓋板子上的 <code>main.py</code>；要清除板子上所有檔案，請重新安裝韌體。</li>
         </ol>
@@ -265,12 +278,14 @@
 
       <section id="faq">
         <h2>常見問題</h2>
+        <details><summary>晶片選錯了，上傳後板子會壞掉嗎？</summary><p>選單選錯不會影響韌體，安裝時網站會自己偵測晶片。上傳的程式也不會改動韌體，但腳位可能不對。ESP32 選成 S2、S3 或 C3 時，範例可能用到 GPIO 6–11，板子可能當機或一直重新啟動。這種情況只要重新選對晶片和範例後上傳；上傳不了時，請按住 IO0 鍵重新安裝韌體。真正可能損壞板子的是接線，例如把 5V 接到 GPIO、電源短路，或腳位輸出時直接接到電源或 GND。</p></details>
+        <details><summary>可以用 ESP32-CAM 拍照嗎？</summary><p>目前不行。MicroPython 官方韌體沒有相機模組，要改用第三方編譯的韌體才能拍照，網站沒有內建。</p></details>
         <details><summary>ESP32-S2、S3、C3 安裝韌體時連不上，或裝完沒有反應</summary><p>USB 直接接晶片的板子，重新啟動時序列埠會暫時消失。連不上時，請按住 BOOT 鍵、按一下 RST 鍵、放開 BOOT 鍵，再重新按「連接開發板」並安裝。裝完後按一下 RST 鍵，等 2 秒再連接。板子有兩個 USB 孔時，可以改接標示 UART 或 COM 的那一個。</p></details>
         <details><summary>按「連接開發板」後，清單裡沒有序列埠</summary><p>先換一條確定能傳輸資料的 USB 線，有些線只能充電。接著確認已安裝對應的驅動程式，並重新插拔開發板。</p></details>
         <details><summary>連接失敗，或顯示序列埠被佔用</summary><p>關閉 Arduino IDE 和其他分頁裡的本網站，一次只能有一個程式使用序列埠。</p></details>
         <details><summary>顯示「沒有偵測到 MicroPython」</summary><p>第一次使用，或燒錄過 Arduino 程式時都會這樣。按「安裝韌體」即可，不用另外下載韌體。</p></details>
         <details><summary>安裝韌體時一直連不上</summary><p>按住板子上的 IO0（BOOT）鍵再重試，開始寫入後就可以放開。</p></details>
-        <details><summary>顯示「這塊板子是 ESP32-xx，目前只支援經典 ESP32」</summary><p>這塊板子的晶片不在支援範圍內，內建韌體不能用。請改用經典 ESP32 開發板。</p></details>
+        <details><summary>顯示「這塊板子是 ESP32-xx，目前只支援 ESP32、ESP32-S2、S3 和 C3」</summary><p>這塊板子的晶片不在支援範圍內，內建韌體不能用。請改用這四種晶片的開發板。</p></details>
         <details><summary>監控窗出現紅色的「程式發生錯誤」</summary><p>按「複製給 Gemini」，把錯誤訊息和程式碼一起貼給 Gemini 修正，再把新程式貼回來上傳。</p></details>
         <details><summary>顯示 Wi-Fi 連線失敗</summary><p>確認名稱和密碼完全正確（包含大小寫），並確認是 2.4GHz 網路。</p></details>
         <details><summary>手機打不開 192.168.x.x 的網頁</summary><p>確認手機和開發板連同一個 Wi-Fi，也關閉手機的行動數據試試。校園網路可能禁止裝置互連，可以改用手機熱點，或語音控制頁（MQTT）。</p></details>

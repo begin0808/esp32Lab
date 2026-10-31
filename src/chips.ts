@@ -28,14 +28,14 @@ export const CHIPS: Record<ChipId, Chip> = {
   esp32: {
     id: "esp32",
     name: "ESP32",
-    label: "經典 ESP32",
+    label: "ESP32 / ESP32-S",
     firmware: {
       url: "./firmware/ESP32_GENERIC-20260824-v1.29.0.bin",
       sha256: "e67ad6015a0a504c1fec9aa9bbf589d0432ed28e62546f4f8dd8a147f8bd95f6",
       address: 0x1000,
     },
     pins: null,
-    promptLines: `- 開發板：NodeMCU ESP-32S（經典 ESP32，MicroPython v1.29.0）
+    promptLines: `- 開發板：NodeMCU ESP-32S（ESP32，MicroPython v1.29.0）
 - 板載 LED：GPIO 2`,
   },
   esp32s2: {

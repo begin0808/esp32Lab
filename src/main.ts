@@ -22,6 +22,7 @@ import blink from "./examples/blink.py?raw";
 import webLed from "./examples/web_led.py?raw";
 import mqttLed from "./examples/mqtt_led.py?raw";
 import dht11Alarm from "./examples/dht11_alarm.py?raw";
+import telegramLed from "./examples/telegram_led.py?raw";
 import buttonLed from "./examples/button_led.py?raw";
 import breathingLed from "./examples/breathing_led.py?raw";
 import knobLed from "./examples/knob_led.py?raw";
@@ -74,6 +75,7 @@ const EXAMPLE_GROUPS = [
       { name: "手機控制 LED（同一個 Wi-Fi）", code: webLed },
       { name: "語音控制 LED（MQTT）", code: mqttLed },
       { name: "DHT11 溫濕度警報", code: dht11Alarm },
+      { name: "Telegram 機器人控制 LED", code: telegramLed },
     ],
   },
 ];

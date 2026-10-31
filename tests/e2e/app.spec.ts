@@ -502,7 +502,7 @@ for (const id of STYLE_IDS) {
 test("offers every example, grouped, and loads the wiring notes into the editor", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("#examples optgroup")).toHaveCount(4);
-  await expect(page.locator("#examples optgroup option")).toHaveCount(18);
+  await expect(page.locator("#examples optgroup option")).toHaveCount(19);
   page.on("dialog", (dialog) => dialog.accept());
   await page.locator("#examples").selectOption({ label: "SSD1306 OLED 顯示器" });
   await expect(page.locator("#editor .cm-content")).toContainText("class SSD1306");
