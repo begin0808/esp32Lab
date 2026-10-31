@@ -12,7 +12,7 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  font-size: 15px;
+  font-size: 13px;
 }
 
 .topbar {
@@ -28,14 +28,14 @@ body {
   margin: 0;
   color: var(--page-title);
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 900;
 }
 
 .status {
   margin: 2px 0 0;
   color: var(--page-muted);
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .status::before {
@@ -84,6 +84,77 @@ body {
   text-align: center;
 }
 
+/* The browser hides a closed popover, so a display value may only apply while it is open. */
+.settings-panel:popover-open {
+  display: grid;
+  gap: 16px;
+}
+
+.settings-panel {
+  position: fixed;
+  inset: 72px 16px auto auto;
+  width: min(380px, calc(100vw - 32px));
+  max-height: calc(100vh - 88px);
+  margin: 0;
+  padding: 16px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--panel-radius);
+  background: var(--surface);
+  box-shadow: 0 8px 28px rgb(0 0 0 / 35%);
+  color: var(--text);
+}
+
+.settings-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.settings-panel h2,
+.settings-panel h3,
+.settings-panel p {
+  margin: 0;
+}
+
+.settings-panel h2 {
+  font-family: var(--font-display);
+  font-size: 16px;
+}
+
+.settings-panel h3 {
+  font-family: var(--font-display);
+  font-size: 13px;
+}
+
+.settings-panel p {
+  font-size: 12px;
+}
+
+.settings-group {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.settings-panel .style-picker {
+  color: var(--text);
+}
+
+/* White buttons on the white panel would otherwise lose their edges in the cutting mat style. */
+:root[data-style="mat"] .settings-panel .btn {
+  box-shadow: var(--btn-shadow), 0 0 0 1px var(--border);
+}
+
+.settings-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .btn {
   padding: 8px 14px;
   border: var(--btn-border);
@@ -128,7 +199,7 @@ input:focus-visible,
 
 .btn.small {
   padding: 5px 10px;
-  font-size: 13px;
+  font-size: 11px;
 }
 
 .banner {
@@ -293,12 +364,12 @@ input:focus-visible,
 .ip-label {
   display: block;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 11px;
 }
 
 .ip-value {
   color: var(--success);
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
 }
 
@@ -358,7 +429,7 @@ input:focus-visible,
 
 .dialog h2 {
   margin-top: 0;
-  font-size: 18px;
+  font-size: 16px;
 }
 
 .dialog ul {
@@ -379,7 +450,7 @@ input:focus-visible,
   gap: 6px 24px;
   padding: 8px 16px 12px;
   color: var(--page-muted);
-  font-size: 13px;
+  font-size: 11px;
 }
 
 .footer a {

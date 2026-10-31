@@ -15,6 +15,11 @@ async function mockSerial(page: Page, options: object = {}) {
   }, options);
 }
 
+/** Style, font size and links live in a collapsed panel. Safe to call when it is already open. */
+async function openSettings(page: Page) {
+  if (!(await page.locator("#settings-panel").isVisible())) await page.locator("#settings-button").click();
+}
+
 test("uploads code and shows the device IP", async ({ page }) => {
   await mockSerial(page);
   await page.goto("/");
@@ -94,19 +99,21 @@ test("changes the code font size and remembers it", async ({ page }) => {
   await page.goto("/");
   const fontSize = (selector: string) => page.locator(selector).evaluate((node) => getComputedStyle(node).fontSize);
 
-  await expect(page.locator("#font-value")).toHaveText("16");
+  await expect(page.locator("#font-value")).toHaveText("14");
+  await openSettings(page);
   await page.locator("#font-up").click();
   await page.locator("#font-up").click();
-  await expect(page.locator("#font-value")).toHaveText("20");
-  expect(await fontSize(".cm-scroller")).toBe("20px");
-  expect(await fontSize("#monitor")).toBe("20px");
-  expect(await fontSize("#repl-input")).toBe("20px");
+  await expect(page.locator("#font-value")).toHaveText("18");
+  expect(await fontSize(".cm-scroller")).toBe("18px");
+  expect(await fontSize("#monitor")).toBe("18px");
+  expect(await fontSize("#repl-input")).toBe("18px");
 
   await page.reload();
-  await expect(page.locator("#font-value")).toHaveText("20");
-  expect(await fontSize(".cm-scroller")).toBe("20px");
+  await expect(page.locator("#font-value")).toHaveText("18");
+  expect(await fontSize(".cm-scroller")).toBe("18px");
 
-  for (let i = 0; i < 6; i++) await page.locator("#font-up").click();
+  await openSettings(page);
+  for (let i = 0; i < 7; i++) await page.locator("#font-up").click();
   await expect(page.locator("#font-value")).toHaveText("32");
   await expect(page.locator("#font-up")).toBeDisabled();
 });
@@ -343,6 +350,7 @@ test("switches style across pages without touching the code", async ({ page }) =
   await expect(page.locator("html")).toHaveAttribute("data-style", "mat");
   await page.locator("#editor .cm-content").fill('print("保留")\n');
 
+  await openSettings(page);
   for (const id of STYLE_IDS) {
     await page.locator("#style-picker").selectOption(id);
     await expect(page.locator("html")).toHaveAttribute("data-style", id);
@@ -375,6 +383,7 @@ test("downloads a style's font only when that style is chosen", async ({ page })
   await page.waitForTimeout(300);
   expect(fonts).toEqual([]);
 
+  await openSettings(page);
   await page.locator("#style-picker").selectOption("blocks");
   await expect.poll(() => fonts.some((url) => url.includes("huninn"))).toBe(true);
 });
@@ -445,6 +454,7 @@ for (const [path, icon] of [
 
 test("help page opens in a new tab and follows the chosen style", async ({ page, context }) => {
   await page.goto("/");
+  await openSettings(page);
   await page.locator("#style-picker").selectOption("blocks");
 
   const [help] = await Promise.all([context.waitForEvent("page"), page.locator("#help-link").click()]);
@@ -454,6 +464,7 @@ test("help page opens in a new tab and follows the chosen style", async ({ page,
   await expect(help.locator("#style-picker")).toHaveValue("blocks");
 
   // Changing the style in the editor also updates the help page that is already open.
+  await openSettings(page);
   await page.locator("#style-picker").selectOption("mat");
   await expect(help.locator("html")).toHaveAttribute("data-style", "mat");
   await expect(help.locator("#style-picker")).toHaveValue("mat");
@@ -547,10 +558,56 @@ test("keeps DTR low on a board with a USB-to-serial chip", async ({ page }) => {
   await expect(page.locator("#chip")).toHaveValue("esp32");
 });
 
-test("opens the pinout image and driver page in new tabs", async ({ page }) => {
+test("keeps settings and links in a panel that closes", async ({ page }) => {
+  await page.goto("/");
+  const panel = page.locator("#settings-panel");
+  await expect(panel).toBeHidden();
+  await expect(page.locator(".actions > *")).toHaveText(["連接開發板", "安裝韌體", "上傳並執行", "停止", "設定與說明"]);
+
+  await page.locator("#settings-button").click();
+  await expect(panel).toBeVisible();
+  // Changes apply right away and leave the panel open.
+  await page.locator("#font-up").click();
+  await expect(page.locator("#font-value")).toHaveText("16");
+  await page.locator("#style-picker").selectOption("blocks");
+  await expect(page.locator("html")).toHaveAttribute("data-style", "blocks");
+  await expect(panel).toBeVisible();
+
+  await page.locator("#settings-close").click();
+  await expect(panel).toBeHidden();
+
+  await page.locator("#settings-button").click();
+  await page.keyboard.press("Escape");
+  await expect(panel).toBeHidden();
+
+  await page.locator("#settings-button").click();
+  await page.mouse.click(40, 400);
+  await expect(panel).toBeHidden();
+});
+
+for (const [width, height] of [[1366, 768], [760, 700], [390, 700], [1366, 400]]) {
+  test(`settings panel fits a ${width}x${height} window`, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    await page.goto("/");
+    await page.locator("#settings-button").click();
+    const box = (await page.locator("#settings-panel").boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(width);
+    expect(box.y + box.height).toBeLessThanOrEqual(height);
+    await page.locator("#ch340-link").scrollIntoViewIfNeeded();
+    await expect(page.locator("#ch340-link")).toBeInViewport();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+  });
+}
+
+test("opens the pinout image and driver pages in new tabs", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("#driver-link")).toHaveAttribute("href", "https://www.silabs.com/software-and-tools/usb-to-uart-bridge-vcp-drivers?tab=downloads");
   await expect(page.locator("#driver-link")).toHaveAttribute("target", "_blank");
+  await expect(page.locator("#ch340-link")).toHaveAttribute("href", "https://www.wch-ic.com/downloads/CH341SER_EXE.html");
+  await expect(page.locator("#ch340-link")).toHaveAttribute("target", "_blank");
+
+  await openSettings(page);
 
   const [tab] = await Promise.all([page.waitForEvent("popup"), page.locator("#pinout-link").click()]);
   const size = await tab.evaluate(async () => {

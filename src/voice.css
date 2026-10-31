@@ -5,7 +5,7 @@
 body {
   margin: 0;
   padding: 16px;
-  font-size: 18px;
+  font-size: 16px;
   line-height: 1.5;
 }
 
@@ -26,7 +26,7 @@ body {
 h1 {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 26px;
+  font-size: 24px;
 }
 
 .page-top {
@@ -39,7 +39,7 @@ h1 {
 
 .page .style-picker {
   color: var(--text);
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .row label {
@@ -90,7 +90,7 @@ input:focus-visible {
 
 .big {
   padding: 22px 18px;
-  font-size: 24px;
+  font-size: 22px;
   text-wrap: balance;
 }
 
@@ -151,7 +151,7 @@ input:focus-visible {
   min-height: 1.5em;
   margin: 0;
   color: var(--accent-text);
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 700;
 }
 
@@ -180,17 +180,17 @@ input:focus-visible {
 .hint {
   margin: 10px 0;
   color: var(--muted);
-  font-size: 15px;
+  font-size: 13px;
 }
 
 .footer {
   color: var(--muted);
-  font-size: 15px;
+  font-size: 13px;
 }
 
 .help-line {
   margin: 0 0 8px;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
 }
 

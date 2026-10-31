@@ -27,6 +27,21 @@
         </div>
       </div>
       <div class="actions">
+        <button id="connect" class="btn">連接開發板</button>
+        <button id="install" class="btn" disabled>安裝韌體</button>
+        <button id="upload" class="btn primary" disabled>上傳並執行</button>
+        <button id="stop" class="btn" disabled>停止</button>
+        <button id="settings-button" class="btn" popovertarget="settings-panel">設定與說明</button>
+      </div>
+    </header>
+
+    <div id="settings-panel" class="settings-panel" popover aria-label="設定與說明">
+      <div class="settings-head">
+        <h2>設定與說明</h2>
+        <button id="settings-close" class="btn small" popovertarget="settings-panel" popovertargetaction="hide">關閉</button>
+      </div>
+      <section class="settings-group">
+        <h3>顯示</h3>
         <label class="style-picker">
           風格
           <select id="style-picker"></select>
@@ -37,16 +52,24 @@
           <output id="font-value" aria-live="polite"></output>
           <button id="font-up" class="btn" aria-label="放大字體">A+</button>
         </div>
-        <a id="help-link" class="btn" href="./help.html" target="_blank" rel="noopener">使用說明</a>
-        <a id="voice-link" class="btn" href="./voice.html" target="_blank" rel="noopener">語音控制頁</a>
-        <a id="pinout-link" class="btn" href="./images/nodemcu-32s-pinout.png" target="_blank" rel="noopener">腳位圖</a>
-        <a id="driver-link" class="btn" href="https://www.silabs.com/software-and-tools/usb-to-uart-bridge-vcp-drivers?tab=downloads" target="_blank" rel="noopener">CP210x 驅動程式</a>
-        <button id="connect" class="btn">連接開發板</button>
-        <button id="install" class="btn" disabled>安裝韌體</button>
-        <button id="upload" class="btn primary" disabled>上傳並執行</button>
-        <button id="stop" class="btn" disabled>停止</button>
-      </div>
-    </header>
+      </section>
+      <section class="settings-group">
+        <h3>說明與工具</h3>
+        <div class="settings-links">
+          <a id="help-link" class="btn" href="./help.html" target="_blank" rel="noopener">使用說明</a>
+          <a id="voice-link" class="btn" href="./voice.html" target="_blank" rel="noopener">語音控制頁</a>
+          <a id="pinout-link" class="btn" href="./images/nodemcu-32s-pinout.png" target="_blank" rel="noopener">腳位圖</a>
+        </div>
+      </section>
+      <section class="settings-group">
+        <h3>驅動程式</h3>
+        <p>電腦找不到開發板時才需要。請依板子上的 USB 晶片選擇。</p>
+        <div class="settings-links">
+          <a id="driver-link" class="btn" href="https://www.silabs.com/software-and-tools/usb-to-uart-bridge-vcp-drivers?tab=downloads" target="_blank" rel="noopener">CP210x 驅動程式</a>
+          <a id="ch340-link" class="btn" href="https://www.wch-ic.com/downloads/CH341SER_EXE.html" target="_blank" rel="noopener">CH340 驅動程式</a>
+        </div>
+      </section>
+    </div>
 
     <div id="unsupported" class="banner danger" hidden>
       這個瀏覽器不支援 Web Serial，無法連接開發板。請改用電腦版的 Chrome 或 Edge。

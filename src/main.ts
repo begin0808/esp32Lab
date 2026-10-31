@@ -83,7 +83,7 @@ const STORAGE_KEY = "esp32-mp-code";
 const CHIP_KEY = "esp32-mp-chip";
 const MONITOR_LIMIT = 200_000;
 const FONT_SIZE_KEY = "esp32-mp-font-size";
-const FONT_SIZE_DEFAULT = 16;
+const FONT_SIZE_DEFAULT = 14;
 const FONT_SIZE_MIN = 12;
 const FONT_SIZE_MAX = 32;
 const FONT_SIZE_STEP = 2;
@@ -644,6 +644,14 @@ ui.splitter.addEventListener("keydown", (event) => {
   event.preventDefault();
   const step = event.key === "ArrowLeft" ? -EDITOR_WIDTH_STEP : EDITOR_WIDTH_STEP;
   setEditorWidth(Number(ui.splitter.getAttribute("aria-valuenow")) + step);
+});
+
+// The top bar wraps on narrow windows, so the panel opens just below wherever its button is.
+el("settings-panel").addEventListener("beforetoggle", (event) => {
+  if ((event as ToggleEvent).newState !== "open") return;
+  const panel = el("settings-panel");
+  panel.style.top = `${el("settings-button").getBoundingClientRect().bottom + 8}px`;
+  panel.style.maxHeight = `calc(100vh - ${el("settings-button").getBoundingClientRect().bottom + 24}px)`;
 });
 
 setupStylePicker(el<HTMLSelectElement>("style-picker"));

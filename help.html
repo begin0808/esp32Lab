@@ -47,7 +47,7 @@
         <h2>開始使用</h2>
         <p>這個網站不用安裝 Arduino IDE，也不需要設定開發環境。請用<strong>電腦版 Chrome 或 Edge</strong> 開啟，用能傳輸資料的 USB 線接上開發板。</p>
         <ol>
-          <li><strong>安裝驅動程式：</strong>電腦找不到開發板時才需要；USB 直接接 S2、S3、C3 晶片的板子通常不用裝。板子上的 USB 晶片是 CP2102 就裝 <a href="https://www.silabs.com/software-and-tools/usb-to-uart-bridge-vcp-drivers?tab=downloads" target="_blank" rel="noopener">CP210x 驅動</a>，是 CH340 就裝 <a href="https://www.wch-ic.com/downloads/CH341SER_EXE.html" target="_blank" rel="noopener">CH340 驅動</a>。</li>
+          <li><strong>安裝驅動程式：</strong>電腦找不到開發板時才需要；USB 直接接 S2、S3、C3 晶片的板子通常不用裝。板子上的 USB 晶片是 CP2102 就裝 <a href="https://www.silabs.com/software-and-tools/usb-to-uart-bridge-vcp-drivers?tab=downloads" target="_blank" rel="noopener">CP210x 驅動</a>，是 CH340 就裝 <a href="https://www.wch-ic.com/downloads/CH341SER_EXE.html" target="_blank" rel="noopener">CH340 驅動</a>。編輯器右上角的「設定與說明」也有這些連結，以及腳位圖、語音控制頁、風格和字體設定。</li>
           <li><strong>連接開發板：</strong>先關閉 Arduino IDE 這類會佔用序列埠的程式，再按「連接開發板」，選擇跳出的序列埠。</li>
           <li><strong>安裝韌體：</strong>第一次使用，或燒錄過 Arduino 程式時才需要。按「安裝韌體」後，<strong>板子上原有的程式和檔案都會被清除</strong>，安裝期間不要拔 USB 線。USB 直接接晶片的板子，裝完要按一下 RST 鍵並重新連接。</li>
           <li><strong>準備程式：</strong>選內建範例，或按「複製 Gemini 提示詞」，填入接線和功能後貼給 Gemini，再把產生的 MicroPython 程式貼回編輯器。</li>
@@ -244,13 +244,23 @@
       <section id="privacy">
         <h2>隱私與安全</h2>
         <ul>
-          <li><strong>程式碼：</strong>網站不會把程式碼上傳到伺服器。程式碼只存在這個瀏覽器和你的開發板上。</li>
-          <li><strong>Wi-Fi 密碼：</strong>密碼寫在程式裡，所以會以明文存在瀏覽器和開發板的 <code>main.py</code>。使用共用電腦或借出開發板前，請先刪除密碼；上傳不含密碼的程式可以覆蓋板子上的 <code>main.py</code>。</li>
+          <li><strong>程式碼：</strong>網站不會把程式碼上傳到伺服器。程式碼只存在這個瀏覽器和你的開發板上。GitHub 只提供網站檔案，可能記錄 IP 這類連線資訊，但收不到你的程式碼。</li>
+          <li><strong>Wi-Fi 密碼：</strong>密碼寫在程式裡，所以會以明文存在瀏覽器和開發板的 <code>main.py</code>。使用共用電腦或借出開發板前，請先刪除密碼，做法見下方「共用電腦與開發板」。</li>
           <li><strong>貼給 Gemini 前：</strong>「複製給 Gemini」和「改寫成 MicroPython」會自動隱藏常見的 Wi-Fi 寫法，但不保證全部偵測得到。自己全選複製程式時不會隱藏，請先刪除密碼。</li>
           <li><strong>截圖和投影：</strong>編輯器會顯示密碼，投影或分享畫面前請先遮住。上課建議使用專用 Wi-Fi 或手機熱點。</li>
           <li><strong>語音控制：</strong>指令會經過公用 MQTT 伺服器，沒有加密保護和權限控管，知道通道名稱的人都能控制。只適合 LED 這類低風險實驗，不要控制插座或門鎖，也不要在通道名稱填入個人資料。</li>
           <li><strong>語音辨識：</strong>語音由瀏覽器和其語音服務辨識，通常需要連網。</li>
         </ul>
+
+        <h3 id="shared-computer">共用電腦與開發板</h3>
+        <p class="tip warn"><strong>關閉網頁不會清除程式碼。</strong>程式碼和裡面的 Wi-Fi 密碼會留在瀏覽器，下一個用同一台電腦、同一個瀏覽器帳號的人打開網站就看得到。</p>
+        <p>離開電腦或交還開發板前，請照下面做：</p>
+        <ol>
+          <li><strong>想留下程式：</strong>先刪除程式裡的 Wi-Fi 名稱和密碼，再按「下載 main.py」。下載的檔案不會自動隱藏密碼。</li>
+          <li><strong>清除瀏覽器：</strong>刪除編輯器裡的全部內容。編輯器會自動儲存，所以舊內容會一起被取代。</li>
+          <li><strong>清除開發板：</strong>上傳不含密碼的程式，會覆蓋板子上的 <code>main.py</code>；要清除板子上所有檔案，請重新安裝韌體。</li>
+        </ol>
+        <p>電腦教室的還原卡通常會在重新開機後清除瀏覽器資料，但重新開機前，下一位使用者還是看得到。開發板不受還原卡影響，資料會一直留在板子上。</p>
       </section>
 
       <section id="faq">
