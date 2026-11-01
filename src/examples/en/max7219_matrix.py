@@ -1,4 +1,4 @@
-# MAX7219 8×8 LED matrix: alternates between a smiley and a heart
+# Example 15 | MAX7219 8×8 LED matrix: alternates between a smiley and a heart
 # Wiring: VCC to 5V (VIN), GND to GND, DIN to GPIO 23, CLK to GPIO 18, CS to GPIO 5
 # The firmware has no driver for this part. The MAX7219 class below is included in this file, so there is nothing else to install
 # On 5V power, 3.3V signals may be unreliable. Add a level shifter if the display misbehaves
@@ -45,16 +45,19 @@ class MAX7219:
         self.write(0x0C, 1)  # Leave shutdown mode
 
     def write(self, register, value):
-        self.cs.value(0)
+        self.cs.value(0)  # Pull CS low to start sending
         # Send 16 bits at a time, highest bit first
+        # Register in the top 8 bits, data in the bottom 8
         data = register << 8 | value
         for bit in range(15, -1, -1):
             self.din.value((data >> bit) & 1)
+            # The chip reads a bit when the clock rises
             self.clk.value(1)
             self.clk.value(0)
-        self.cs.value(1)
+        self.cs.value(1)  # Raise CS so the chip applies the data
 
     def show(self, rows):
+        # Write each row; registers 1-8 are rows 1-8
         for index, row in enumerate(rows):
             self.write(index + 1, row)
 
@@ -65,7 +68,7 @@ cs = Pin(CS_PIN, Pin.OUT, value=1)
 matrix = MAX7219(din, clk, cs, BRIGHTNESS)
 
 while True:
-    matrix.show(SMILE)
+    matrix.show(SMILE)  # Show the smile
     time.sleep(1)
     matrix.show(HEART)
     time.sleep(1)

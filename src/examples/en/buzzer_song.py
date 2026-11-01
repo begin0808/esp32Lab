@@ -1,4 +1,4 @@
-# Twinkle Twinkle on a passive buzzer: changing the PWM frequency changes the pitch
+# Example 5 | Twinkle Twinkle on a passive buzzer: changing the PWM frequency changes the pitch
 # Wiring: buzzer positive to GPIO 25, negative to GND (an active buzzer has only one tone, so it will not work here)
 from machine import Pin, PWM
 import time
@@ -15,14 +15,17 @@ SONG = [
     ("F", 1), ("F", 1), ("E", 1), ("E", 1), ("D", 1), ("D", 1), ("C", 2),
 ]
 
+# Set a frequency; duty 0 stays silent
 buzzer = PWM(Pin(BUZZER_PIN), freq=NOTES["C"], duty_u16=0)
 
 while True:
-    for note, beats in SONG:
-        buzzer.freq(NOTES[note])
+    for note, beats in SONG:  # Take each note and its beats in turn
+        buzzer.freq(NOTES[note])  # The frequency sets the pitch
+        # On for half the time, which makes sound
         buzzer.duty_u16(32768)
+        # Note length, leaving 40 ms for the gap
         time.sleep_ms(beats * BEAT_MS - 40)
         # A short gap between notes, so a repeated note is heard as two notes
         buzzer.duty_u16(0)
         time.sleep_ms(40)
-    time.sleep(2)
+    time.sleep(2)  # Rest for 2 seconds after the tune

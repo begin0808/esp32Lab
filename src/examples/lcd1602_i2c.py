@@ -1,4 +1,4 @@
-# I2C LCD 1602 顯示器（PCF8574 轉接板）：顯示文字和開機秒數
+# 範例 14｜I2C LCD 1602 顯示器（PCF8574 轉接板）：顯示文字和開機秒數
 # 接線：SDA 接 GPIO 21、SCL 接 GPIO 22、GND 接 GND
 #       模組多半要接 5V（VIN）。此時 SDA、SCL 可能被拉高到 5V，要加電平轉換模組，不要直接接 GPIO
 # 韌體沒有內建這個元件的控制程式，下面的 LCD1602 類別已經寫在這個檔案裡，不用另外安裝
@@ -31,12 +31,13 @@ class LCD1602:
         self.command(0x06)  # 寫入後游標往右
         self.clear()
 
-    def write_nibble(self, nibble, mode):
+    def write_nibble(self, nibble, mode):  # 轉接板一次只傳 4 位元
         data = nibble | mode | BACKLIGHT
+        # ENABLE 由高變低，LCD 才會收下資料
         self.i2c.writeto(self.address, bytes((data | ENABLE, data)))
         time.sleep_us(50)
 
-    def send(self, value, mode):
+    def send(self, value, mode):  # 把 1 個位元組拆成兩次傳送
         self.write_nibble(value & 0xF0, mode)
         self.write_nibble((value << 4) & 0xF0, mode)
 
@@ -47,7 +48,7 @@ class LCD1602:
         self.command(0x01)
         time.sleep_ms(2)
 
-    def move_to(self, column, row):
+    def move_to(self, column, row):  # 把游標移到第幾欄、第幾列
         self.command(0x80 | (0x40 * row + column))
 
     def write(self, text):
@@ -58,6 +59,7 @@ class LCD1602:
 i2c = I2C(0, sda=Pin(SDA_PIN), scl=Pin(SCL_PIN), freq=100000)
 found = i2c.scan()
 print("I2C 裝置位址:", [hex(address) for address in found])
+# 從常見位址中找出實際的位址
 address = next((a for a in LCD_ADDRESSES if a in found), None)
 if address is None:
     raise OSError("找不到 LCD，請檢查接線和模組電源")
@@ -66,6 +68,6 @@ lcd = LCD1602(i2c, address)
 lcd.write("ESP32 Lab")
 
 while True:
-    lcd.move_to(0, 1)
+    lcd.move_to(0, 1)  # 移到第 2 列開頭，列數從 0 算起
     lcd.write("Time: {} s".format(time.ticks_ms() // 1000))
-    time.sleep(1)
+    time.sleep(1)  # 每秒更新一次

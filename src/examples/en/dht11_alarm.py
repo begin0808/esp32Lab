@@ -1,4 +1,4 @@
-# DHT11 monitor: a phone web page updates every 2 seconds and alarms when humidity is over 50%
+# Example 18 | DHT11 monitor: a phone web page updates every 2 seconds and alarms when humidity is over 50%
 # Wiring: DHT11 VCC to 3V3, GND to GND, DATA to GPIO 4
 import asyncio
 import dht
@@ -14,8 +14,10 @@ PASSWORD = "YOUR_WIFI_PASSWORD"
 DHT_PIN = 4
 
 sensor = dht.DHT11(Pin(DHT_PIN))
+# The latest reading; nothing yet at the start
 latest = {"error": True}
 
+# The page the phone shows, which refreshes itself
 PAGE = """<!DOCTYPE html>
 <html><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -68,11 +70,12 @@ setInterval(update,2000);
 
 
 def connect_wifi():
-    wlan = network.WLAN()
-    wlan.active(True)
+    wlan = network.WLAN()  # Create the Wi-Fi connection object
+    wlan.active(True)  # Turn Wi-Fi on
+    # Start connecting, which takes a moment
     wlan.connect(SSID, PASSWORD)
     print("Connecting to Wi-Fi", end="")
-    for _ in range(40):
+    for _ in range(40):  # Wait up to 40 times 0.5 s, 20 s in total
         if wlan.isconnected():
             print()
             return wlan.ipconfig("addr4")[0]
@@ -81,16 +84,21 @@ def connect_wifi():
     raise RuntimeError("Wi-Fi connection failed. Check the name, the password, and that the network is 2.4GHz")
 
 
+# Runs when someone opens the page or asks for data
 async def handle_client(reader, writer):
     try:
+        # The first line is the request, such as GET /on HTTP/1.1
         request = await reader.readline()
         while True:
+            # Read the remaining headers until a blank line
             header = await reader.readline()
             if not header or header == b"\r\n":
                 break
+        # Split on spaces; the second part is the path
         parts = request.split()
         path = parts[1].decode() if len(parts) > 1 else "/"
 
+        # The page fetches JSON data from this address
         if path == "/data":
             status, content_type, body = "200 OK", "application/json", json.dumps(latest)
         elif path == "/":
@@ -98,16 +106,19 @@ async def handle_client(reader, writer):
         else:
             status, content_type, body = "404 Not Found", "text/plain", "not found"
 
+        # Networks carry bytes, so text is converted first
         data = body.encode()
         writer.write("HTTP/1.1 {}\r\nContent-Type: {}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n".format(status, content_type, len(data)).encode())
-        writer.write(data)
+        writer.write(data)  # Then send the content
+        # Wait until the data has really gone out
         await writer.drain()
     finally:
+        # Always close the connection, even after an error
         writer.close()
         await writer.wait_closed()
 
 
-async def sensor_task():
+async def sensor_task():  # A separate task that reads the sensor
     # The DHT11 can be read at most every 2 seconds, so it is read only here and the page gets the latest result
     global latest
     while True:
@@ -118,11 +129,13 @@ async def sensor_task():
         except OSError:
             latest = {"error": True}
             print("Could not read the sensor. Check the wiring")
+        # The web page keeps working during this wait
         await asyncio.sleep(2)
 
 
 async def main():
     ip = connect_wifi()
+    # Start the web server on port 80, the default for web pages
     await asyncio.start_server(handle_client, "0.0.0.0", 80)
     print("Web server started, IP address:", ip)
     await sensor_task()

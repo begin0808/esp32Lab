@@ -1,4 +1,4 @@
-# 手機控制 LED：網頁按鈕與語音控制（開啟、關閉、閃爍）
+# 範例 16｜手機控制 LED：網頁按鈕與語音控制（開啟、關閉、閃爍）
 # 接線：LED 長腳接 GPIO 18，短腳經 220Ω 電阻接 GND
 import asyncio
 import network
@@ -12,8 +12,9 @@ PASSWORD = "YOUR_WIFI_PASSWORD"
 LED_PIN = 18
 
 led = Pin(LED_PIN, Pin.OUT, value=0)
-mode = "off"
+mode = "off"  # 目前的模式：on、off 或 blink
 
+# 手機看到的網頁，內容寫在下面的字串裡
 PAGE = """<!DOCTYPE html>
 <html><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -65,11 +66,11 @@ function startVoice(){
 
 
 def connect_wifi():
-    wlan = network.WLAN()
-    wlan.active(True)
-    wlan.connect(SSID, PASSWORD)
+    wlan = network.WLAN()  # 建立 Wi-Fi 連線物件
+    wlan.active(True)  # 開啟 Wi-Fi 功能
+    wlan.connect(SSID, PASSWORD)  # 開始連線，要等一下才會連上
     print("正在連線 Wi-Fi", end="")
-    for _ in range(40):
+    for _ in range(40):  # 最多等 40 次，每次 0.5 秒，共 20 秒
         if wlan.isconnected():
             print()
             return wlan.ipconfig("addr4")[0]
@@ -78,19 +79,20 @@ def connect_wifi():
     raise RuntimeError("Wi-Fi 連線失敗，請檢查名稱、密碼，以及是否為 2.4GHz")
 
 
-async def handle_client(reader, writer):
-    global mode
+async def handle_client(reader, writer):  # 有人開網頁時，就會執行這裡
+    global mode  # 要修改函式外面的 mode
     try:
+        # 第一行是請求，例如 GET /on HTTP/1.1
         request = await reader.readline()
         while True:
-            header = await reader.readline()
+            header = await reader.readline()  # 把其餘標頭讀完，空行代表結束
             if not header or header == b"\r\n":
                 break
-        parts = request.split()
+        parts = request.split()  # 用空白切開，第二段是網址路徑
         path = parts[1].decode() if len(parts) > 1 else "/"
 
-        if path in ("/on", "/off", "/blink"):
-            mode = path[1:]
+        if path in ("/on", "/off", "/blink"):  # 網址就是指令
+            mode = path[1:]  # 去掉開頭的斜線，例如 /on 變成 on
             if mode != "blink":
                 led.value(1 if mode == "on" else 0)
             status, content_type, body = "200 OK", "text/plain", mode
@@ -99,24 +101,25 @@ async def handle_client(reader, writer):
         else:
             status, content_type, body = "404 Not Found", "text/plain", "not found"
 
-        data = body.encode()
+        data = body.encode()  # 網路傳的是位元組，中文也要先轉換
         writer.write("HTTP/1.1 {}\r\nContent-Type: {}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n".format(status, content_type, len(data)).encode())
-        writer.write(data)
-        await writer.drain()
+        writer.write(data)  # 接著送出內容
+        await writer.drain()  # 等資料真的送出去
     finally:
-        writer.close()
+        writer.close()  # 不管成功或失敗都要關閉連線
         await writer.wait_closed()
 
 
-async def blink_task():
+async def blink_task():  # 另一個工作，負責閃爍
     while True:
         if mode == "blink":
             led.value(not led.value())
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(0.5)  # 等待時也能繼續處理網頁
 
 
 async def main():
     ip = connect_wifi()
+    # 啟動網頁伺服器，80 是網頁的預設連接埠
     await asyncio.start_server(handle_client, "0.0.0.0", 80)
     print("網頁伺服器已啟動，IP 位址：", ip)
     await blink_task()

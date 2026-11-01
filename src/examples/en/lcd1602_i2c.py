@@ -1,4 +1,4 @@
-# I2C LCD 1602 display (PCF8574 backpack): shows text and seconds since boot
+# Example 14 | I2C LCD 1602 display (PCF8574 backpack): shows text and seconds since boot
 # Wiring: SDA to GPIO 21, SCL to GPIO 22, GND to GND
 #         Most modules need 5V (VIN). SDA and SCL may then be pulled up to 5V, so use a level shifter instead of wiring them straight to GPIO
 # The firmware has no driver for this part. The LCD1602 class below is included in this file, so there is nothing else to install
@@ -31,12 +31,14 @@ class LCD1602:
         self.command(0x06)  # Cursor moves right after each write
         self.clear()
 
+    # The adapter sends 4 bits at a time
     def write_nibble(self, nibble, mode):
         data = nibble | mode | BACKLIGHT
+        # The LCD takes the data when ENABLE falls
         self.i2c.writeto(self.address, bytes((data | ENABLE, data)))
         time.sleep_us(50)
 
-    def send(self, value, mode):
+    def send(self, value, mode):  # Split one byte into two sends
         self.write_nibble(value & 0xF0, mode)
         self.write_nibble((value << 4) & 0xF0, mode)
 
@@ -47,6 +49,7 @@ class LCD1602:
         self.command(0x01)
         time.sleep_ms(2)
 
+    # Move the cursor to a column and row
     def move_to(self, column, row):
         self.command(0x80 | (0x40 * row + column))
 
@@ -58,6 +61,7 @@ class LCD1602:
 i2c = I2C(0, sda=Pin(SDA_PIN), scl=Pin(SCL_PIN), freq=100000)
 found = i2c.scan()
 print("I2C device addresses:", [hex(address) for address in found])
+# Pick the address that was actually found
 address = next((a for a in LCD_ADDRESSES if a in found), None)
 if address is None:
     raise OSError("LCD not found. Check the wiring and the module's power")
@@ -66,6 +70,6 @@ lcd = LCD1602(i2c, address)
 lcd.write("ESP32 Lab")
 
 while True:
-    lcd.move_to(0, 1)
+    lcd.move_to(0, 1)  # Go to the start of row 2; rows count from 0
     lcd.write("Time: {} s".format(time.ticks_ms() // 1000))
-    time.sleep(1)
+    time.sleep(1)  # Update once a second

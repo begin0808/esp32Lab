@@ -1,4 +1,4 @@
-# Telegram bot LED: send /on, /off or /status to control the LED; pressing the button notifies your phone
+# Example 19 | Telegram bot LED: send /on, /off or /status to control the LED; pressing the button notifies your phone
 # Wiring: LED through a 220Ω resistor to GPIO 18, short leg to GND; button between GPIO 19 and GND
 # The Wi-Fi must reach the internet. For setup steps, see Telegram bot in the help page
 # The bot token is the bot's password, so do not project or share it. This example does not verify the server certificate, so do not control anything important
@@ -23,6 +23,7 @@ LED_PIN = 18
 BUTTON_PIN = 19
 POLL_SECONDS = 2
 
+# The address of Telegram's bot API
 API_URL = "https://api.telegram.org/bot{}/".format(BOT_TOKEN)
 
 led = Pin(LED_PIN, Pin.OUT, value=0)
@@ -32,26 +33,30 @@ last_press = 0
 next_update = None
 
 
+# Runs by itself on a press, with no need to keep checking
 def on_button(_pin):
     global button_pressed, last_press
     now = time.ticks_ms()
     # Ignore repeats within 200 ms to skip button bounce
     if time.ticks_diff(now, last_press) > 200:
+        # Only set a flag; the main loop does the network work
         button_pressed = True
         last_press = now
 
 
+# Call on_button when the pin falls on a press
 button.irq(trigger=Pin.IRQ_FALLING, handler=on_button)
 
 
 def connect_wifi():
-    wlan = network.WLAN()
-    wlan.active(True)
+    wlan = network.WLAN()  # Create the Wi-Fi connection object
+    wlan.active(True)  # Turn Wi-Fi on
     if wlan.isconnected():
         return
+    # Start connecting, which takes a moment
     wlan.connect(SSID, PASSWORD)
     print("Connecting to Wi-Fi", end="")
-    for _ in range(40):
+    for _ in range(40):  # Wait up to 40 times 0.5 s, 20 s in total
         if wlan.isconnected():
             print()
             return
@@ -60,15 +65,16 @@ def connect_wifi():
     raise RuntimeError("Wi-Fi connection failed. Check the name, the password, and that the network is 2.4GHz")
 
 
+# A shared function for calling Telegram
 def call_telegram(method, payload):
-    gc.collect()
+    gc.collect()  # HTTPS needs a lot of memory, so free some first
     # Convert to bytes first so the length that is sent stays correct for any language
     body = json.dumps(payload).encode()
     response = requests.post(API_URL + method, data=body, headers={"Content-Type": "application/json"}, timeout=15)
     try:
-        result = response.json()
+        result = response.json()  # Turn the reply into a dictionary
     finally:
-        response.close()
+        response.close()  # Close it, or memory runs out
     if not result["ok"]:
         raise RuntimeError("Telegram reported an error: {}".format(result.get("description")))
     return result["result"]
@@ -83,10 +89,12 @@ def led_status():
 
 
 def handle_message(message):
+    # Which chat the message came from
     chat_id = str(message["chat"]["id"])
     if not CHAT_ID:
         print("Your CHAT_ID is", chat_id, ". Put it in the program and upload again")
         return
+    # Ignore other chats, so nobody else can control it
     if chat_id != CHAT_ID:
         print("Ignored a message from another chat")
         return
@@ -128,13 +136,14 @@ def serve():
             else:
                 print("CHAT_ID is not set, so no notification was sent")
 
+        # Ask Telegram for new messages
         updates = call_telegram("getUpdates", {"offset": next_update, "limit": 5, "timeout": 0, "allowed_updates": ["message"]})
         for update in updates:
             # Record progress first, so a failure does not repeat the same command forever
             next_update = update["update_id"] + 1
             if "message" in update:
                 handle_message(update["message"])
-        time.sleep(POLL_SECONDS)
+        time.sleep(POLL_SECONDS)  # Wait a while before asking again
 
 
 if "YOUR_" in BOT_TOKEN:

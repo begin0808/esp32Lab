@@ -74,6 +74,11 @@ const EXAMPLE_GROUPS = [
 ];
 const EXAMPLES = EXAMPLE_GROUPS.flatMap((group) => group.examples);
 
+/** The same number means the same topic on both editions, so teachers can refer to an example by number. */
+function numberedName(item: (typeof EXAMPLES)[number]): string {
+  return `${EXAMPLES.indexOf(item) + 1}. ${item.name}`;
+}
+
 const STORAGE_KEY = "esp32-mp-code";
 const CHIP_KEY = "esp32-mp-chip";
 const MONITOR_LIMIT = 200_000;
@@ -710,13 +715,13 @@ ui.examples.append(
   ...EXAMPLE_GROUPS.map((group) => {
     const optgroup = document.createElement("optgroup");
     optgroup.label = group.label;
-    optgroup.append(...group.examples.map((item) => new Option(item.name, String(EXAMPLES.indexOf(item)))));
+    optgroup.append(...group.examples.map((item) => new Option(numberedName(item), String(EXAMPLES.indexOf(item)))));
     return optgroup;
   }),
 );
 ui.examples.addEventListener("change", () => {
   const chosen = EXAMPLES[Number(ui.examples.value)];
-  if (ui.examples.value !== "" && chosen && confirm(t("要用「{name}」取代目前的程式嗎？", { name: chosen.name }))) {
+  if (ui.examples.value !== "" && chosen && confirm(t("要用「{name}」取代目前的程式嗎？", { name: numberedName(chosen) }))) {
     const code = fillExample(chosen.code, randomChannel(), new URL("voice.html", location.href).href);
     setCode(adaptExamplePins(code, selectedChip()));
   }

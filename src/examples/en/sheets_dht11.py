@@ -1,4 +1,4 @@
-# Log DHT11 data to Google Sheets: adds a row of temperature and humidity every minute
+# Example 20 | Log DHT11 data to Google Sheets: adds a row of temperature and humidity every minute
 # Wiring: DHT11 VCC to 3V3, GND to GND, DATA to GPIO 4
 # The Wi-Fi must reach the internet. For setup steps, see Google Sheets in the help page
 # Anyone with the URL can write to the sheet, so do not project or share it. This example does not verify the server certificate, so do not store important data
@@ -19,17 +19,18 @@ SCRIPT_URL = "YOUR_SCRIPT_URL"
 DHT_PIN = 4
 SEND_SECONDS = 60
 
-sensor = dht.DHT11(Pin(DHT_PIN))
+sensor = dht.DHT11(Pin(DHT_PIN))  # Create the sensor object
 
 
 def connect_wifi():
-    wlan = network.WLAN()
-    wlan.active(True)
+    wlan = network.WLAN()  # Create the Wi-Fi connection object
+    wlan.active(True)  # Turn Wi-Fi on
     if wlan.isconnected():
         return
+    # Start connecting, which takes a moment
     wlan.connect(SSID, PASSWORD)
     print("Connecting to Wi-Fi", end="")
-    for _ in range(40):
+    for _ in range(40):  # Wait up to 40 times 0.5 s, 20 s in total
         if wlan.isconnected():
             print()
             return
@@ -39,15 +40,17 @@ def connect_wifi():
 
 
 def send_reading(temperature, humidity):
-    gc.collect()
+    gc.collect()  # HTTPS needs a lot of memory, so free some first
+    # Pass the data to the sheet in the address
     url = "{}?temp={}&hum={}".format(SCRIPT_URL, temperature, humidity)
+    # Wait up to 30 s, as Google can be slow
     response = requests.get(url, timeout=30)
     try:
         # Read only the first few characters: with wrong permissions, Google returns a login page too big for memory
         reply = bytes(response.raw.read(16))
         status = response.status_code
     finally:
-        response.close()
+        response.close()  # Close it, or memory runs out
     if status != 200 or reply != b"ok":
         raise RuntimeError("Google did not return ok. Check that access was set to 'Anyone' when deploying")
 
@@ -64,6 +67,7 @@ while True:
         print("Temperature:", temperature, "°C  Humidity:", humidity, "%")
         send_reading(temperature, humidity)
         print("Saved to Google Sheets")
+    # Keep going after a failure and try next minute
     except Exception as error:
         print("Could not save this time, will try again next time:", error)
-    time.sleep(SEND_SECONDS)
+    time.sleep(SEND_SECONDS)  # Wait before sending the next reading

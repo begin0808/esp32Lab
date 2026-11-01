@@ -89,7 +89,7 @@ test("loads an example and keeps code after reload", async ({ page }) => {
   await mockSerial(page);
   await page.goto("/");
   page.on("dialog", (dialog) => dialog.accept());
-  await page.locator("#examples").selectOption({ label: "DHT11 溫濕度警報" });
+  await page.locator("#examples").selectOption({ label: "18. DHT11 溫濕度警報" });
   await expect(page.locator("#editor .cm-content")).toContainText("dht.DHT11");
   await page.reload();
   await expect(page.locator("#editor .cm-content")).toContainText("dht.DHT11");
@@ -362,7 +362,7 @@ test("voice page reports a broker it cannot reach", async ({ page }) => {
 test("MQTT example gets its own channel when loaded", async ({ page }) => {
   await page.goto("/");
   page.on("dialog", (dialog) => dialog.accept());
-  await page.locator("#examples").selectOption({ label: "語音控制 LED（MQTT）" });
+  await page.locator("#examples").selectOption({ label: "17. 語音控制 LED（MQTT）" });
   const code = await page.evaluate(() => localStorage.getItem("esp32-mp-code"));
   expect(code).not.toContain("{{");
   expect(code).toMatch(/TOPIC_NAME = "led-[0-9a-f]{12}"/);
@@ -627,11 +627,11 @@ test("offers every example, grouped, and loads the wiring notes into the editor"
   await expect(page.locator("#examples optgroup")).toHaveCount(4);
   await expect(page.locator("#examples optgroup option")).toHaveCount(20);
   page.on("dialog", (dialog) => dialog.accept());
-  await page.locator("#examples").selectOption({ label: "SSD1306 OLED 顯示器" });
+  await page.locator("#examples").selectOption({ label: "13. SSD1306 OLED 顯示器" });
   await expect(page.locator("#editor .cm-content")).toContainText("class SSD1306");
-  await page.locator("#examples").selectOption({ label: "DHT11 資料存到 Google 試算表" });
+  await page.locator("#examples").selectOption({ label: "20. DHT11 資料存到 Google 試算表" });
   await expect(page.locator("#editor .cm-content")).toContainText("YOUR_SCRIPT_URL");
-  await page.locator("#examples").selectOption({ label: "MAX7219 點矩陣" });
+  await page.locator("#examples").selectOption({ label: "15. MAX7219 點矩陣" });
   await expect(page.locator("#editor .cm-content")).toContainText("class MAX7219");
 });
 
@@ -641,7 +641,7 @@ test("moves example pins to the chosen chip", async ({ page, context }) => {
   page.on("dialog", (dialog) => dialog.accept());
   await expect(page.locator("#chip")).toHaveValue("esp32");
   await page.locator("#chip").selectOption({ label: "ESP32-C3" });
-  await page.locator("#examples").selectOption({ label: "按鈕開關 LED" });
+  await page.locator("#examples").selectOption({ label: "2. 按鈕開關 LED" });
   await expect(page.locator("#editor .cm-content")).toContainText("LED_PIN = 4");
   await expect(page.locator("#editor .cm-content")).toContainText("BUTTON_PIN = 5");
 
@@ -855,7 +855,7 @@ test.describe("in an English browser", () => {
     await expect(page.locator("#examples optgroup option")).toHaveCount(20);
 
     page.on("dialog", (dialog) => dialog.accept());
-    await page.locator("#examples").selectOption({ label: "Voice-controlled LED (MQTT)" });
+    await page.locator("#examples").selectOption({ label: "17. Voice-controlled LED (MQTT)" });
     await expect(page.locator("#editor .cm-content")).toContainText("Connected to the MQTT broker");
     const code = await page.evaluate(() => localStorage.getItem("esp32-mp-code"));
     expect(code).toMatch(/TOPIC_NAME = "led-[0-9a-f]{12}"/);
@@ -1276,4 +1276,25 @@ test.describe("edition name", () => {
       await expect(page).toHaveTitle(/ESP32 Lab MicroPython Edition/);
     });
   });
+});
+
+test.describe("example numbers", () => {
+  for (const [locale, heading] of [["zh-TW", "範例"], ["en-US", "Example"]] as const) {
+    test.describe(locale, () => {
+      test.use({ locale });
+
+      test("the menu number matches the number written in each example", async ({ page }) => {
+        page.on("dialog", (dialog) => void dialog.accept());
+        await page.goto("/");
+        const options = await page.locator("#examples optgroup option").evaluateAll((items) => items.map((item) => (item as HTMLOptionElement).value));
+        expect(options).toHaveLength(20);
+        for (const [index, value] of options.entries()) {
+          const label = await page.locator(`#examples option[value="${value}"]`).textContent();
+          expect(label!.startsWith(`${index + 1}. `)).toBe(true);
+          await page.locator("#examples").selectOption(value);
+          await expect(page.locator("#editor .cm-line").first()).toContainText(`${heading} ${index + 1}`);
+        }
+      });
+    });
+  }
 });

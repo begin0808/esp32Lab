@@ -1,4 +1,4 @@
-# Phone-controlled LED: web page buttons and voice control (on, off, blink)
+# Example 16 | Phone-controlled LED: web page buttons and voice control (on, off, blink)
 # Wiring: LED long leg to GPIO 18, short leg through a 220Ω resistor to GND
 import asyncio
 import network
@@ -12,8 +12,9 @@ PASSWORD = "YOUR_WIFI_PASSWORD"
 LED_PIN = 18
 
 led = Pin(LED_PIN, Pin.OUT, value=0)
-mode = "off"
+mode = "off"  # The current mode: on, off or blink
 
+# The page the phone shows, in the string below
 PAGE = """<!DOCTYPE html>
 <html><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -66,11 +67,12 @@ function startVoice(){
 
 
 def connect_wifi():
-    wlan = network.WLAN()
-    wlan.active(True)
+    wlan = network.WLAN()  # Create the Wi-Fi connection object
+    wlan.active(True)  # Turn Wi-Fi on
+    # Start connecting, which takes a moment
     wlan.connect(SSID, PASSWORD)
     print("Connecting to Wi-Fi", end="")
-    for _ in range(40):
+    for _ in range(40):  # Wait up to 40 times 0.5 s, 20 s in total
         if wlan.isconnected():
             print()
             return wlan.ipconfig("addr4")[0]
@@ -79,19 +81,24 @@ def connect_wifi():
     raise RuntimeError("Wi-Fi connection failed. Check the name, the password, and that the network is 2.4GHz")
 
 
+# Runs each time someone opens the page
 async def handle_client(reader, writer):
-    global mode
+    global mode  # This function changes the outer mode
     try:
+        # The first line is the request, such as GET /on HTTP/1.1
         request = await reader.readline()
         while True:
+            # Read the remaining headers until a blank line
             header = await reader.readline()
             if not header or header == b"\r\n":
                 break
+        # Split on spaces; the second part is the path
         parts = request.split()
         path = parts[1].decode() if len(parts) > 1 else "/"
 
+        # The address is the command
         if path in ("/on", "/off", "/blink"):
-            mode = path[1:]
+            mode = path[1:]  # Drop the slash, so /on becomes on
             if mode != "blink":
                 led.value(1 if mode == "on" else 0)
             status, content_type, body = "200 OK", "text/plain", mode
@@ -100,24 +107,29 @@ async def handle_client(reader, writer):
         else:
             status, content_type, body = "404 Not Found", "text/plain", "not found"
 
+        # Networks carry bytes, so text is converted first
         data = body.encode()
         writer.write("HTTP/1.1 {}\r\nContent-Type: {}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n".format(status, content_type, len(data)).encode())
-        writer.write(data)
+        writer.write(data)  # Then send the content
+        # Wait until the data has really gone out
         await writer.drain()
     finally:
+        # Always close the connection, even after an error
         writer.close()
         await writer.wait_closed()
 
 
-async def blink_task():
+async def blink_task():  # A separate task that handles blinking
     while True:
         if mode == "blink":
             led.value(not led.value())
+        # The web page keeps working during this wait
         await asyncio.sleep(0.5)
 
 
 async def main():
     ip = connect_wifi()
+    # Start the web server on port 80, the default for web pages
     await asyncio.start_server(handle_client, "0.0.0.0", 80)
     print("Web server started, IP address:", ip)
     await blink_task()

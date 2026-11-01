@@ -1,4 +1,4 @@
-# DHT11 資料存到 Google 試算表：每分鐘把溫度和濕度新增成一列
+# 範例 20｜DHT11 資料存到 Google 試算表：每分鐘把溫度和濕度新增成一列
 # 接線：DHT11 VCC 接 3V3、GND 接 GND、DATA 接 GPIO 4
 # Wi-Fi 必須能上網。設定步驟請看「使用說明」的 Google 試算表
 # 網址等於試算表的寫入權限，不要投影或分享。這個範例不驗證伺服器憑證，請勿存放重要資料
@@ -19,17 +19,17 @@ SCRIPT_URL = "YOUR_SCRIPT_URL"
 DHT_PIN = 4
 SEND_SECONDS = 60
 
-sensor = dht.DHT11(Pin(DHT_PIN))
+sensor = dht.DHT11(Pin(DHT_PIN))  # 建立感測器物件
 
 
 def connect_wifi():
-    wlan = network.WLAN()
-    wlan.active(True)
+    wlan = network.WLAN()  # 建立 Wi-Fi 連線物件
+    wlan.active(True)  # 開啟 Wi-Fi 功能
     if wlan.isconnected():
         return
-    wlan.connect(SSID, PASSWORD)
+    wlan.connect(SSID, PASSWORD)  # 開始連線，要等一下才會連上
     print("正在連線 Wi-Fi", end="")
-    for _ in range(40):
+    for _ in range(40):  # 最多等 40 次，每次 0.5 秒，共 20 秒
         if wlan.isconnected():
             print()
             return
@@ -39,15 +39,17 @@ def connect_wifi():
 
 
 def send_reading(temperature, humidity):
-    gc.collect()
+    gc.collect()  # HTTPS 很吃記憶體，先清出空間
+    # 把資料放在網址後面傳給試算表
     url = "{}?temp={}&hum={}".format(SCRIPT_URL, temperature, humidity)
+    # 最多等 30 秒，Google 有時回應較慢
     response = requests.get(url, timeout=30)
     try:
         # 只讀開頭幾個字：權限設錯時，Google 會回傳記憶體放不下的登入頁
         reply = bytes(response.raw.read(16))
         status = response.status_code
     finally:
-        response.close()
+        response.close()  # 用完要關閉，否則記憶體會不夠
     if status != 200 or reply != b"ok":
         raise RuntimeError("Google 沒有回傳 ok，請確認部署時存取權選了「所有人」")
 
@@ -64,6 +66,6 @@ while True:
         print("溫度:", temperature, "°C  濕度:", humidity, "%")
         send_reading(temperature, humidity)
         print("已存到 Google 試算表")
-    except Exception as error:
+    except Exception as error:  # 這次失敗也不要停止，下一分鐘再試
         print("這次沒有存成功，下一次再試：", error)
-    time.sleep(SEND_SECONDS)
+    time.sleep(SEND_SECONDS)  # 隔一段時間再傳下一筆

@@ -1,4 +1,4 @@
-# 無源蜂鳴器播放小星星：改變 PWM 頻率就能發出不同音高
+# 範例 5｜無源蜂鳴器播放小星星：改變 PWM 頻率就能發出不同音高
 # 接線：蜂鳴器正極接 GPIO 25、負極接 GND（有源蜂鳴器只有一種音，不適用這個範例）
 from machine import Pin, PWM
 import time
@@ -15,14 +15,15 @@ SONG = [
     ("F", 1), ("F", 1), ("E", 1), ("E", 1), ("D", 1), ("D", 1), ("C", 2),
 ]
 
+# 先設定頻率，音量 0 代表不響
 buzzer = PWM(Pin(BUZZER_PIN), freq=NOTES["C"], duty_u16=0)
 
 while True:
-    for note, beats in SONG:
-        buzzer.freq(NOTES[note])
-        buzzer.duty_u16(32768)
-        time.sleep_ms(beats * BEAT_MS - 40)
+    for note, beats in SONG:  # 依序取出每個音和拍數
+        buzzer.freq(NOTES[note])  # 頻率決定音高
+        buzzer.duty_u16(32768)  # 一半時間通電，發出聲音
+        time.sleep_ms(beats * BEAT_MS - 40)  # 音的長度，留 40 毫秒給下面的停頓
         # 每個音之間停一下，同音連續才聽得出是兩個音
         buzzer.duty_u16(0)
         time.sleep_ms(40)
-    time.sleep(2)
+    time.sleep(2)  # 唱完一遍後休息 2 秒

@@ -1,4 +1,4 @@
-# Telegram 機器人控制 LED：傳 /on、/off、/status 控制 LED，按下按鈕時通知手機
+# 範例 19｜Telegram 機器人控制 LED：傳 /on、/off、/status 控制 LED，按下按鈕時通知手機
 # 接線：LED 經 220Ω 電阻接 GPIO 18，短腳接 GND；按鈕一腳接 GPIO 19、另一腳接 GND
 # Wi-Fi 必須能上網。設定步驟請看「使用說明」的 Telegram 機器人
 # Bot Token 等於機器人的密碼，不要投影或分享。這個範例不驗證伺服器憑證，請勿用來控制重要設備
@@ -23,6 +23,7 @@ LED_PIN = 18
 BUTTON_PIN = 19
 POLL_SECONDS = 2
 
+# Telegram 機器人 API 的網址
 API_URL = "https://api.telegram.org/bot{}/".format(BOT_TOKEN)
 
 led = Pin(LED_PIN, Pin.OUT, value=0)
@@ -32,26 +33,27 @@ last_press = 0
 next_update = None
 
 
-def on_button(_pin):
+def on_button(_pin):  # 按下按鈕時自動執行，不用一直檢查
     global button_pressed, last_press
     now = time.ticks_ms()
     # 忽略 200 毫秒內的重複觸發，避開按鈕彈跳
     if time.ticks_diff(now, last_press) > 200:
-        button_pressed = True
+        button_pressed = True  # 只做記號，網路工作留到主程式處理
         last_press = now
 
 
+# 按下時電位由高變低，就執行 on_button
 button.irq(trigger=Pin.IRQ_FALLING, handler=on_button)
 
 
 def connect_wifi():
-    wlan = network.WLAN()
-    wlan.active(True)
+    wlan = network.WLAN()  # 建立 Wi-Fi 連線物件
+    wlan.active(True)  # 開啟 Wi-Fi 功能
     if wlan.isconnected():
         return
-    wlan.connect(SSID, PASSWORD)
+    wlan.connect(SSID, PASSWORD)  # 開始連線，要等一下才會連上
     print("正在連線 Wi-Fi", end="")
-    for _ in range(40):
+    for _ in range(40):  # 最多等 40 次，每次 0.5 秒，共 20 秒
         if wlan.isconnected():
             print()
             return
@@ -60,15 +62,15 @@ def connect_wifi():
     raise RuntimeError("Wi-Fi 連線失敗，請檢查名稱、密碼，以及是否為 2.4GHz")
 
 
-def call_telegram(method, payload):
-    gc.collect()
+def call_telegram(method, payload):  # 呼叫 Telegram 的共用函式
+    gc.collect()  # HTTPS 很吃記憶體，先清出空間
     # 中文要先轉成位元組，傳送的資料長度才會正確
     body = json.dumps(payload).encode()
     response = requests.post(API_URL + method, data=body, headers={"Content-Type": "application/json"}, timeout=15)
     try:
-        result = response.json()
+        result = response.json()  # 把回應轉成字典
     finally:
-        response.close()
+        response.close()  # 用完要關閉，否則記憶體會不夠
     if not result["ok"]:
         raise RuntimeError("Telegram 回報錯誤：{}".format(result.get("description")))
     return result["result"]
@@ -83,11 +85,11 @@ def led_status():
 
 
 def handle_message(message):
-    chat_id = str(message["chat"]["id"])
+    chat_id = str(message["chat"]["id"])  # 訊息來自哪個聊天室
     if not CHAT_ID:
         print("你的 CHAT_ID 是", chat_id, "，請填進程式後重新上傳")
         return
-    if chat_id != CHAT_ID:
+    if chat_id != CHAT_ID:  # 別人的訊息不處理，避免被別人控制
         print("已忽略其他聊天室的訊息")
         return
 
@@ -128,13 +130,14 @@ def serve():
             else:
                 print("還沒有設定 CHAT_ID，無法傳送通知")
 
+        # 問 Telegram 有沒有新訊息
         updates = call_telegram("getUpdates", {"offset": next_update, "limit": 5, "timeout": 0, "allowed_updates": ["message"]})
         for update in updates:
             # 先記下進度，處理失敗時才不會一直重複同一則指令
             next_update = update["update_id"] + 1
             if "message" in update:
                 handle_message(update["message"])
-        time.sleep(POLL_SECONDS)
+        time.sleep(POLL_SECONDS)  # 隔一段時間再問一次
 
 
 if "YOUR_" in BOT_TOKEN:

@@ -1,4 +1,4 @@
-# MAX7219 8×8 LED 點矩陣：輪流顯示笑臉和愛心
+# 範例 15｜MAX7219 8×8 LED 點矩陣：輪流顯示笑臉和愛心
 # 接線：VCC 接 5V（VIN）、GND 接 GND、DIN 接 GPIO 23、CLK 接 GPIO 18、CS 接 GPIO 5
 # 韌體沒有內建這個元件的控制程式，下面的 MAX7219 類別已經寫在這個檔案裡，不用另外安裝
 # 模組以 5V 供電時，3.3V 訊號可能不穩定。顯示異常時再加電平轉換模組
@@ -45,16 +45,17 @@ class MAX7219:
         self.write(0x0C, 1)  # 結束關機模式
 
     def write(self, register, value):
-        self.cs.value(0)
+        self.cs.value(0)  # CS 拉低，開始傳送
         # 從最高位元開始，一次送出 16 個位元
-        data = register << 8 | value
+        data = register << 8 | value  # 前 8 位元是暫存器，後 8 位元是資料
         for bit in range(15, -1, -1):
             self.din.value((data >> bit) & 1)
-            self.clk.value(1)
+            self.clk.value(1)  # 時脈由低變高時，晶片讀入 1 個位元
             self.clk.value(0)
-        self.cs.value(1)
+        self.cs.value(1)  # CS 拉高，晶片才會套用資料
 
     def show(self, rows):
+        # 一列一列寫入，暫存器 1 到 8 對應第 1 到 8 列
         for index, row in enumerate(rows):
             self.write(index + 1, row)
 
@@ -65,7 +66,7 @@ cs = Pin(CS_PIN, Pin.OUT, value=1)
 matrix = MAX7219(din, clk, cs, BRIGHTNESS)
 
 while True:
-    matrix.show(SMILE)
+    matrix.show(SMILE)  # 顯示笑臉
     time.sleep(1)
     matrix.show(HEART)
     time.sleep(1)
