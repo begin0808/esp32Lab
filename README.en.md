@@ -1,4 +1,4 @@
-# ESP32 Lab Online (Beta)
+# ESP32 Lab MicroPython Edition (Beta)
 
 [繁體中文](README.md) | English
 

@@ -1253,3 +1253,27 @@ test.describe("REPL", () => {
     });
   });
 });
+
+test.describe("edition name", () => {
+  test("names the MicroPython edition in the title and heading", async ({ page }) => {
+    await page.goto("/");
+    await expect(page).toHaveTitle(/ESP32 Lab MicroPython 版/);
+    await expect(page.locator(".topbar h1 .edition")).toHaveText("MicroPython 版");
+    await page.goto("/help.html");
+    await expect(page).toHaveTitle(/ESP32 Lab MicroPython 版/);
+    await expect(page.locator("h1 .edition")).toHaveText("MicroPython 版");
+  });
+
+  test.describe("in an English browser", () => {
+    test.use({ locale: "en-US" });
+
+    test("uses the English name", async ({ page }) => {
+      await page.goto("/");
+      await expect(page).toHaveTitle(/ESP32 Lab MicroPython Edition/);
+      await expect(page.locator(".topbar h1 .edition")).toHaveText("MicroPython Edition");
+      await page.goto("/help.html");
+      await expect(page).toHaveURL(/help.en.html/);
+      await expect(page).toHaveTitle(/ESP32 Lab MicroPython Edition/);
+    });
+  });
+});

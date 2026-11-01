@@ -1,4 +1,4 @@
-# ESP32 Lab 線上實驗室（測試 Beta 版）
+# ESP32 Lab MicroPython 版（測試 Beta 版）
 
 繁體中文 | [English](README.en.md)
 
