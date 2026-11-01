@@ -410,14 +410,40 @@ input:focus-visible,
 
 .repl-form {
   display: flex;
+  align-items: flex-end;
   gap: 8px;
-  padding: 8px 10px;
+  padding: 8px 10px 4px;
 }
 
-.repl-form input {
+.repl-choices {
+  margin: 0;
+  padding: 6px 10px 0;
+  max-height: 6em;
+  overflow: auto;
+  color: var(--muted);
+  font-family: var(--font-code);
+  font-size: 13px;
+  word-spacing: 0.4em;
+}
+
+.repl-tip {
+  margin: 0;
+  padding: 0 10px 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.repl-tip a {
+  color: var(--link);
+}
+
+.repl-form textarea {
   flex: 1;
   min-width: 0;
   padding: 6px 8px;
+  resize: none;
+  white-space: pre;
+  overflow: auto;
   border: 1px solid var(--border);
   border-radius: 6px;
   background: var(--input-bg);

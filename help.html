@@ -53,6 +53,7 @@
       <nav class="toc" aria-label="本頁目錄">
         <a href="#start">開始使用</a>
         <a href="#languages">MicroPython 與 Arduino</a>
+        <a href="#repl">REPL 即時指令</a>
         <a href="#boards">支援的開發板</a>
         <a href="#parts">電子元件與感測器</a>
         <a href="#wiring">接線注意事項</a>
@@ -128,6 +129,63 @@
           </table>
         </div>
         <p>同一塊板子可以換來換去，只是一次只能用一種：用 Arduino IDE 燒錄後，MicroPython 和板子上的檔案會被覆蓋；想換回來，再到本網站按「安裝韌體」即可。</p>
+      </section>
+
+      <section id="repl">
+        <h2>用 REPL 和開發板對話</h2>
+        <p>REPL 是 Read-Eval-Print Loop 的縮寫，意思是讀取指令、執行、印出結果，然後重複。平常的 <code>main.py</code> 是寫好整份程式再上傳；REPL 則是說一句、回一句，很適合用來測接線、試指令和找錯誤。</p>
+        <p class="tip">這裡輸入的指令會直接在板子上執行，但<strong>不會存進 <code>main.py</code></strong>。重新啟動或上傳程式後，變數和指令的效果都會消失。</p>
+        <h3>開始使用</h3>
+        <ol>
+          <li>按「連接開發板」。連接時，板子上正在執行的程式會停止，監控窗會出現 <code>&gt;&gt;&gt;</code> 提示符號。</li>
+          <li>如果程式正在執行（例如剛按完「上傳並執行」），先按「停止」。</li>
+          <li>在監控窗下方的輸入框打指令，按 <kbd>Enter</kbd> 送出。</li>
+        </ol>
+        <h3>動手試試看</h3>
+        <p>照順序輸入下面的指令。第二段會用到 GPIO 2，也就是常見 ESP32 開發板的板載 LED；其他晶片或板子請改成自己的腳位。</p>
+        <pre class="code-block" tabindex="0">1 + 1
+
+from machine import Pin
+led = Pin(2, Pin.OUT)
+led.value(1)
+led.value(0)
+
+import os
+os.listdir()</pre>
+        <h3>常用指令</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">指令</th><th scope="col">用途</th></tr></thead>
+            <tbody>
+              <tr><td><code>help("modules")</code></td><td>列出韌體內建的模組</td></tr>
+              <tr><td><code>import machine</code>，再輸入 <code>dir(machine)</code></td><td>列出模組裡的功能</td></tr>
+              <tr><td><code>from machine import Pin</code>，再輸入 <code>Pin(19, Pin.IN, Pin.PULL_UP).value()</code></td><td>讀取按鈕腳位，按下時通常是 0</td></tr>
+              <tr><td><code>from machine import Pin, I2C</code>，再輸入 <code>I2C(0, scl=Pin(22), sda=Pin(21)).scan()</code></td><td>掃描 I2C 裝置，確認 OLED、LCD 的接線和位址</td></tr>
+              <tr><td><code>import gc</code>，再輸入 <code>gc.mem_free()</code></td><td>查看剩餘記憶體</td></tr>
+              <tr><td><code>print(open("main.py").read())</code></td><td>看板子上的程式。裡面可能有 Wi-Fi 密碼，投影時要小心</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>快速鍵</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">按鍵</th><th scope="col">功能</th></tr></thead>
+            <tbody>
+              <tr><td><kbd>Enter</kbd></td><td>送出指令。行尾是冒號時會換行並縮排</td></tr>
+              <tr><td><kbd>Shift</kbd> + <kbd>Enter</kbd></td><td>換行，不送出</td></tr>
+              <tr><td><kbd>Ctrl</kbd> + <kbd>Enter</kbd></td><td>不論內容，立刻送出</td></tr>
+              <tr><td><kbd>↑</kbd>、<kbd>↓</kbd></td><td>叫回之前的指令</td></tr>
+              <tr><td><kbd>Tab</kbd></td><td>補完名稱。有多個可能時，會列在輸入框上方。要先 <code>import</code>，才補得到模組裡的名稱，例如先輸入 <code>import machine</code>，再輸入 <code>machine.</code> 後按 Tab</td></tr>
+              <tr><td><kbd>Ctrl</kbd> + <kbd>C</kbd></td><td>中斷正在執行的程式，和「停止」相同。有選取文字時則是複製</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>輸入多行程式</h3>
+        <p>輸入 <code>for i in range(3):</code> 後按 <kbd>Enter</kbd>，輸入框會自動換行並縮排。寫完內容後，再多按兩次 <kbd>Enter</kbd>（出現一個空行後送出），整段就會執行。也可以直接貼上多行程式，再按「傳送」。監控窗會顯示 <code>===</code>，這是開發板接收多行程式時的提示，屬於正常現象。</p>
+        <pre class="code-block" tabindex="0">for i in range(3):
+    print(i)</pre>
+        <p>較長的程式請放到左邊的編輯器，用「上傳並執行」，才會保存下來。</p>
+        <p class="tip warn"><strong>REPL 會真的控制硬體。</strong>和寫在程式裡一樣，錯誤的腳位設定仍可能影響接在上面的元件，也不要輸入不了解的刪除檔案指令。之前的指令只留在這個分頁的記憶體，重新整理或切換語言後就會清除，不會存進瀏覽器。</p>
       </section>
 
       <section id="boards">

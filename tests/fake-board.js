@@ -32,6 +32,9 @@
       this.files = {};
       this.mode = "friendly";
       this.command = [];
+      this.line = "";
+      this.commands = [];
+      this.pasted = [];
       this.tempData = null;
       this.resets = 0;
       this.received = [];
@@ -70,15 +73,53 @@
         }
         return;
       }
-      if (byte === 0x01) {
+      if (this.mode === "paste") {
+        if (byte === 0x04) {
+          this.pasted.push(new TextDecoder().decode(new Uint8Array(this.command)));
+          this.command = [];
+          this.mode = "friendly";
+          this.emit("\r\nran block\r\n>>> ");
+        } else {
+          this.command.push(byte);
+          this.emit(byte === 0x0d ? "\r\n=== " : String.fromCharCode(byte));
+        }
+        return;
+      }
+      if (byte === 0x05) {
+        this.mode = "paste";
+        this.command = [];
+        this.emit("\r\npaste mode; Ctrl-C to cancel, Ctrl-D to finish\r\n=== ");
+      } else if (byte === 0x09) {
+        this.complete();
+      } else if (byte === 0x0d) {
+        const command = this.line;
+        this.line = "";
+        if (command) this.commands.push(command);
+        this.emit(`\r\n${command === "1+1" ? "2\r\n" : ""}>>> `);
+      } else if (byte >= 0x20 && byte < 0x7f) {
+        this.line += String.fromCharCode(byte);
+        this.emit(String.fromCharCode(byte));
+      } else if (byte === 0x01) {
         this.mode = "raw";
+        this.line = "";
         this.emit("raw REPL; CTRL-B to exit\r\n>");
       } else if (byte === 0x03) {
+        this.line = "";
         this.emit("\r\n>>> ");
       } else if (byte === 0x04) {
         this.softResets++;
         this.emit("MPY: soft reboot\r\n");
         if (this.files["/main.py"]) setTimeout(() => this.emit(this.runOutput), 20);
+      }
+    }
+
+    /** Answers Tab in the same format as a real REPL. */
+    complete() {
+      if (this.line === "impor") {
+        this.line = "import ";
+        this.emit("t ");
+      } else if (this.line === "sys.std") {
+        this.emit(`\r\nstderr          stdin           stdout\r\n>>> ${this.line}`);
       }
     }
 
@@ -109,6 +150,7 @@
       this.resets++;
       this.mode = "friendly";
       this.command = [];
+      this.line = "";
       this.emit("rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)\r\n");
       if (this.files["/main.py"]) setTimeout(() => this.emit(this.runOutput), 20);
     }

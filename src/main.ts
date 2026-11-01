@@ -2,10 +2,11 @@ import { basicSetup, EditorView } from "codemirror";
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { python } from "@codemirror/lang-python";
 import { tags } from "@lezer/highlight";
+import { CommandHistory, enterAction, nextIndent, parseCompletion } from "./command";
 import { adaptExamplePins, chipFromMachine, CHIPS, FIRMWARE_VERSION, isChipId, type ChipId } from "./chips";
 import { installFirmware } from "./flasher";
 import { lang, setupLanguagePicker, t, translatePage } from "./i18n";
-import { RawRepl, ReplExecError, ReplTimeoutError } from "./repl";
+import { pasteModeBytes, RawRepl, ReplExecError, ReplTimeoutError } from "./repl";
 import { SerialLink } from "./serial";
 import { setupStats } from "./stats";
 import { setupStylePicker } from "./theme";
@@ -86,6 +87,11 @@ const EDITOR_WIDTH_DEFAULT = 60;
 const EDITOR_WIDTH_MIN = 20;
 const EDITOR_WIDTH_MAX = 80;
 const EDITOR_WIDTH_STEP = 2;
+const PASTE_CHUNK = 128;
+const PASTE_CHUNK_GAP = 20;
+const COMPLETION_QUIET = 80;
+const COMPLETION_TIMEOUT = 400;
+const REPL_MAX_ROWS = 8;
 
 function el<T extends HTMLElement>(id: string): T {
   return document.getElementById(id) as T;
@@ -118,7 +124,8 @@ const ui = {
   errorCard: el("error-card"),
   copyError: el<HTMLButtonElement>("copy-error"),
   replForm: el<HTMLFormElement>("repl-form"),
-  replInput: el<HTMLInputElement>("repl-input"),
+  replInput: el<HTMLTextAreaElement>("repl-input"),
+  replChoices: el("repl-choices"),
   replSend: el<HTMLButtonElement>("repl-send"),
   installDialog: el<HTMLDialogElement>("install-dialog"),
   firmwareVersion: el("firmware-version"),
@@ -136,6 +143,9 @@ let busy = false;
 let hasFirmware = false;
 let monitorText = "";
 let scanFrom = 0;
+let atPrompt = false;
+let completing = false;
+const commandHistory = new CommandHistory();
 
 function readSaved(): string | null {
   try {
@@ -294,6 +304,7 @@ function refreshButtons(): void {
   ui.replInput.disabled = busy || !open;
   ui.replSend.disabled = busy || !open;
   ui.language.disabled = busy;
+  ui.replInput.placeholder = open && hasFirmware && !busy && !atPrompt ? t("程式執行中，按「停止」後可輸入指令") : t("輸入 MicroPython 指令後按 Enter");
 }
 
 function setBusy(value: boolean): void {
@@ -345,6 +356,8 @@ function onBoardOutput(data: Uint8Array): void {
   const text = stripTerminalCodes(decoder.decode(data, { stream: true }));
   appendMonitor(text);
   monitorText = (monitorText + text).slice(-MONITOR_LIMIT);
+  atPrompt = /(?:^|\n)>>> $/.test(monitorText);
+  refreshButtons();
   scanFrom = Math.min(scanFrom, monitorText.length);
   scanOutput();
 }
@@ -409,6 +422,8 @@ async function detectFirmware(): Promise<void> {
     systemMessage(t("開發板就緒：{machine}{flash}，MicroPython {release}", { machine: info.machine, flash, release: info.release }));
     const chip = chipFromMachine(info.machine);
     if (chip) followDetectedChip(chip.id);
+    // The board is waiting at its prompt, but that prompt went by while the site was reading its details.
+    await link.write(Uint8Array.of(0x0d));
   } catch (error) {
     if (!(error instanceof ReplTimeoutError)) throw error;
     hasFirmware = false;
@@ -437,12 +452,14 @@ async function disconnect(): Promise<void> {
   setBusy(true);
   await link.close();
   hasFirmware = false;
+  atPrompt = false;
   setStatus(t("尚未連接開發板"), "idle");
   setBusy(false);
 }
 
 async function restartBoard(): Promise<void> {
   clearMonitor();
+  atPrompt = false;
   const before = monitorText.length;
   await link.hardReset();
   // Boards without an auto-reset circuit print nothing, so fall back to a soft reset.
@@ -554,6 +571,7 @@ function guarded(action: () => Promise<void>): () => void {
 
 link.onLost = () => {
   hasFirmware = false;
+  atPrompt = false;
   setStatus(t("開發板連線中斷，請檢查 USB 線後重新連接"), "error");
   systemMessage(t("開發板連線中斷"));
   refreshButtons();
@@ -573,11 +591,116 @@ ui.installDialog.addEventListener("close", () => {
   if (ui.installDialog.returnValue === "confirm") guarded(install)();
 });
 
+function setReplText(text: string): void {
+  ui.replInput.value = text;
+  fitReplInput();
+}
+
+function fitReplInput(): void {
+  ui.replInput.rows = Math.min(REPL_MAX_ROWS, ui.replInput.value.split("\n").length);
+  ui.replChoices.hidden = true;
+}
+
+async function sendPaste(code: string): Promise<void> {
+  const bytes = pasteModeBytes(code);
+  // The board echoes as it reads, so a long block must not outrun its receive buffer.
+  for (let offset = 0; offset < bytes.length; offset += PASTE_CHUNK) {
+    await link.write(bytes.subarray(offset, offset + PASTE_CHUNK));
+    await new Promise((resolve) => setTimeout(resolve, PASTE_CHUNK_GAP));
+  }
+}
+
+/** Asks the board's own Tab completion, which knows what is imported, and keeps the exchange out of the monitor. */
+async function askBoardToComplete(line: string): Promise<string> {
+  const replyDecoder = new TextDecoder();
+  let reply = "";
+  const answered = new Promise<void>((resolve) => {
+    let timer = setTimeout(resolve, COMPLETION_TIMEOUT);
+    link.setSink((data) => {
+      reply += replyDecoder.decode(data, { stream: true });
+      clearTimeout(timer);
+      timer = setTimeout(resolve, COMPLETION_QUIET);
+    });
+  });
+  try {
+    await link.write(new TextEncoder().encode(`${line}\t`));
+    await answered;
+    // Ctrl-C empties the board's copy of the line, because the text stays in this box until it is sent.
+    link.setSink(() => {});
+    await link.write(Uint8Array.of(0x03));
+    await new Promise((resolve) => setTimeout(resolve, COMPLETION_QUIET));
+  } finally {
+    link.setSink(onBoardOutput);
+  }
+  return stripTerminalCodes(reply);
+}
+
+async function completeCommand(): Promise<void> {
+  const value = ui.replInput.value;
+  const lineStart = value.lastIndexOf("\n") + 1;
+  const line = value.slice(lineStart).trimStart();
+  const indent = value.slice(lineStart, value.length - line.length);
+  completing = true;
+  try {
+    const completion = parseCompletion(line, await askBoardToComplete(line));
+    if (ui.replInput.value !== value) return;
+    setReplText(value.slice(0, lineStart) + indent + completion.line);
+    ui.replChoices.textContent = completion.choices.join("  ");
+    ui.replChoices.hidden = completion.choices.length === 0;
+  } finally {
+    completing = false;
+  }
+}
+
 ui.replForm.addEventListener("submit", (event) => {
   event.preventDefault();
-  const command = ui.replInput.value;
-  ui.replInput.value = "";
-  guarded(() => link.write(new TextEncoder().encode(`${command}\r\n`)))();
+  if (completing) return;
+  const command = ui.replInput.value.trimEnd();
+  const isBlock = command.includes("\n");
+  // Paste mode's control characters would reach a running program as ordinary input.
+  if (isBlock && !atPrompt) {
+    systemMessage(t("程式還在執行，請先按「停止」再送出多行程式。"));
+    return;
+  }
+  commandHistory.add(command);
+  setReplText("");
+  guarded(() => (isBlock ? sendPaste(command) : link.write(new TextEncoder().encode(`${command.trim()}\r`))))();
+});
+
+ui.replInput.addEventListener("input", fitReplInput);
+ui.replInput.addEventListener("keydown", (event) => {
+  // Enter also confirms a word in a Chinese input method, and that must not run the command.
+  if (event.isComposing) return;
+  const input = ui.replInput;
+  const caretAtEnd = input.selectionStart === input.value.length && input.selectionEnd === input.value.length;
+  if (event.key === "Enter") {
+    event.preventDefault();
+    if (event.ctrlKey || (!event.shiftKey && enterAction(input.value) === "send" && (caretAtEnd || !input.value.includes("\n")))) {
+      ui.replForm.requestSubmit();
+    } else {
+      input.setRangeText(`\n${caretAtEnd ? nextIndent(input.value) : ""}`, input.selectionStart, input.selectionEnd, "end");
+      fitReplInput();
+    }
+  } else if (event.key === "ArrowUp" && !input.value.slice(0, input.selectionStart).includes("\n")) {
+    const command = commandHistory.previous(input.value);
+    if (command === null) return;
+    event.preventDefault();
+    setReplText(command);
+  } else if (event.key === "ArrowDown" && !input.value.slice(input.selectionEnd).includes("\n")) {
+    const command = commandHistory.next();
+    if (command === null) return;
+    event.preventDefault();
+    setReplText(command);
+    input.setSelectionRange(command.length, command.length);
+  } else if (event.key === "Tab" && !event.shiftKey && atPrompt && !completing && caretAtEnd && input.value.trim() && /^[\x20-\x7e\n]*$/.test(input.value)) {
+    // An empty box or a running program leaves Tab for moving between controls, so the keyboard is never stuck.
+    event.preventDefault();
+    guarded(completeCommand)();
+  } else if (event.key === "c" && event.ctrlKey && input.selectionStart === input.selectionEnd) {
+    event.preventDefault();
+    setReplText("");
+    guarded(stopProgram)();
+  }
 });
 
 setupStats();

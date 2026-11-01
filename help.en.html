@@ -43,6 +43,7 @@
       <nav class="toc" aria-label="On this page">
         <a href="#start">Getting started</a>
         <a href="#languages">MicroPython and Arduino</a>
+        <a href="#repl">The REPL</a>
         <a href="#boards">Supported boards</a>
         <a href="#parts">Parts and sensors</a>
         <a href="#wiring">Wiring notes</a>
@@ -118,6 +119,63 @@
           </table>
         </div>
         <p>One board can switch back and forth, but it runs only one at a time. Flashing from the Arduino IDE overwrites MicroPython and the files on the board. To come back, press "Install firmware" on this site.</p>
+      </section>
+
+      <section id="repl">
+        <h2>Talking to the board with the REPL</h2>
+        <p>REPL stands for Read-Eval-Print Loop: it reads a command, runs it, prints the result, and repeats. With <code>main.py</code> you write a whole program and then upload it. The REPL works one line at a time, which suits checking wiring, trying commands and finding mistakes.</p>
+        <p class="tip">Commands you type here run on the board straight away, but <strong>are not saved to <code>main.py</code></strong>. Variables and the effects of commands are gone after a restart or an upload.</p>
+        <h3>Getting started</h3>
+        <ol>
+          <li>Press "Connect board". Connecting stops any running program, and the monitor shows the <code>&gt;&gt;&gt;</code> prompt.</li>
+          <li>If a program is running (for example, just after "Upload and run"), press "Stop" first.</li>
+          <li>Type a command in the box below the monitor and press <kbd>Enter</kbd>.</li>
+        </ol>
+        <h3>Try it</h3>
+        <p>Type these commands in order. The second group uses GPIO 2, the onboard LED of common ESP32 boards. For other chips or boards, use your own pin.</p>
+        <pre class="code-block" tabindex="0">1 + 1
+
+from machine import Pin
+led = Pin(2, Pin.OUT)
+led.value(1)
+led.value(0)
+
+import os
+os.listdir()</pre>
+        <h3>Useful commands</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Command</th><th scope="col">What it does</th></tr></thead>
+            <tbody>
+              <tr><td><code>help("modules")</code></td><td>Lists the modules in the firmware</td></tr>
+              <tr><td><code>import machine</code>, then <code>dir(machine)</code></td><td>Lists what a module contains</td></tr>
+              <tr><td><code>from machine import Pin</code>, then <code>Pin(19, Pin.IN, Pin.PULL_UP).value()</code></td><td>Reads a button pin, usually 0 when pressed</td></tr>
+              <tr><td><code>from machine import Pin, I2C</code>, then <code>I2C(0, scl=Pin(22), sda=Pin(21)).scan()</code></td><td>Scans for I2C devices, to check an OLED or LCD's wiring and address</td></tr>
+              <tr><td><code>import gc</code>, then <code>gc.mem_free()</code></td><td>Shows the free memory</td></tr>
+              <tr><td><code>print(open("main.py").read())</code></td><td>Shows the program on the board. It may contain a Wi-Fi password, so take care when projecting</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Keyboard shortcuts</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Keys</th><th scope="col">What they do</th></tr></thead>
+            <tbody>
+              <tr><td><kbd>Enter</kbd></td><td>Sends the command. After a line ending in a colon, it starts an indented new line</td></tr>
+              <tr><td><kbd>Shift</kbd> + <kbd>Enter</kbd></td><td>Starts a new line without sending</td></tr>
+              <tr><td><kbd>Ctrl</kbd> + <kbd>Enter</kbd></td><td>Sends straight away, whatever the text</td></tr>
+              <tr><td><kbd>↑</kbd>, <kbd>↓</kbd></td><td>Brings back earlier commands</td></tr>
+              <tr><td><kbd>Tab</kbd></td><td>Completes a name. When several fit, they are listed above the box. A module must be imported first: type <code>import machine</code>, then <code>machine.</code> and press Tab</td></tr>
+              <tr><td><kbd>Ctrl</kbd> + <kbd>C</kbd></td><td>Interrupts the running program, like "Stop". With text selected, it copies instead</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Typing several lines</h3>
+        <p>Type <code>for i in range(3):</code> and press <kbd>Enter</kbd>, and the box starts an indented new line. After the body, press <kbd>Enter</kbd> twice more (a blank line, then send) to run the whole block. You can also paste several lines and press "Send". The monitor shows <code>===</code>, which is the board's normal prompt while it receives several lines.</p>
+        <pre class="code-block" tabindex="0">for i in range(3):
+    print(i)</pre>
+        <p>Put longer programs in the editor on the left and use "Upload and run", so they are saved.</p>
+        <p class="tip warn"><strong>The REPL really controls the hardware.</strong> As in a program, wrong pin settings can still affect connected parts, so do not type file-deleting commands you do not understand. Earlier commands stay only in this tab's memory. They are cleared when you reload or change the language, and are never saved in the browser.</p>
       </section>
 
       <section id="boards">

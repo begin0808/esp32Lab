@@ -4,6 +4,7 @@ const CTRL_A = 0x01;
 const CTRL_B = 0x02;
 const CTRL_C = 0x03;
 const CTRL_D = 0x04;
+const CTRL_E = 0x05;
 
 const RAW_BANNER = "raw REPL; CTRL-B to exit\r\n>";
 const WRITE_CHUNK = 256;
@@ -45,6 +46,16 @@ export function byteChecksum(data: Uint8Array): number {
   let sum = 0;
   for (const byte of data) sum = (sum + byte) & 0xffff;
   return sum;
+}
+
+/** A whole block for paste mode, which compiles it at once and skips the board's auto-indent. */
+export function pasteModeBytes(code: string): Uint8Array {
+  const text = new TextEncoder().encode(`${code.trimEnd().replace(/\r?\n/g, "\r")}\r`);
+  const bytes = new Uint8Array(text.length + 2);
+  bytes[0] = CTRL_E;
+  bytes.set(text, 1);
+  bytes[bytes.length - 1] = CTRL_D;
+  return bytes;
 }
 
 function pythonString(text: string): string {

@@ -146,10 +146,12 @@
         </div>
 
         <pre id="monitor" class="monitor" tabindex="0" aria-live="off"></pre>
+        <p id="repl-choices" class="repl-choices" role="status" hidden></p>
         <form id="repl-form" class="repl-form">
-          <input id="repl-input" type="text" placeholder="輸入 MicroPython 指令後按 Enter" autocomplete="off" disabled />
+          <textarea id="repl-input" rows="1" placeholder="輸入 MicroPython 指令後按 Enter" aria-label="MicroPython 指令" autocomplete="off" autocapitalize="off" spellcheck="false" disabled></textarea>
           <button class="btn small" id="repl-send" disabled>傳送</button>
         </form>
+        <p class="repl-tip">↑↓ 之前的指令 · Tab 補字 · Shift+Enter 換行 · Ctrl+C 中斷 · <a id="repl-help" href="./help.html#repl" target="_blank" rel="opener">REPL 教學</a></p>
       </section>
     </main>
 

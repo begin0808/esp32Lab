@@ -1024,3 +1024,232 @@ test.describe("choosing a language", () => {
     await expect(page.locator("#language-picker option")).toHaveText(["繁體中文", "English"]);
   });
 });
+
+test.describe("REPL", () => {
+  async function connected(page: Page, options: object = {}) {
+    await mockSerial(page, options);
+    await page.goto("/");
+    await page.locator("#connect").click();
+    await expect(page.locator("#upload")).toBeEnabled();
+    await expect(page.locator("#monitor")).toContainText(">>> ");
+  }
+  const box = (page: Page) => page.locator("#repl-input");
+  const commands = (page: Page) => page.evaluate(() => (globalThis as any).board.commands as string[]);
+  const pasted = (page: Page) => page.evaluate(() => (globalThis as any).board.pasted as string[]);
+
+  test("runs a command and shows the answer", async ({ page }) => {
+    await connected(page);
+    await box(page).fill("1+1");
+    await box(page).press("Enter");
+    await expect(page.locator("#monitor")).toContainText("1+1\r\n2\r\n>>> ".replace(/\r/g, ""));
+    await expect(box(page)).toHaveValue("");
+    expect(await commands(page)).toEqual(["1+1"]);
+  });
+
+  test("the send button works too", async ({ page }) => {
+    await connected(page);
+    await box(page).fill("print(1)");
+    await page.locator("#repl-send").click();
+    await expect.poll(() => commands(page)).toEqual(["print(1)"]);
+  });
+
+  test("brings back earlier commands and the unsent text", async ({ page }) => {
+    await connected(page);
+    for (const command of ["first", "second"]) {
+      await box(page).fill(command);
+      await box(page).press("Enter");
+    }
+    await box(page).fill("draft");
+    await box(page).press("ArrowUp");
+    await expect(box(page)).toHaveValue("second");
+    await box(page).press("ArrowUp");
+    await expect(box(page)).toHaveValue("first");
+    await box(page).press("ArrowDown");
+    await expect(box(page)).toHaveValue("second");
+    await box(page).press("ArrowDown");
+    await expect(box(page)).toHaveValue("draft");
+  });
+
+  test("never stores earlier commands, which may hold a password", async ({ page }) => {
+    await connected(page);
+    await box(page).fill('wlan.connect("home", "my-secret")');
+    await box(page).press("Enter");
+    await expect.poll(() => commands(page)).toHaveLength(1);
+    expect(await page.evaluate(() => JSON.stringify(localStorage))).not.toContain("my-secret");
+  });
+
+  test("Tab completes a name without touching the monitor or leaving text on the board", async ({ page }) => {
+    await connected(page);
+    const before = await page.locator("#monitor").textContent();
+    await box(page).fill("impor");
+    await box(page).press("Tab");
+    await expect(box(page)).toHaveValue("import ");
+    await expect(box(page)).toBeFocused();
+    expect(await page.locator("#monitor").textContent()).toBe(before);
+    await expect.poll(() => page.evaluate(() => (globalThis as any).board.line)).toBe("");
+    await box(page).pressSequentially("sys");
+    await box(page).press("Enter");
+    await expect.poll(() => commands(page)).toEqual(["import sys"]);
+  });
+
+  test("Tab lists the choices above the box until the text changes", async ({ page }) => {
+    await connected(page);
+    await box(page).fill("sys.std");
+    await box(page).press("Tab");
+    await expect(page.locator("#repl-choices")).toHaveText("stderr  stdin  stdout");
+    await expect(box(page)).toHaveValue("sys.std");
+    await box(page).pressSequentially("o");
+    await expect(page.locator("#repl-choices")).toBeHidden();
+  });
+
+  test("Tab leaves a running program alone and still moves the focus", async ({ page }) => {
+    await connected(page);
+    await page.locator("#upload").click();
+    await expect(page.locator("#ip-link")).toBeVisible();
+    await expect(box(page)).toHaveAttribute("placeholder", /按「停止」/);
+    const sent = await page.evaluate(() => (globalThis as any).board.received.length);
+    await box(page).fill("impor");
+    await box(page).press("Tab");
+    await expect(box(page)).not.toBeFocused();
+    expect(await page.evaluate(() => (globalThis as any).board.received.length)).toBe(sent);
+  });
+
+  test("an empty box leaves Tab for moving between controls", async ({ page }) => {
+    await connected(page);
+    await box(page).focus();
+    await page.keyboard.press("Tab");
+    await expect(box(page)).not.toBeFocused();
+  });
+
+  test("writes a block over several lines and runs it whole", async ({ page }) => {
+    await connected(page);
+    await box(page).focus();
+    await page.keyboard.type("for i in range(3):");
+    await page.keyboard.press("Enter");
+    await expect(box(page)).toHaveValue("for i in range(3):\n    ");
+    await expect(box(page)).toHaveAttribute("rows", "2");
+    await page.keyboard.type("print(i)");
+    await page.keyboard.press("Enter");
+    await expect(box(page)).toHaveValue("for i in range(3):\n    print(i)\n    ");
+    expect(await pasted(page)).toEqual([]);
+    await page.keyboard.press("Enter");
+    await expect.poll(() => pasted(page)).toEqual(["for i in range(3):\r    print(i)\r"]);
+    await expect(page.locator("#monitor")).toContainText("ran block");
+    await expect(box(page)).toHaveValue("");
+    await expect(box(page)).toHaveAttribute("rows", "1");
+
+    await box(page).press("ArrowUp");
+    await expect(box(page)).toHaveValue("for i in range(3):\n    print(i)");
+  });
+
+  test("Shift+Enter adds a line and Ctrl+Enter sends at once", async ({ page }) => {
+    await connected(page);
+    await box(page).fill("a = 1");
+    await box(page).press("Shift+Enter");
+    await page.keyboard.type("b = 2");
+    await expect(box(page)).toHaveValue("a = 1\nb = 2");
+    await box(page).press("Control+Enter");
+    await expect.poll(() => pasted(page)).toEqual(["a = 1\rb = 2\r"]);
+  });
+
+  test("pasted lines are sent whole, and Enter inside them only adds a line", async ({ page }) => {
+    await connected(page);
+    await box(page).fill("x = 1\ny = 2");
+    await box(page).evaluate((node) => (node as HTMLTextAreaElement).setSelectionRange(3, 3));
+    await box(page).press("Enter");
+    expect(await pasted(page)).toEqual([]);
+    await expect(box(page)).toHaveValue("x =\n 1\ny = 2");
+    await page.locator("#repl-send").click();
+    await expect.poll(() => pasted(page)).toHaveLength(1);
+  });
+
+  test("keeps a block while a program runs instead of feeding it to the program", async ({ page }) => {
+    await connected(page);
+    await page.locator("#upload").click();
+    await expect(page.locator("#ip-link")).toBeVisible();
+    await box(page).fill("a = 1\nb = 2");
+    await page.locator("#repl-send").click();
+    await expect(page.locator("#monitor")).toContainText("程式還在執行");
+    await expect(box(page)).toHaveValue("a = 1\nb = 2");
+    expect(await pasted(page)).toEqual([]);
+
+    await page.locator("#stop").click();
+    await expect(box(page)).toHaveAttribute("placeholder", /輸入 MicroPython/);
+    await page.locator("#repl-send").click();
+    await expect.poll(() => pasted(page)).toHaveLength(1);
+  });
+
+  test("a one-line command still reaches a program waiting for input", async ({ page }) => {
+    await connected(page);
+    await page.locator("#upload").click();
+    await expect(page.locator("#ip-link")).toBeVisible();
+    await box(page).fill("yes");
+    await box(page).press("Enter");
+    await expect.poll(() => commands(page)).toContain("yes");
+  });
+
+  test("Ctrl+C interrupts, unless text is selected for copying", async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await connected(page);
+    const interrupts = () => page.evaluate(() => (globalThis as any).board.received.filter((byte: number) => byte === 3).length);
+    const before = await interrupts();
+    await box(page).fill("copy me");
+    await box(page).evaluate((node) => (node as HTMLTextAreaElement).select());
+    await box(page).press("Control+c");
+    expect(await interrupts()).toBe(before);
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("copy me");
+
+    await box(page).evaluate((node) => (node as HTMLTextAreaElement).setSelectionRange(7, 7));
+    await box(page).press("Control+c");
+    await expect.poll(interrupts).toBeGreaterThan(before);
+    await expect(box(page)).toHaveValue("");
+    await expect(page.locator("#status")).toContainText("程式已停止");
+  });
+
+  test("clearing the monitor does not lose track of the prompt", async ({ page }) => {
+    await connected(page);
+    await page.locator("#clear").click();
+    await box(page).fill("impor");
+    await box(page).press("Tab");
+    await expect(box(page)).toHaveValue("import ");
+  });
+
+  test("opens the tutorial from below the box", async ({ page, context }) => {
+    await page.goto("/");
+    const [help] = await Promise.all([context.waitForEvent("page"), page.locator("#repl-help").click()]);
+    await help.waitForLoadState();
+    await expect(help).toHaveURL(/help\.html#repl$/);
+    await expect(help.locator("#repl h2")).toContainText("REPL");
+    await expect(help.locator("#repl h2")).toBeInViewport();
+  });
+
+  test("the input keeps the code font size and fits a phone", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/");
+    await expect(page.locator(".repl-tip")).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+  });
+
+  test.describe("in an English browser", () => {
+    test.use({ locale: "en-US" });
+
+    test("guides students in English", async ({ page }) => {
+      await connected(page);
+      await expect(page.locator(".repl-tip")).toContainText("Tab completes");
+      await page.locator("#upload").click();
+      await expect(page.locator("#ip-link")).toBeVisible();
+      await expect(box(page)).toHaveAttribute("placeholder", 'Program running. Press "Stop" to type commands');
+      await box(page).fill("a = 1\nb = 2");
+      await page.locator("#repl-send").click();
+      await expect(page.locator("#monitor")).toContainText("The program is still running");
+    });
+
+    test("opens the English tutorial", async ({ page, context }) => {
+      await page.goto("/");
+      const [help] = await Promise.all([context.waitForEvent("page"), page.locator("#repl-help").click()]);
+      await expect(help).toHaveURL(/help\.en\.html#repl$/);
+      await expect(help.locator("#repl h2")).toContainText("REPL");
+    await expect(help.locator("#repl h2")).toBeInViewport();
+    });
+  });
+});
