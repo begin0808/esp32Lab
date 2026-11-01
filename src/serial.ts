@@ -1,3 +1,5 @@
+import { t } from "./i18n";
+
 const CP210X_VENDOR_ID = 0x10c4;
 const CH340_VENDOR_ID = 0x1a86;
 const ESPRESSIF_VENDOR_ID = 0x303a;
@@ -46,7 +48,7 @@ export class SerialLink {
   }
 
   async open(): Promise<void> {
-    if (!this.port) throw new Error("尚未選擇序列埠");
+    if (!this.port) throw new Error(t("尚未選擇序列埠"));
     await this.port.open({ baudRate: BAUD_RATE });
     // Keep EN and IO0 released so that opening the port does not hold the board in reset.
     await this.port.setSignals({ dataTerminalReady: false, requestToSend: false });
@@ -72,7 +74,7 @@ export class SerialLink {
 
   async write(data: Uint8Array): Promise<void> {
     const writable = this.port?.writable;
-    if (!writable) throw new Error("開發板尚未連接");
+    if (!writable) throw new Error(t("開發板尚未連接"));
     const writer = writable.getWriter();
     try {
       await writer.write(data);

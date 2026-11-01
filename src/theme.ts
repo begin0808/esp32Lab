@@ -1,8 +1,10 @@
+import { t } from "./i18n";
+
 const STYLE_KEY = "esp32-mp-style";
 
 export const STYLES = [
-  { id: "mat", name: "切割墊工作台" },
-  { id: "blocks", name: "積木玩具" },
+  { id: "mat", name: t("切割墊工作台") },
+  { id: "blocks", name: t("積木玩具") },
 ];
 
 // Chinese fonts are large, so each one is fetched only when its style is chosen.

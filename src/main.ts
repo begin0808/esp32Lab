@@ -4,6 +4,7 @@ import { python } from "@codemirror/lang-python";
 import { tags } from "@lezer/highlight";
 import { adaptExamplePins, chipFromMachine, CHIPS, FIRMWARE_VERSION, isChipId, type ChipId } from "./chips";
 import { installFirmware } from "./flasher";
+import { lang, setupLanguagePicker, t, translatePage } from "./i18n";
 import { RawRepl, ReplExecError, ReplTimeoutError } from "./repl";
 import { SerialLink } from "./serial";
 import { setupStats } from "./stats";
@@ -19,66 +20,54 @@ import {
   randomChannel,
   stripTerminalCodes,
 } from "./text";
-import blink from "./examples/blink.py?raw";
-import webLed from "./examples/web_led.py?raw";
-import mqttLed from "./examples/mqtt_led.py?raw";
-import dht11Alarm from "./examples/dht11_alarm.py?raw";
-import telegramLed from "./examples/telegram_led.py?raw";
-import sheetsDht11 from "./examples/sheets_dht11.py?raw";
-import buttonLed from "./examples/button_led.py?raw";
-import breathingLed from "./examples/breathing_led.py?raw";
-import knobLed from "./examples/knob_led.py?raw";
-import buzzerSong from "./examples/buzzer_song.py?raw";
-import servoSweep from "./examples/servo_sweep.py?raw";
-import lightSensor from "./examples/light_sensor.py?raw";
-import pirAlarm from "./examples/pir_alarm.py?raw";
-import ultrasonic from "./examples/ultrasonic.py?raw";
-import dht11Serial from "./examples/dht11_serial.py?raw";
-import ds18b20 from "./examples/ds18b20.py?raw";
-import ws2812Rainbow from "./examples/ws2812_rainbow.py?raw";
-import oledSsd1306 from "./examples/oled_ssd1306.py?raw";
-import lcd1602 from "./examples/lcd1602_i2c.py?raw";
-import max7219 from "./examples/max7219_matrix.py?raw";
+
+translatePage();
+
+const exampleFiles = import.meta.glob<string>("./examples/**/*.py", { query: "?raw", import: "default", eager: true });
+
+function example(file: string): string {
+  return exampleFiles[`./examples/${lang === "en" ? "en/" : ""}${file}.py`];
+}
 
 const EXAMPLE_GROUPS = [
   {
-    label: "基礎輸出與輸入",
+    label: t("基礎輸出與輸入"),
     examples: [
-      { name: "LED 閃爍", code: blink },
-      { name: "按鈕開關 LED", code: buttonLed },
-      { name: "呼吸燈（PWM）", code: breathingLed },
-      { name: "可變電阻調亮度", code: knobLed },
-      { name: "無源蜂鳴器播放小星星", code: buzzerSong },
-      { name: "SG90 伺服馬達來回轉動", code: servoSweep },
+      { name: t("LED 閃爍"), code: example("blink") },
+      { name: t("按鈕開關 LED"), code: example("button_led") },
+      { name: t("呼吸燈（PWM）"), code: example("breathing_led") },
+      { name: t("可變電阻調亮度"), code: example("knob_led") },
+      { name: t("無源蜂鳴器播放小星星"), code: example("buzzer_song") },
+      { name: t("SG90 伺服馬達來回轉動"), code: example("servo_sweep") },
     ],
   },
   {
-    label: "感測器",
+    label: t("感測器"),
     examples: [
-      { name: "光敏電阻自動夜燈", code: lightSensor },
-      { name: "人體紅外線警報（HC-SR501）", code: pirAlarm },
-      { name: "超音波測距（HC-SR04）", code: ultrasonic },
-      { name: "DHT11 溫濕度（監控窗）", code: dht11Serial },
-      { name: "DS18B20 溫度計", code: ds18b20 },
+      { name: t("光敏電阻自動夜燈"), code: example("light_sensor") },
+      { name: t("人體紅外線警報（HC-SR501）"), code: example("pir_alarm") },
+      { name: t("超音波測距（HC-SR04）"), code: example("ultrasonic") },
+      { name: t("DHT11 溫濕度（監控窗）"), code: example("dht11_serial") },
+      { name: t("DS18B20 溫度計"), code: example("ds18b20") },
     ],
   },
   {
-    label: "顯示與燈光",
+    label: t("顯示與燈光"),
     examples: [
-      { name: "WS2812 全彩 LED 彩虹", code: ws2812Rainbow },
-      { name: "SSD1306 OLED 顯示器", code: oledSsd1306 },
-      { name: "I2C LCD 1602 顯示器", code: lcd1602 },
-      { name: "MAX7219 點矩陣", code: max7219 },
+      { name: t("WS2812 全彩 LED 彩虹"), code: example("ws2812_rainbow") },
+      { name: t("SSD1306 OLED 顯示器"), code: example("oled_ssd1306") },
+      { name: t("I2C LCD 1602 顯示器"), code: example("lcd1602_i2c") },
+      { name: t("MAX7219 點矩陣"), code: example("max7219_matrix") },
     ],
   },
   {
-    label: "Wi-Fi 與語音",
+    label: t("Wi-Fi 與語音"),
     examples: [
-      { name: "手機控制 LED（同一個 Wi-Fi）", code: webLed },
-      { name: "語音控制 LED（MQTT）", code: mqttLed },
-      { name: "DHT11 溫濕度警報", code: dht11Alarm },
-      { name: "Telegram 機器人控制 LED", code: telegramLed },
-      { name: "DHT11 資料存到 Google 試算表", code: sheetsDht11 },
+      { name: t("手機控制 LED（同一個 Wi-Fi）"), code: example("web_led") },
+      { name: t("語音控制 LED（MQTT）"), code: example("mqtt_led") },
+      { name: t("DHT11 溫濕度警報"), code: example("dht11_alarm") },
+      { name: t("Telegram 機器人控制 LED"), code: example("telegram_led") },
+      { name: t("DHT11 資料存到 Google 試算表"), code: example("sheets_dht11") },
     ],
   },
 ];
@@ -138,6 +127,7 @@ const ui = {
   fontValue: el<HTMLOutputElement>("font-value"),
   workspace: el("workspace"),
   splitter: el("splitter"),
+  language: el<HTMLSelectElement>("language-picker"),
 };
 
 const link = new SerialLink();
@@ -172,7 +162,7 @@ const codeHighlight = HighlightStyle.define([
 ]);
 
 const editor = new EditorView({
-  doc: readSaved() ?? blink,
+  doc: readSaved() ?? example("blink"),
   extensions: [
     basicSetup,
     python(),
@@ -283,7 +273,7 @@ function setChip(id: ChipId): void {
 function followDetectedChip(id: ChipId): void {
   if (id === ui.chip.value) return;
   setChip(id);
-  systemMessage(`偵測到 ${CHIPS[id].label}，之後選範例會使用這種晶片的腳位。編輯器裡現有的程式不會自動修改。`);
+  systemMessage(t("偵測到 {chip}，之後選範例會使用這種晶片的腳位。編輯器裡現有的程式不會自動修改。", { chip: CHIPS[id].label }));
 }
 
 function setStatus(text: string, state: "idle" | "ready" | "busy" | "error"): void {
@@ -294,15 +284,16 @@ function setStatus(text: string, state: "idle" | "ready" | "busy" | "error"): vo
 function refreshButtons(): void {
   const open = link.isOpen;
   ui.connect.disabled = busy || !SerialLink.isSupported();
-  ui.connect.textContent = open ? "中斷連線" : "連接開發板";
+  ui.connect.textContent = open ? t("中斷連線") : t("連接開發板");
   ui.install.disabled = busy || !link.selectedPort;
-  ui.install.textContent = hasFirmware ? "重新安裝韌體" : "安裝韌體";
+  ui.install.textContent = hasFirmware ? t("重新安裝韌體") : t("安裝韌體");
   ui.install.classList.toggle("primary", !!link.selectedPort && !hasFirmware);
   ui.upload.disabled = busy || !open || !hasFirmware;
   ui.stop.disabled = busy || !open;
   ui.reset.disabled = busy || !open;
   ui.replInput.disabled = busy || !open;
   ui.replSend.disabled = busy || !open;
+  ui.language.disabled = busy;
 }
 
 function setBusy(value: boolean): void {
@@ -339,7 +330,7 @@ function appendMonitor(text: string, className?: string): void {
 }
 
 function systemMessage(text: string): void {
-  appendMonitor(`\n[系統] ${text}\n`, "system");
+  appendMonitor(`\n${t("[系統]")} ${text}\n`, "system");
 }
 
 function clearMonitor(): void {
@@ -377,7 +368,7 @@ function scanOutput(): void {
 }
 
 function failureMessage(error: unknown): string {
-  if (error instanceof ReplExecError) return `開發板回報錯誤：${error.message.trim()}`;
+  if (error instanceof ReplExecError) return t("開發板回報錯誤：{message}", { message: error.message.trim() });
   if (error instanceof Error) return error.message;
   return String(error);
 }
@@ -409,20 +400,20 @@ async function enterRawRepl(repl: RawRepl): Promise<void> {
 }
 
 async function detectFirmware(): Promise<void> {
-  setStatus("正在偵測 MicroPython", "busy");
+  setStatus(t("正在偵測 MicroPython"), "busy");
   try {
     const info = await withRepl((repl) => repl.readBoardInfo());
     hasFirmware = true;
-    const flash = info.flashBytes ? `，快閃記憶體 ${Math.round(info.flashBytes / 1048576)} MB` : "";
-    setStatus(`已連接：${info.machine}${flash}，MicroPython ${info.release}`, "ready");
-    systemMessage(`開發板就緒：${info.machine}${flash}，MicroPython ${info.release}`);
+    const flash = info.flashBytes ? t("，快閃記憶體 {size} MB", { size: Math.round(info.flashBytes / 1048576) }) : "";
+    setStatus(t("已連接：{machine}{flash}，MicroPython {release}", { machine: info.machine, flash, release: info.release }), "ready");
+    systemMessage(t("開發板就緒：{machine}{flash}，MicroPython {release}", { machine: info.machine, flash, release: info.release }));
     const chip = chipFromMachine(info.machine);
     if (chip) followDetectedChip(chip.id);
   } catch (error) {
     if (!(error instanceof ReplTimeoutError)) throw error;
     hasFirmware = false;
-    setStatus("已連接，但沒有偵測到 MicroPython，請先安裝韌體", "error");
-    systemMessage("沒有偵測到 MicroPython。第一次使用，或之前燒錄過 Arduino 程式時，請按「安裝韌體」。");
+    setStatus(t("已連接，但沒有偵測到 MicroPython，請先安裝韌體"), "error");
+    systemMessage(t("沒有偵測到 MicroPython。第一次使用，或之前燒錄過 Arduino 程式時，請按「安裝韌體」。"));
   }
 }
 
@@ -435,8 +426,8 @@ async function connect(): Promise<void> {
     await detectFirmware();
   } catch (error) {
     await link.close();
-    setStatus("連接失敗", "error");
-    systemMessage(`連接失敗：${failureMessage(error)}。如果其他程式（例如 Arduino IDE）正在使用序列埠，請先關閉。`);
+    setStatus(t("連接失敗"), "error");
+    systemMessage(t("連接失敗：{message}。如果其他程式（例如 Arduino IDE）正在使用序列埠，請先關閉。", { message: failureMessage(error) }));
   } finally {
     setBusy(false);
   }
@@ -446,7 +437,7 @@ async function disconnect(): Promise<void> {
   setBusy(true);
   await link.close();
   hasFirmware = false;
-  setStatus("尚未連接開發板", "idle");
+  setStatus(t("尚未連接開發板"), "idle");
   setBusy(false);
 }
 
@@ -461,22 +452,22 @@ async function restartBoard(): Promise<void> {
 
 async function upload(): Promise<void> {
   const code = getCode();
-  if (looksLikeArduino(code) && !confirm("這段程式看起來是 Arduino C++，上傳後會出現語法錯誤。仍要上傳嗎？")) return;
+  if (looksLikeArduino(code) && !confirm(t("這段程式看起來是 Arduino C++，上傳後會出現語法錯誤。仍要上傳嗎？"))) return;
 
   setBusy(true);
-  setStatus("正在上傳程式", "busy");
-  showProgress("正在上傳程式", 0);
+  setStatus(t("正在上傳程式"), "busy");
+  showProgress(t("正在上傳程式"), 0);
   try {
     await withRepl((repl) =>
       repl.writeFile("/main.py", new TextEncoder().encode(code), (fraction) => {
-        showProgress("正在上傳程式", fraction);
+        showProgress(t("正在上傳程式"), fraction);
       }),
     );
-    setStatus("程式執行中", "ready");
+    setStatus(t("程式執行中"), "ready");
     await restartBoard();
   } catch (error) {
-    setStatus("上傳失敗", "error");
-    systemMessage(`上傳失敗：${failureMessage(error)}`);
+    setStatus(t("上傳失敗"), "error");
+    systemMessage(t("上傳失敗：{message}", { message: failureMessage(error) }));
   } finally {
     hideProgress();
     setBusy(false);
@@ -485,7 +476,7 @@ async function upload(): Promise<void> {
 
 async function stopProgram(): Promise<void> {
   await link.write(Uint8Array.of(0x03, 0x03));
-  setStatus("程式已停止", "ready");
+  setStatus(t("程式已停止"), "ready");
 }
 
 async function install(): Promise<void> {
@@ -495,23 +486,23 @@ async function install(): Promise<void> {
   try {
     await link.close();
     hasFirmware = false;
-    systemMessage(`開始安裝 ${FIRMWARE_VERSION}，會依晶片自動選擇韌體`);
+    systemMessage(t("開始安裝 {version}，會依晶片自動選擇韌體", { version: FIRMWARE_VERSION }));
     const chip = await installFirmware(port, {
       onLog: (line) => appendMonitor(`${line}\n`, "system"),
       onStage: (label) => {
         setStatus(label, "busy");
         showProgress(label, null);
       },
-      onProgress: (fraction) => showProgress("正在寫入韌體", fraction),
+      onProgress: (fraction) => showProgress(t("正在寫入韌體"), fraction),
     });
-    systemMessage("韌體安裝完成");
+    systemMessage(t("韌體安裝完成"));
     followDetectedChip(chip.id);
   } catch (error) {
-    setStatus("韌體安裝失敗", "error");
+    setStatus(t("韌體安裝失敗"), "error");
     systemMessage(
       link.isNativeUsb
-        ? `韌體安裝失敗：${failureMessage(error)}。請按住 BOOT 鍵，按一下 RST 鍵，再放開 BOOT 鍵，然後重新按「連接開發板」並再裝一次。`
-        : `韌體安裝失敗：${failureMessage(error)}。連不上時，請按住 IO0 鍵再重試。`,
+        ? t("韌體安裝失敗：{message}。請按住 BOOT 鍵，按一下 RST 鍵，再放開 BOOT 鍵，然後重新按「連接開發板」並再裝一次。", { message: failureMessage(error) })
+        : t("韌體安裝失敗：{message}。連不上時，請按住 IO0 鍵再重試。", { message: failureMessage(error) }),
     );
   } finally {
     hideProgress();
@@ -519,8 +510,8 @@ async function install(): Promise<void> {
 
   // Built-in USB disappears when the chip restarts, so the old port cannot be reopened.
   if (link.isNativeUsb) {
-    setStatus("請按一下板子上的 RST 鍵，再按「連接開發板」", "idle");
-    systemMessage("請按一下板子上的 RST 鍵，等 2 秒，再按「連接開發板」並重新選擇序列埠。");
+    setStatus(t("請按一下板子上的 RST 鍵，再按「連接開發板」"), "idle");
+    systemMessage(t("請按一下板子上的 RST 鍵，等 2 秒，再按「連接開發板」並重新選擇序列埠。"));
     setBusy(false);
     return;
   }
@@ -532,7 +523,7 @@ async function install(): Promise<void> {
     await new Promise((resolve) => setTimeout(resolve, 2500));
     await detectFirmware();
   } catch (error) {
-    systemMessage(`無法重新連接開發板：${failureMessage(error)}`);
+    systemMessage(t("無法重新連接開發板：{message}", { message: failureMessage(error) }));
   } finally {
     setBusy(false);
   }
@@ -542,9 +533,9 @@ async function copyText(text: string, button: HTMLButtonElement): Promise<void> 
   const original = button.textContent;
   try {
     await navigator.clipboard.writeText(text);
-    button.textContent = "已複製";
+    button.textContent = t("已複製");
   } catch {
-    button.textContent = "複製失敗";
+    button.textContent = t("複製失敗");
   }
   setTimeout(() => {
     button.textContent = original;
@@ -563,8 +554,8 @@ function guarded(action: () => Promise<void>): () => void {
 
 link.onLost = () => {
   hasFirmware = false;
-  setStatus("開發板連線中斷，請檢查 USB 線後重新連接", "error");
-  systemMessage("開發板連線中斷");
+  setStatus(t("開發板連線中斷，請檢查 USB 線後重新連接"), "error");
+  systemMessage(t("開發板連線中斷"));
   refreshButtons();
 };
 
@@ -592,18 +583,18 @@ ui.replForm.addEventListener("submit", (event) => {
 setupStats();
 
 ui.examples.append(
-  new Option("選擇範例…", ""),
+  new Option(t("選擇範例…"), ""),
   ...EXAMPLE_GROUPS.map((group) => {
     const optgroup = document.createElement("optgroup");
     optgroup.label = group.label;
-    optgroup.append(...group.examples.map((example) => new Option(example.name, String(EXAMPLES.indexOf(example)))));
+    optgroup.append(...group.examples.map((item) => new Option(item.name, String(EXAMPLES.indexOf(item)))));
     return optgroup;
   }),
 );
 ui.examples.addEventListener("change", () => {
-  const example = EXAMPLES[Number(ui.examples.value)];
-  if (ui.examples.value !== "" && example && confirm(`要用「${example.name}」取代目前的程式嗎？`)) {
-    const code = fillExample(example.code, randomChannel(), new URL("voice.html", location.href).href);
+  const chosen = EXAMPLES[Number(ui.examples.value)];
+  if (ui.examples.value !== "" && chosen && confirm(t("要用「{name}」取代目前的程式嗎？", { name: chosen.name }))) {
+    const code = fillExample(chosen.code, randomChannel(), new URL("voice.html", location.href).href);
     setCode(adaptExamplePins(code, selectedChip()));
   }
   ui.examples.value = "";
@@ -662,7 +653,12 @@ el("settings-panel").addEventListener("beforetoggle", (event) => {
 });
 
 setupStylePicker(el<HTMLSelectElement>("style-picker"));
-ui.firmwareVersion.textContent = `${FIRMWARE_VERSION}（依晶片自動選擇）`;
+setupLanguagePicker(ui.language, {
+  allowSwitch: () => !link.isOpen || confirm(t("切換語言會重新載入頁面並中斷開發板連線，要繼續嗎？")),
+  // A board connection cannot survive a reload, so this tab keeps its language until it is free.
+  canFollow: () => !busy && !link.isOpen,
+});
+ui.firmwareVersion.textContent = t("{version}（依晶片自動選擇）", { version: FIRMWARE_VERSION });
 setFontSize(readFontSize());
 setEditorWidth(readEditorWidth());
 ui.splitter.setAttribute("aria-valuemin", String(EDITOR_WIDTH_MIN));

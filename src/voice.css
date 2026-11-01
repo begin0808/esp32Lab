@@ -29,6 +29,12 @@ h1 {
   font-size: 22px;
 }
 
+.page-pickers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+
 .page-top {
   display: flex;
   flex-wrap: wrap;

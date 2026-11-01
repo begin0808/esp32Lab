@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Help | ESP32 Lab Online</title>
+    <meta name="description" content="How to use ESP32 Lab Online: the steps, supported boards and parts, wiring and privacy notes, and common questions." />
+    <script>
+      // Runs before the first paint so a saved style never flashes the default one.
+      try {
+        document.documentElement.dataset.style = localStorage.getItem("esp32-mp-style") || "mat";
+      } catch {}
+    </script>
+    <link rel="icon" href="/icons/logo.svg" type="image/svg+xml" />
+    <link rel="icon" href="/icons/logo-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/icons/logo-180.png" />
+    <link rel="stylesheet" href="/src/themes.css" />
+    <link rel="stylesheet" href="/src/help.css" />
+  </head>
+  <body>
+    <header class="help-top">
+      <div class="brand">
+        <img class="brand-logo" src="/icons/logo.svg" alt="" width="40" height="40" />
+        <div>
+          <h1>ESP32 Lab Help</h1>
+          <p class="updated">Last updated: November 1, 2026</p>
+        </div>
+      </div>
+      <div class="help-actions">
+        <a id="home-link" class="home-link" href="./index.html"><span aria-hidden="true">←</span> Back to the editor</a>
+        <label class="style-picker">
+          Style
+          <select id="style-picker"></select>
+        </label>
+        <label class="style-picker language-picker">
+          語言 Language
+          <select id="language-picker"></select>
+        </label>
+      </div>
+    </header>
+
+    <main class="doc">
+      <nav class="toc" aria-label="On this page">
+        <a href="#start">Getting started</a>
+        <a href="#languages">MicroPython and Arduino</a>
+        <a href="#boards">Supported boards</a>
+        <a href="#parts">Parts and sensors</a>
+        <a href="#wiring">Wiring notes</a>
+        <a href="#voice">Phone and voice control</a>
+        <a href="#google-sheets">Google Sheets</a>
+        <a href="#privacy">Privacy and safety</a>
+        <a href="#faq">Common questions</a>
+      </nav>
+
+      <p id="micropython-notice" class="tip"><strong>This site uses MicroPython: you write programs in Python, not Arduino C++.</strong> The board needs the MicroPython firmware first, and installing it erases any Arduino program on the board. Arduino programs cannot run here. If you paste one, a notice appears and you can copy a prompt asking Gemini to rewrite it. See <a href="#languages">the differences between MicroPython and Arduino</a>.</p>
+
+      <p id="beta-notice" class="tip warn"><strong>This site is a beta and is still being developed.</strong> There are many combinations of boards and examples, and not all of them have been tested, so you may run into problems. If you find a mistake or would like a feature, please <a href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=begin0808@gmail.com" target="_blank" rel="noopener">email me</a>.</p>
+
+      <section id="start">
+        <h2>Getting started</h2>
+        <p>You do not need the Arduino IDE or any development setup. Open this site in <strong>Chrome or Edge on a computer</strong>, and connect the board with a USB cable that can carry data.</p>
+        <ol>
+          <li><strong>Install a driver:</strong> only if the computer cannot find the board. Boards whose USB goes straight to an S2, S3 or C3 chip usually need none. If the board's USB chip is a CP2102, install the <a href="https://www.silabs.com/software-and-tools/usb-to-uart-bridge-vcp-drivers?tab=downloads" target="_blank" rel="noopener">CP210x driver</a>; if it is a CH340, install the <a href="https://www.wch-ic.com/downloads/CH341SER_EXE.html" target="_blank" rel="noopener">CH340 driver</a>. "Settings and help" at the top right of the editor has these links too, along with the pinout, the voice control page, and the language, style and font settings.</li>
+          <li><strong>Connect the board:</strong> close programs that hold the serial port, such as the Arduino IDE. Then press "Connect board" and choose the serial port that appears.</li>
+          <li><strong>Install the firmware:</strong> only needed the first time, or after flashing an Arduino program. Pressing "Install firmware" <strong>erases all programs and files on the board</strong>, so do not unplug the USB cable while it runs. For boards whose USB goes straight to the chip, press RST afterwards and connect again.</li>
+          <li><strong>Get a program:</strong> choose a built-in example, or press "Copy Gemini prompt", fill in your wiring and what you want, paste it into Gemini, and paste the MicroPython program it writes back into the editor.</li>
+          <li><strong>Upload and run:</strong> press "Upload and run". The program is saved as <code>main.py</code> on the board and runs automatically whenever the board powers up. Output and errors appear in the serial monitor.</li>
+        </ol>
+
+        <h3>Built-in examples</h3>
+        <p>This table shows the default wiring for the ESP32 (including ESP32-S and ESP-WROOM-32 modules). If you choose S2, S3 or C3 in the editor's "Chip" menu before choosing an example, the program and its wiring notes switch to pins that suit that chip. The site also sets the chip menu for you when you connect a board.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Example</th><th scope="col">What it does</th><th scope="col">Default wiring</th><th scope="col">Wi-Fi</th></tr></thead>
+            <tbody>
+              <tr><td>Blink an LED</td><td>Toggles the LED once a second</td><td>Onboard LED (GPIO 2)</td><td>Not needed</td></tr>
+              <tr><td>Button-controlled LED</td><td>Each press toggles the LED</td><td>Button GPIO 19, LED GPIO 18</td><td>Not needed</td></tr>
+              <tr><td>Breathing LED (PWM)</td><td>The LED slowly brightens and dims</td><td>LED GPIO 18</td><td>Not needed</td></tr>
+              <tr><td>Potentiometer LED dimmer</td><td>Turn the knob to set the LED's brightness</td><td>Knob GPIO 34, LED GPIO 18</td><td>Not needed</td></tr>
+              <tr><td>Twinkle Twinkle on a passive buzzer</td><td>Plays a tune using different frequencies</td><td>Buzzer GPIO 25</td><td>Not needed</td></tr>
+              <tr><td>SG90 servo sweep</td><td>Sweeps between 0 and 180 degrees</td><td>Signal GPIO 13, external 5V supply</td><td>Not needed</td></tr>
+              <tr><td>Automatic night light (photoresistor)</td><td>The LED turns on when it gets dark</td><td>Photoresistor GPIO 34, LED GPIO 18</td><td>Not needed</td></tr>
+              <tr><td>Motion alarm (HC-SR501)</td><td>The buzzer sounds and the LED lights when someone is detected</td><td>OUT GPIO 27, buzzer GPIO 25, LED GPIO 18</td><td>Not needed</td></tr>
+              <tr><td>Ultrasonic distance (HC-SR04)</td><td>Shows the distance in the monitor</td><td>Trig GPIO 26, Echo through a divider to GPIO 33</td><td>Not needed</td></tr>
+              <tr><td>DHT11 temperature and humidity (monitor)</td><td>Shows temperature and humidity every 2 seconds</td><td>DATA GPIO 4</td><td>Not needed</td></tr>
+              <tr><td>DS18B20 thermometer</td><td>Shows the temperature every 2 seconds</td><td>DATA GPIO 4</td><td>Not needed</td></tr>
+              <tr><td>WS2812 RGB LED rainbow</td><td>Rainbow colours flow along the strip</td><td>DIN GPIO 16</td><td>Not needed</td></tr>
+              <tr><td>SSD1306 OLED display</td><td>Shows text and seconds since boot</td><td>SDA GPIO 21, SCL GPIO 22</td><td>Not needed</td></tr>
+              <tr><td>I2C LCD 1602 display</td><td>Shows text and seconds since boot</td><td>SDA GPIO 21, SCL GPIO 22</td><td>Not needed</td></tr>
+              <tr><td>MAX7219 LED matrix</td><td>Alternates between a smiley and a heart</td><td>DIN GPIO 23, CLK GPIO 18, CS GPIO 5</td><td>Not needed</td></tr>
+              <tr><td>Phone-controlled LED (same Wi-Fi)</td><td>Control the LED from buttons or text commands on a phone web page</td><td>Wired LED on GPIO 18</td><td>Phone and board on the same Wi-Fi</td></tr>
+              <tr><td>Voice-controlled LED (MQTT)</td><td>Say "on", "off" or "blink" on the voice control page</td><td>Wired LED on GPIO 18</td><td>Board and phone both online</td></tr>
+              <tr><td>DHT11 humidity alarm</td><td>A phone web page updates every 2 seconds and alarms when humidity is over 50%</td><td>DHT11 DATA on GPIO 4</td><td>Phone and board on the same Wi-Fi</td></tr>
+              <tr><td>Telegram bot LED</td><td>Send /on, /off or /status to control the LED; the button notifies your phone</td><td>LED GPIO 18, button GPIO 19</td><td>Board online</td></tr>
+              <tr><td>Log DHT11 data to Google Sheets</td><td>Adds a row of temperature and humidity every minute; see <a href="#google-sheets">Google Sheets</a></td><td>DATA GPIO 4</td><td>Board online</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="languages">
+        <h2>The differences between MicroPython and Arduino</h2>
+        <p>Both can control an ESP32, and neither is better in every way. This site uses MicroPython because there is nothing to install, changes run within seconds, and error messages are easier to understand, which suits classrooms and quick experiments.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col"></th><th scope="col">MicroPython (this site)</th><th scope="col">Arduino C++</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Language</th><td>Python, short and easy to start with</td><td>C++, with declared types and stricter syntax</td></tr>
+              <tr><th scope="row">Setup</th><td>Works in a browser after one firmware install</td><td>Needs the Arduino IDE and board package, reinstalled if the computer is restored</td></tr>
+              <tr><th scope="row">Uploading changes</th><td>No compiling, usually done in seconds</td><td>Compiles and flashes every time, so it takes longer</td></tr>
+              <tr><th scope="row">Finding errors</th><td>Errors give the line number, and you can try commands in the monitor</td><td>The compiler catches syntax errors first; runtime problems are mostly traced through serial output</td></tr>
+              <tr><th scope="row">Speed</th><td>Slower, but usually enough for sensing and control</td><td>Much faster, suits heavy computing and high-speed work</td></tr>
+              <tr><th scope="row">Memory</th><td>The interpreter takes up space, so less is left</td><td>More is available, better for large programs</td></tr>
+              <tr><th scope="row">Timing</th><td>Garbage collection can cause short pauses, so it does not suit precise timing</td><td>More precise timing</td></tr>
+              <tr><th scope="row">Libraries</th><td>Common features are built in, others may need code you find yourself</td><td>Plenty available, for most modules</td></tr>
+              <tr><th scope="row">Best for</th><td>Teaching beginners, writing code with AI, sensor and IoT experiments</td><td>Camera images, high-speed signals, large or long-running projects</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>One board can switch back and forth, but it runs only one at a time. Flashing from the Arduino IDE overwrites MicroPython and the files on the board. To come back, press "Install firmware" on this site.</p>
+      </section>
+
+      <section id="boards">
+        <h2>Supported boards</h2>
+        <p>The site includes MicroPython v1.29.0 firmware for the <strong>ESP32, ESP32-S2, S3 and C3</strong>, and picks the right one by detecting the chip during installation. The chip inside ESP32-S and ESP-WROOM-32 modules is an ESP32, which is different from the ESP32-S2 and S3. The flash must be at least 4 MB. With any other chip or too little flash, the site stops before erasing anything.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Board</th><th scope="col">USB chip</th><th scope="col">Status</th><th scope="col">Notes</th></tr></thead>
+            <tbody>
+              <tr><td>NodeMCU-32S (ESP-WROOM-32)</td><td>CP2102</td><td><span class="badge tested">Tested</span></td><td>Firmware install, upload, Wi-Fi and MQTT have been tested. See the <a href="./images/nodemcu-32s-pinout.png" target="_blank" rel="noopener">pinout</a>.</td></tr>
+              <tr><td>ESP32-S board</td><td>CH340</td><td><span class="badge tested">Tested</span></td><td>Firmware install, uploading the LED blink program and stopping it have been tested. This board's Wi-Fi has not. Its pin layout may differ from the pinout above, so check the markings on the board.</td></tr>
+              <tr><td>Other ESP32-WROOM-32 boards</td><td>Varies</td><td><span class="badge expected">Should work</span></td><td>Needs at least 4 MB of flash. Not every model has been tested.</td></tr>
+              <tr><td>ESP32-S2 boards</td><td>Built-in USB or varies</td><td><span class="badge expected">Not yet tested</span></td><td>Supported by the site, but not yet tested on a real board.</td></tr>
+              <tr><td>ESP32-S3 boards</td><td>Built-in USB or varies</td><td><span class="badge expected">Not yet tested</span></td><td>Supported by the site, but not yet tested on a real board. Versions with octal PSRAM (for example, models with R8) may not be able to use the PSRAM.</td></tr>
+              <tr><td>ESP32-C3 boards</td><td>Built-in USB or varies</td><td><span class="badge expected">Not yet tested</span></td><td>Supported by the site, but not yet tested on a real board. MicroPython says this firmware needs chip revision 3 or later; the monitor shows the revision during installation.</td></tr>
+              <tr><td>ESP32-CAM</td><td>None on the board; needs a base board or USB-to-serial module</td><td><span class="badge expected">No camera</span></td><td>The chip is an ESP32, so the firmware should install, but this has not been tested. The included firmware <strong>has no camera support and cannot use the onboard PSRAM</strong>, so it works only as a plain ESP32. Most examples use pins this board does not expose, so you will need to change them.</td></tr>
+              <tr><td>ESP32-C6, H2, C2, C5, P4 and others</td><td>Varies</td><td><span class="badge no">Not supported</span></td><td>The site has no firmware for these chips. Installation stops by itself without erasing the board.</td></tr>
+              <tr><td>ESP8266, Arduino UNO and others</td><td>Varies</td><td><span class="badge no">Not supported</span></td><td>These are not ESP32 boards, so the site cannot install firmware on them.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Supported browsers</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Device and browser</th><th scope="col">Editor (USB upload)</th><th scope="col">Voice control page</th></tr></thead>
+            <tbody>
+              <tr><td>Chrome and Edge on a computer</td><td>Works</td><td>Tested in Chrome; voice not yet tested in Edge</td></tr>
+              <tr><td>Chrome on an Android phone</td><td>Use a computer instead</td><td>The page opens; speech recognition not yet tested</td></tr>
+              <tr><td>Safari on an iPhone</td><td>Does not work</td><td>Not yet tested; use text commands if voice does not work</td></tr>
+              <tr><td>Firefox and Safari on a computer</td><td>Does not work (no Web Serial)</td><td>Not yet tested</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="parts">
+        <h2>Parts and sensors</h2>
+        <p><strong>This list is not a limit.</strong> Parts not listed here can also be used, as long as MicroPython can control them. Tell Gemini the <strong>full model and wiring pins</strong>, and follow the notes below when wiring.</p>
+        <ul class="legend">
+          <li><span class="badge tested">Tested</span>Tested successfully on a real board.</li>
+          <li><span class="badge example">Example</span>The site has a built-in example. Its program has run on simulated hardware, but not yet with the real part.</li>
+          <li><span class="badge firmware">Firmware</span>The firmware has what is needed, so you can program it directly, but there is no dedicated example and it has not been tested.</li>
+        </ul>
+
+        <p class="tip"><strong>The OLED, LCD and MAX7219 need nothing extra installed.</strong> The firmware has no driver for these three parts, so their examples include the driver in the same <code>main.py</code>. Just choose the example and upload it. This has nothing to do with the CP210x and CH340 USB drivers on your computer.</p>
+
+        <h3>Output parts</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Part</th><th scope="col">Status</th><th scope="col">Control</th><th scope="col">Notes</th></tr></thead>
+            <tbody>
+              <tr><td>LED</td><td><span class="badge tested">Tested</span></td><td><code>Pin</code></td><td>Use a series resistor (such as 220Ω). Long leg to GPIO, short leg to GND.</td></tr>
+              <tr><td>Active buzzer</td><td><span class="badge example">Example</span></td><td><code>Pin</code></td><td>Sounds when powered, so it can only switch on and off. Higher-current parts need a module or transistor.</td></tr>
+              <tr><td>Passive buzzer</td><td><span class="badge example">Example</span></td><td><code>PWM</code></td><td>Needs a frequency to sound, and can play different pitches. Check whether it is active or passive before buying.</td></tr>
+              <tr><td>SG90 servo</td><td><span class="badge example">Example</span></td><td><code>PWM</code> (50 Hz)</td><td>Use an external 5V supply sharing GND with the ESP32. Do not power it from the board's 3V3.</td></tr>
+              <tr><td>Relay module</td><td><span class="badge firmware">Firmware</span></td><td><code>Pin</code></td><td>Check that the module accepts 3.3V signals. <strong>Do not connect mains power in class experiments.</strong></td></tr>
+              <tr><td>WS2812 RGB LEDs, strips, matrices</td><td><span class="badge example">Example</span></td><td><code>neopixel</code></td><td>Many LEDs draw a lot of current, so use an external supply sharing GND.</td></tr>
+              <tr><td>MAX7219 LED matrix</td><td><span class="badge example">Example</span></td><td><code>Pin</code></td><td>Usually powered at 5V, where the ESP32's 3.3V signals may be unreliable. Test it first.</td></tr>
+              <tr><td>Bare 8×8 LED matrix</td><td><span class="badge firmware">Firmware</span></td><td><code>Pin</code></td><td>Needs many pins and a scanning program. Beginners should use a module with a driver chip instead.</td></tr>
+              <tr><td>SSD1306 OLED</td><td><span class="badge example">Example</span></td><td><code>I2C</code></td><td>Usually SDA to GPIO 21 and SCL to GPIO 22.</td></tr>
+              <tr><td>I2C LCD 1602</td><td><span class="badge example">Example</span></td><td><code>I2C</code></td><td>Many modules run on 5V, and their I2C lines may be pulled up to 5V. Check the voltage before wiring.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Sensors and inputs</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Part</th><th scope="col">Status</th><th scope="col">Control</th><th scope="col">Notes</th></tr></thead>
+            <tbody>
+              <tr><td>DHT11 temperature and humidity</td><td><span class="badge example">Example</span></td><td><code>dht</code></td><td>VCC to 3V3. Read at least 1 second apart.</td></tr>
+              <tr><td>DHT22 temperature and humidity</td><td><span class="badge firmware">Firmware</span></td><td><code>dht</code></td><td>Use <code>dht.DHT22</code> in the program. Read at least 2 seconds apart.</td></tr>
+              <tr><td>Photoresistor</td><td><span class="badge example">Example</span></td><td><code>ADC</code></td><td>Use <strong>GPIO 32–39</strong>. A bare part needs a divider resistor (such as 10kΩ); power modules from 3V3.</td></tr>
+              <tr><td>Potentiometer</td><td><span class="badge example">Example</span></td><td><code>ADC</code></td><td>Also on GPIO 32–39, with the ends on 3V3 and GND.</td></tr>
+              <tr><td>HC-SR501 motion sensor</td><td><span class="badge example">Example</span></td><td><code>Pin</code></td><td>Usually powered at 5V, with an output of about 3.3V. May give false readings for about a minute after power-up.</td></tr>
+              <tr><td>Button</td><td><span class="badge example">Example</span></td><td><code>Pin</code></td><td>You can use the internal <code>Pin.PULL_UP</code>. GPIO 34–39 have no internal pull-up.</td></tr>
+              <tr><td>DS18B20 temperature</td><td><span class="badge example">Example</span></td><td><code>onewire</code>, <code>ds18x20</code></td><td>Needs a 4.7kΩ pull-up between DATA and 3V3; modules usually include one.</td></tr>
+              <tr><td>HC-SR04 ultrasonic</td><td><span class="badge example">Example</span></td><td><code>Pin</code>, <code>time_pulse_us</code></td><td>Echo is often 5V, and <strong>must be divided down to 3.3V</strong> before it reaches a GPIO.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Tips for asking Gemini</h3>
+        <ul>
+          <li><strong>State the model and pins:</strong> for example, "MAX7219 8×8 LED matrix, DIN on GPIO 23, CLK on GPIO 18, CS on GPIO 5".</li>
+          <li><strong>Use a single file:</strong> this site uploads only <code>main.py</code>. An <code>ImportError</code> means the program uses a module the firmware lacks, so ask Gemini to "put this part's driver in the same main.py as the main program".</li>
+          <li><strong>Name the language:</strong> ask for MicroPython v1.29.0, not Arduino C++. The site's "Copy Gemini prompt" already includes these requirements.</li>
+        </ul>
+      </section>
+
+      <section id="wiring">
+        <h2>Wiring notes</h2>
+        <p>The pin table below is for the <strong>ESP32 (including ESP32-S and ESP-WROOM-32 modules)</strong>. For other chips, see the table at the end of this section.</p>
+        <p class="tip warn"><strong>Unplug the USB cable before wiring or changing wires.</strong> A wrong voltage or a short circuit can destroy the board.</p>
+        <ul>
+          <li><strong>GPIO pins only accept 3.3V:</strong> do not connect 5V signals straight to a GPIO.</li>
+          <li><strong>Do not drive high-current parts directly:</strong> motors, long LED strips and the like need an external supply or driver module. With an external supply, connect its GND to the ESP32's.</li>
+          <li><strong>Check the pin numbers:</strong> numbers in programs are GPIO numbers, so compare them with the markings on the board or the <a href="./images/nodemcu-32s-pinout.png" target="_blank" rel="noopener">pinout</a>.</li>
+        </ul>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Pins</th><th scope="col">Advice</th><th scope="col">Why</th></tr></thead>
+            <tbody>
+              <tr><td>GPIO 6–11</td><td><span class="badge no">Do not use</span></td><td>Connected to the internal flash, so wiring them can stop the board working. GPIO 9 and 10, marked RX1 and TX1 on the pinout, are included.</td></tr>
+              <tr><td>GPIO 34, 35, 36, 39</td><td><span class="badge expected">Input only</span></td><td>They cannot output, and have no internal pull-up or pull-down.</td></tr>
+              <tr><td>GPIO 25–27, GPIO 0, 2, 4, 12–15</td><td><span class="badge expected">No analog with Wi-Fi</span></td><td>These are ADC2 pins, which cannot read analog values while Wi-Fi is on. Use GPIO 32–39 for analog input.</td></tr>
+              <tr><td>GPIO 0, 2, 5, 12, 15</td><td><span class="badge expected">Use with care</span></td><td>Their levels at power-up affect booting. If GPIO 12 is high at power-up, the board may not start.</td></tr>
+              <tr><td>GPIO 1, 3</td><td><span class="badge expected">Avoid</span></td><td>Used by the USB serial port, so other parts here interfere with uploading and the monitor.</td></tr>
+              <tr><td>GPIO 4, 13, 16–19, 21–23, 25–27, 32, 33</td><td><span class="badge tested">Good first choice</span></td><td>Least likely to conflict for general digital input and output (GPIO 21 and 22 are often used for I2C).</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Pins on the ESP32-S2, S3 and C3</h3>
+        <p>These chips number their pins differently from the ESP32, so <strong>the pinout above does not apply</strong>. Check the markings on your board. This table shows the pins used by default when you choose an example.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Use</th><th scope="col">S2, S3</th><th scope="col">C3</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">LED</th><td>GPIO 18</td><td>GPIO 4</td></tr>
+              <tr><th scope="row">Button</th><td>GPIO 17</td><td>GPIO 5</td></tr>
+              <tr><th scope="row">Analog input (photoresistor, potentiometer)</th><td>GPIO 1</td><td>GPIO 3</td></tr>
+              <tr><th scope="row">DHT11, DS18B20</th><td>GPIO 4</td><td>GPIO 5</td></tr>
+              <tr><th scope="row">I2C (SDA, SCL)</th><td>GPIO 8, 9</td><td>GPIO 6, 7</td></tr>
+              <tr><th scope="row">Buzzer</th><td>GPIO 14</td><td>GPIO 6</td></tr>
+              <tr><th scope="row">Servo</th><td>GPIO 13</td><td>GPIO 6</td></tr>
+              <tr><th scope="row">WS2812</th><td>GPIO 16</td><td>GPIO 6</td></tr>
+              <tr><th scope="row">Used by USB; do not connect parts</th><td>GPIO 19, 20</td><td>GPIO 18, 19</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="voice">
+        <h2>Phone and voice control</h2>
+        <p>There are two ways to control a board from a phone web page, and you can also use the Telegram bot at the end of this section:</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col"></th><th scope="col">Web page on the board</th><th scope="col">Voice control page (MQTT)</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Examples</th><td>Phone-controlled LED, DHT11 humidity alarm</td><td>Voice-controlled LED (MQTT)</td></tr>
+              <tr><th scope="row">Address</th><td><code>http://192.168.x.x</code> (shown in the monitor)</td><td><a href="./voice.html" target="_blank" rel="noopener">Voice control page</a></td></tr>
+              <tr><th scope="row">Microphone</th><td>Not available: browsers do not allow microphones on <code>http://</code> addresses</td><td>Available (HTTPS)</td></tr>
+              <tr><th scope="row">Network needs</th><td>Phone and board on the same Wi-Fi, which need not reach the internet</td><td>Board and phone both online, not necessarily on the same Wi-Fi</td></tr>
+              <tr><th scope="row">School networks</th><td>Will not open if devices may not talk to each other</td><td>The board cannot connect if a firewall blocks port 1883</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Voice control steps</h3>
+        <ol>
+          <li>Choose the example "Voice-controlled LED (MQTT)", fill in your Wi-Fi name and password, and press "Upload and run".</li>
+          <li>When the monitor shows "Connected to the MQTT broker", note the <strong>MQTT topic name</strong>.</li>
+          <li>Open the <a href="./voice.html" target="_blank" rel="noopener">voice control page</a>, enter the topic name and press "Connect".</li>
+          <li>Press the voice button, allow the microphone, and say "on", "off" or "blink". A sentence such as "turn the light on" also works.</li>
+        </ol>
+        <p>If voice does not work, press the On and Off buttons, or use your phone keyboard's microphone in the text command box. On Windows you can also press <kbd>Win</kbd> + <kbd>H</kbd> for voice typing.</p>
+        <p><strong>Topic names and MQTT topics:</strong> the name you enter makes up two topics. With <code>led-1</code>, commands use <code>esp32-mp-class/led-1/command</code> and board reports use <code>esp32-mp-class/led-1/state</code>. Other MQTT tools can subscribe or publish to them too.</p>
+        <p><strong>Using your own MQTT broker:</strong> open "Advanced" on the voice control page and fill in the broker address, WSS port, path, username and password. Change <code>BROKER</code>, <code>MQTT_PORT</code>, <code>MQTT_USER</code> and <code>MQTT_PASSWORD</code> in the program to the same broker. The voice control page does not save the password, so enter it again after reloading. The board uses unencrypted port 1883 by default, so others on the network may see the login. Use a password made only for this broker.</p>
+
+        <h3 id="telegram">Telegram bot</h3>
+        <ol>
+          <li>Search for <strong>@BotFather</strong> on Telegram, send <code>/newbot</code>, and follow the steps to name your bot. You will get a <strong>bot token</strong>.</li>
+          <li>Choose the example "Telegram bot LED", fill in your Wi-Fi name, password and <code>BOT_TOKEN</code>, and press "Upload and run".</li>
+          <li>Send your bot any message, and the monitor shows your <strong>CHAT_ID</strong>. Put the number in the program and upload again.</li>
+          <li>Send <code>/on</code>, <code>/off</code> or <code>/status</code> to control the LED. Pressing the button sends a notification to your phone.</li>
+        </ol>
+        <p>The board checks for new messages about every 2 seconds, so replies can take a few seconds. Only the chat set in <code>CHAT_ID</code> can control the board, and old commands from before it started are not run. If your school network blocks Telegram, try a phone hotspot.</p>
+
+        <p class="tip warn"><strong>Wi-Fi is 2.4GHz only.</strong> The ESP32 cannot connect to 5GHz networks.</p>
+      </section>
+
+      <section id="google-sheets">
+        <h2>Saving sensor data to Google Sheets</h2>
+        <p>The example "Log DHT11 data to Google Sheets" adds a row of time, temperature and humidity every minute. Google Apps Script is free, but needs setting up once. This example has been tested with simulated hardware and simulated Google responses, but not with a real Google Sheet.</p>
+        <ol>
+          <li>Create a new Google Sheet, and enter the headings in the first row: <strong>Time, Temperature, Humidity</strong>.</li>
+          <li>Choose "Extensions" → "Apps Script", replace the contents with the program below, and save:
+            <pre class="code-block" tabindex="0">function doGet(e) {
+  var temp = Number(e.parameter.temp);
+  var hum = Number(e.parameter.hum);
+  if (isNaN(temp) || isNaN(hum)) {
+    return ContentService.createTextOutput("bad data");
+  }
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
+  sheet.appendRow([new Date(), temp, hum]);
+  return ContentService.createTextOutput("ok");
+}</pre>
+          </li>
+          <li>Choose "Deploy" → "New deployment", with the type "Web app". Set "Execute as" to "Me" and "Who has access" to "<strong>Anyone</strong>", then complete the authorization.</li>
+          <li>Copy the deployment URL, which ends in <code>/exec</code>. First test it in a browser by adding <code>?temp=25&amp;hum=60</code> to the end. If the page shows <code>ok</code> and the sheet gains a row, the setup is correct. You can delete that row afterwards.</li>
+          <li>Choose the example "Log DHT11 data to Google Sheets", fill in your Wi-Fi name, password and <code>SCRIPT_URL</code>, and press "Upload and run".</li>
+        </ol>
+        <p class="tip warn"><strong>Anyone with the URL can write to the sheet.</strong> Do not project or share it. If it leaks, archive the deployment under "Deploy" → "Manage deployments" and create a new one.</p>
+        <p>School Google accounts may not allow access for "Anyone". If so, use a personal account. After changing the Apps Script later, edit the deployment in "Manage deployments" and publish a new version for the change to take effect.</p>
+      </section>
+
+      <section id="privacy">
+        <h2>Privacy and safety</h2>
+        <ul>
+          <li><strong>Code:</strong> the site does not upload your code to a server. It exists only in this browser and on your board. GitHub only serves the site's files and may log connection details such as IP addresses, but never receives your code.</li>
+          <li><strong>Visit statistics:</strong> the site uses <a href="https://www.goatcounter.com/" target="_blank" rel="noopener">GoatCounter</a> to count page views, and the footer shows the editor page's total. Each page load sends only the page path, the page title and the referring site. GoatCounter also receives the IP address and browser details that every request carries, and uses them to estimate unique visitors. No cookies are used, and no code, Wi-Fi passwords, serial output or MQTT topic names are sent.</li>
+          <li><strong>Wi-Fi passwords:</strong> the password is part of the program, so it is stored as plain text in the browser and in <code>main.py</code> on the board. Delete it before using a shared computer or lending out a board; see "Shared computers and boards" below.</li>
+          <li><strong>Before pasting into Gemini:</strong> "Copy for Gemini" and the "convert to MicroPython" prompt hide common forms of Wi-Fi details, logins, tokens and Apps Script URLs, but may not catch them all. Copying the program yourself hides nothing, so delete passwords first.</li>
+          <li><strong>Screenshots and projectors:</strong> the editor shows your password, so cover it before projecting or sharing your screen. A dedicated class Wi-Fi or phone hotspot is recommended.</li>
+          <li><strong>Voice control:</strong> commands pass through a public MQTT broker with no encryption or access control, and anyone who knows the topic name can send them. It only suits low-risk experiments such as LEDs. Do not control sockets or door locks, and keep personal details out of the topic name.</li>
+          <li><strong>Speech recognition:</strong> your browser and its speech service handle recognition, which usually needs the internet.</li>
+          <li><strong>Telegram bot token:</strong> the token is the bot's password, and anyone with it can impersonate your bot, so do not project or share it. If it leaks, send <code>/revoke</code> to @BotFather for a new one. The example does not verify the server certificate, so do not control anything important.</li>
+        </ul>
+
+        <h3 id="shared-computer">Shared computers and boards</h3>
+        <p class="tip warn"><strong>Closing the page does not clear your code.</strong> The code and any Wi-Fi password in it stay in the browser, and the next person using the same computer and browser account will see them when they open the site.</p>
+        <p>Before leaving a computer or returning a board:</p>
+        <ol>
+          <li><strong>To keep your program:</strong> first delete the Wi-Fi name and password, MQTT login, bot token and Apps Script URL from it, then press "Download main.py". The downloaded file does not hide these automatically.</li>
+          <li><strong>To clear the browser:</strong> delete everything in the editor. The editor saves automatically, so this replaces the old contents too.</li>
+          <li><strong>To clear the board:</strong> upload a program with no passwords, which overwrites <code>main.py</code>. To erase every file on the board, reinstall the firmware.</li>
+        </ol>
+        <p>Restore cards in computer labs usually clear browser data on restart, but the next user can still see it until then. Restore cards do not affect the board, so its data stays until you remove it.</p>
+      </section>
+
+      <section id="faq">
+        <h2>Common questions</h2>
+        <details><summary>Installing the firmware shows "Serial data stream stopped"</summary><p>This usually happens before erasing starts, so the board is not damaged and keeps running its old program. Reload the page, unplug and replug the USB cable, connect again and retry; a CH340 board in testing was installed this way. If it still fails, plug into a USB port on the computer itself, try another USB cable, or hold IO0, press EN once, release IO0, and then install.</p></details>
+        <details><summary>I chose the wrong chip. Will uploading damage the board?</summary><p>The wrong menu choice does not affect the firmware, because the site detects the chip itself during installation. Uploaded programs do not change the firmware either, but the pins may be wrong. With an ESP32 set to S2, S3 or C3, examples may use GPIO 6–11, and the board may crash or keep restarting. Choose the right chip and example, then upload again; if you cannot upload, hold IO0 and reinstall the firmware. What can really damage a board is wiring, such as 5V on a GPIO, a shorted supply, or an output pin connected straight to power or GND.</p></details>
+        <details><summary>Can I take pictures with an ESP32-CAM?</summary><p>Not at the moment. The official MicroPython firmware has no camera module. Taking pictures needs a third-party build, which this site does not include.</p></details>
+        <details><summary>An ESP32-S2, S3 or C3 will not connect during firmware installation, or does nothing afterwards</summary><p>On boards whose USB goes straight to the chip, the serial port disappears briefly when the chip restarts. If it will not connect, hold BOOT, press RST once, release BOOT, then press "Connect board" and install. Afterwards, press RST and wait 2 seconds before connecting. If the board has two USB ports, try the one marked UART or COM.</p></details>
+        <details><summary>No serial port is listed after pressing "Connect board"</summary><p>First try a USB cable you know carries data, because some only charge. Then check that the right driver is installed, and replug the board.</p></details>
+        <details><summary>Connection fails, or the serial port is in use</summary><p>Close the Arduino IDE and any other tab of this site. Only one program can use the serial port at a time.</p></details>
+        <details><summary>It says "MicroPython was not found"</summary><p>This is normal on first use or after flashing an Arduino program. Press "Install firmware". There is nothing else to download.</p></details>
+        <details><summary>Firmware installation keeps failing to connect</summary><p>Hold the IO0 (BOOT) button on the board and try again. You can let go once writing starts.</p></details>
+        <details><summary>It says "This board is an ESP32-xx. Only ESP32, ESP32-S2, S3 and C3 are supported"</summary><p>This board's chip is not supported, so the included firmware cannot be used. Please use a board with one of those four chips.</p></details>
+        <details><summary>The monitor shows a red "The program hit an error"</summary><p>Press "Copy for Gemini", paste the error and code into Gemini to fix it, then paste the new program back and upload it.</p></details>
+        <details><summary>It says Wi-Fi connection failed</summary><p>Check that the name and password are exactly right, including capitals, and that the network is 2.4GHz.</p></details>
+        <details><summary>My phone cannot open the 192.168.x.x page</summary><p>Check that the phone and board are on the same Wi-Fi, and try turning off the phone's mobile data. School networks may block devices from reaching each other, so try a phone hotspot or the voice control page (MQTT).</p></details>
+        <details><summary>No microphone permission appears, and voice does not work</summary><p>Check that you opened the HTTPS voice control page, not <code>http://192.168.x.x</code>. If you refused before, allow it in the browser's site settings.</p></details>
+        <details><summary>The voice control page says "no response" or "offline"</summary><p>Check that the board's program is running, that the monitor shows it connected to the MQTT broker, and that the topic names on the page and in the program match exactly. School networks may block port 1883, so try a phone hotspot.</p></details>
+        <details><summary>The voice control page says the MQTT username or password is wrong</summary><p>Check that the login matches the broker's settings, and that this account may use topics starting with <code>esp32-mp-class/</code>. The password is not saved, so enter it again after reloading.</p></details>
+        <details><summary>The Google Sheets example says "Google did not return ok"</summary><p>Usually access was not set to "Anyone" when deploying, or a school account does not allow it. Test the URL in a private browser window, where it should show <code>ok</code>. If no data is added, also check that the URL ends in <code>/exec</code>.</p></details>
+        <details><summary>After pressing "Stop", will the program run again by itself?</summary><p>Yes. "Stop" only interrupts the current run. <code>main.py</code> stays on the board, and runs again at the next power-up or restart.</p></details>
+      </section>
+
+      <p class="help-bottom"><a class="home-link" href="./index.html"><span aria-hidden="true">←</span> Back to the editor</a></p>
+    </main>
+
+    <footer class="footer">
+      <div class="copyright">
+        <span>© 2026 <a href="https://begin0808.github.io/studio0808/" target="_blank" rel="noopener">Studio0808</a>. All rights reserved.</span>
+        <span class="contact-note">Suggestions and bug reports are welcome</span>
+        <a class="contact-link" href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=begin0808@gmail.com" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>Email me
+        </a>
+        <a class="contact-link" href="https://www.facebook.com/begin.li.1/" target="_blank" rel="noopener" aria-label="Facebook">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="#1877f2" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
+        </a>
+        <span id="visit-count" class="visit-count" hidden></span>
+      </div>
+    </footer>
+
+    <script type="module" src="/src/help.ts"></script>
+  </body>
+</html>

@@ -1,3 +1,8 @@
+/* English pages stay hidden until their text is replaced, so Chinese never flashes first. */
+.translating body {
+  visibility: hidden;
+}
+
 :root {
   color-scheme: light;
   --code-font-size: 14px;

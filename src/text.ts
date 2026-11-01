@@ -1,3 +1,5 @@
+import { lang } from "./i18n";
+
 const ARDUINO_PATTERNS = [/^\s*#include\s*[<"]/m, /\bvoid\s+(setup|loop)\s*\(/, /\bSerial\.(begin|print)/, /\bpinMode\s*\(/];
 
 export function looksLikeArduino(code: string): boolean {
@@ -31,11 +33,12 @@ export function findLastTraceback(text: string): string | null {
 
 export type LedCommand = "on" | "off" | "blink";
 
-/** "關" is checked before "開" so that a sentence containing both turns the LED off. */
+/** "Off" is checked before "on" so that a sentence containing both turns the LED off. Both languages always work. */
 export function parseVoiceCommand(text: string): LedCommand | null {
-  if (text.includes("閃")) return "blink";
-  if (text.includes("關") || text.includes("暗")) return "off";
-  if (text.includes("開") || text.includes("亮")) return "on";
+  const english = text.toLowerCase();
+  if (text.includes("閃") || /\b(blink|flash)/.test(english)) return "blink";
+  if (text.includes("關") || text.includes("暗") || /\b(off|dark)\b/.test(english)) return "off";
+  if (text.includes("開") || text.includes("亮") || /\b(on|bright)\b/.test(english)) return "on";
   return null;
 }
 
@@ -86,6 +89,23 @@ export function stripTerminalCodes(text: string): string {
 }
 
 export function geminiPrompt(boardLines: string): string {
+  if (lang === "en") {
+    return `Please write an ESP32 program in MicroPython, not Arduino C++.
+
+Hardware and environment:
+${boardLines}
+- Wiring: (replace with your wiring, for example: LED on GPIO 18, DHT11 signal on GPIO 4)
+
+Program requirements:
+- Give me one complete main.py, not several files, and no packages that need separate installation
+- Use the built-in dht module for sensors and the built-in asyncio for a web server
+- Connect to Wi-Fi with network.WLAN(), put the credentials at the top of the program, and print the IP address once connected
+- Use asyncio when the program has to do several things at once, not blocking time.sleep
+- Write the comments in English
+
+What I want the program to do:
+(describe it here)`;
+  }
   return `請用 MicroPython 幫我寫 ESP32 程式，不要用 Arduino C++。
 
 硬體與環境：
@@ -115,6 +135,18 @@ export function hideWifiSettings(code: string): string {
 }
 
 export function arduinoConvertPrompt(code: string): string {
+  if (lang === "en") {
+    return `Please rewrite the Arduino C++ program below as MicroPython (v1.29.0) for the ESP32, keeping the same behaviour and pins.
+
+Requirements:
+- Give me one complete main.py, with no packages that need separate installation
+- Use the built-in dht module for sensors and the built-in asyncio for a web server
+- Print the IP address once connected
+- Write the comments in English
+
+Code:
+${hideWifiSettings(code)}`;
+  }
   return `請把下面的 Arduino C++ 程式改寫成 ESP32 用的 MicroPython（v1.29.0），功能和腳位都要保持一樣。
 
 要求：
@@ -128,6 +160,15 @@ ${hideWifiSettings(code)}`;
 }
 
 export function fixErrorPrompt(code: string, traceback: string): string {
+  if (lang === "en") {
+    return `My ESP32 MicroPython (v1.29.0) program hit an error while running. Please find the cause and give me the complete corrected main.py.
+
+Error message:
+${traceback}
+
+Code:
+${hideWifiSettings(code)}`;
+  }
   return `我的 ESP32 MicroPython（v1.29.0）程式執行時發生錯誤，請幫我找出原因並給我修正後的完整 main.py。
 
 錯誤訊息：

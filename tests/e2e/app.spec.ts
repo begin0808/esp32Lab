@@ -773,3 +773,254 @@ test("serves the complete firmware file", async ({ page }) => {
   });
   expect(size).toBe(1790544);
 });
+
+const CHINESE = /[　-〿㐀-鿿＀-￯]/;
+
+/** Everything a student can read, including closed dialogs and menus. Only the language picker keeps its Chinese name. */
+function chineseLeftOnPage(page: Page) {
+  return page.evaluate((source) => {
+    const pattern = new RegExp(source);
+    const copy = document.documentElement.cloneNode(true) as HTMLElement;
+    copy.querySelectorAll("script, style, .language-picker").forEach((node) => node.remove());
+    const found = [document.title, document.querySelector('meta[name="description"]')!.getAttribute("content")!];
+    const walker = document.createTreeWalker(copy.querySelector("body")!, NodeFilter.SHOW_TEXT);
+    while (walker.nextNode()) found.push(walker.currentNode.nodeValue!);
+    for (const node of copy.querySelectorAll("*")) {
+      for (const name of ["placeholder", "aria-label", "title", "alt"]) found.push(node.getAttribute(name) ?? "");
+    }
+    return found.filter((text) => pattern.test(text));
+  }, CHINESE.source);
+}
+
+test.describe("in an English browser", () => {
+  test.use({ locale: "en-US" });
+
+  for (const path of ["/", "/voice.html", "/help.html"]) {
+    test(`${path} shows no Chinese`, async ({ page }) => {
+      await page.goto(path);
+      await expect(page.locator("html")).toHaveAttribute("lang", "en");
+      await expect(page.locator("body")).toBeVisible();
+      expect(await chineseLeftOnPage(page)).toEqual([]);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+    });
+  }
+
+  test("opens the English help page and keeps the section asked for", async ({ page }) => {
+    await page.goto("/help.html#faq");
+    await expect(page).toHaveURL(/help\.en\.html#faq$/);
+    await expect(page).toHaveTitle(/Help/);
+  });
+
+  test("the English help page has the same sections and links as the Chinese one", async ({ page, request }) => {
+    const outline = () => page.evaluate(() => [...document.querySelectorAll(".toc a, section[id], h3[id]")].map((node) => node.getAttribute("href") ?? node.id));
+    const rows = () => page.locator(".doc tbody tr").count();
+    await page.goto("/help.en.html");
+    const [english, englishRows] = [await outline(), await rows()];
+    for (const href of await page.locator('.doc a[href^="./"]').evaluateAll((nodes) => nodes.map((node) => (node as HTMLAnchorElement).href))) {
+      expect((await request.get(href)).ok(), href).toBe(true);
+    }
+    await page.evaluate(() => localStorage.setItem("esp32-mp-lang", "zh-Hant"));
+    await page.goto("/help.html");
+    expect(await outline()).toEqual(english);
+    expect(await rows()).toBe(englishRows);
+  });
+
+  test("connects, uploads and reports in English", async ({ page }) => {
+    await mockSerial(page);
+    await page.goto("/");
+    await expect(page.locator("#connect")).toHaveText("Connect board");
+    await expect(page.locator("#status")).toHaveText("Board not connected");
+    await page.locator("#connect").click();
+    await expect(page.locator("#status")).toContainText("4 MB flash");
+    await expect(page.locator("#connect")).toHaveText("Disconnect");
+    await page.locator("#upload").click();
+    await expect(page.locator("#status")).toContainText("Program running");
+    await page.locator("#stop").click();
+    await expect(page.locator("#status")).toHaveText("Program stopped");
+  });
+
+  test("asks in English to install firmware", async ({ page }) => {
+    await mockSerial(page, { hasMicroPython: false });
+    await page.goto("/");
+    await page.locator("#connect").click();
+    await expect(page.locator("#status")).toContainText("install the firmware first", { timeout: 20_000 });
+    await expect(page.locator("#monitor")).toContainText('press "Install firmware"');
+    expect(CHINESE.test(await page.locator("#monitor").innerText())).toBe(false);
+  });
+
+  test("starts with and loads English examples and copies an English prompt", async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.goto("/");
+    await expect(page.locator("#editor .cm-content")).toContainText("Blink an LED");
+    await expect(page.locator("#examples optgroup option")).toHaveCount(20);
+
+    page.on("dialog", (dialog) => dialog.accept());
+    await page.locator("#examples").selectOption({ label: "Voice-controlled LED (MQTT)" });
+    await expect(page.locator("#editor .cm-content")).toContainText("Connected to the MQTT broker");
+    const code = await page.evaluate(() => localStorage.getItem("esp32-mp-code"));
+    expect(code).toMatch(/TOPIC_NAME = "led-[0-9a-f]{12}"/);
+    expect(CHINESE.test(code!)).toBe(false);
+
+    await page.locator("#copy-prompt").click();
+    const prompt = await page.evaluate(() => navigator.clipboard.readText());
+    expect(prompt).toContain("MicroPython, not Arduino C++");
+    expect(CHINESE.test(prompt)).toBe(false);
+  });
+
+  test("the voice page listens in English and understands English commands", async ({ page }) => {
+    await page.routeWebSocket(/broker\.emqx\.io/, (socket) => {
+      socket.onMessage((message) => {
+        const data = Buffer.from(message as Buffer);
+        const type = data[0] >> 4;
+        if (type === 1) socket.send(Buffer.from([0x20, 2, 0, 0]));
+        if (type === 8) socket.send(Buffer.from([0x90, 3, data[2], data[3], 0]));
+        if (type === 3) {
+          const topicLength = data.readUInt16BE(2);
+          const state = Buffer.from("esp32-mp-class/abc/state");
+          const reply = data.subarray(4 + topicLength);
+          socket.send(Buffer.concat([Buffer.from([0x30, 2 + state.length + reply.length, 0, state.length]), state, reply]));
+        }
+      });
+    });
+    await page.addInitScript(() => {
+      (globalThis as any).SpeechRecognition = class {
+        lang = "";
+        onresult!: (event: unknown) => void;
+        start() {
+          (globalThis as any).heardIn = this.lang;
+          this.onresult({ results: [[{ transcript: "Turn the light on" }]] });
+        }
+      };
+    });
+    await page.goto("/voice.html");
+    await page.locator("#channel").fill("abc");
+    await page.locator("#channel-connect").click();
+    await expect(page.locator("#link-status")).toHaveText("Connected, topic: abc");
+    await page.locator("#voice").click();
+    await expect(page.locator("#board-status")).toHaveText("Board: LED on");
+    expect(await page.evaluate(() => (globalThis as any).heardIn)).toBe("en-US");
+    await page.locator("#text-command").fill("hello");
+    await page.locator("#text-send").click();
+    await expect(page.locator("#message")).toContainText("Did not understand");
+  });
+
+  test("the English web LED page takes English commands", async ({ page }) => {
+    const source = readFileSync("src/examples/en/web_led.py", "utf8");
+    const html = source.match(/PAGE = """([\s\S]*?)"""/)![1];
+    const requests: string[] = [];
+    await page.route("http://esp32.test/**", (route) => {
+      const path = new URL(route.request().url()).pathname;
+      if (path === "/") return route.fulfill({ contentType: "text/html; charset=utf-8", body: html });
+      requests.push(path);
+      return route.fulfill({ contentType: "text/plain", body: "ok" });
+    });
+    await page.goto("http://esp32.test/");
+    for (const [command, path] of [["Turn it on.", "/on"], ["off", "/off"], ["blink", "/blink"]]) {
+      await page.locator("input").fill(command);
+      await page.locator("input").press("Enter");
+      await expect.poll(() => requests.at(-1)).toBe(path);
+    }
+    await page.locator("input").fill("button");
+    await page.locator("input").press("Enter");
+    await expect(page.locator("#status")).toContainText("Did not understand");
+  });
+
+  test("a saved Chinese choice wins over the browser's language", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("esp32-mp-lang", "zh-Hant"));
+    await page.goto("/");
+    await expect(page.locator("#connect")).toHaveText("連接開發板");
+    await page.goto("/help.html");
+    await expect(page).toHaveURL(/\/help\.html$/);
+  });
+});
+
+test.describe("choosing a language", () => {
+  test("follows a Chinese browser by default", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator("html")).toHaveAttribute("lang", "zh-Hant");
+    await expect(page.locator("#connect")).toHaveText("連接開發板");
+    await openSettings(page);
+    await expect(page.locator("#language-picker")).toHaveValue("zh-Hant");
+  });
+
+  test("switches every page, keeps the code and comes back", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("#editor .cm-content").fill('print("保留")\n');
+    await openSettings(page);
+    await page.locator("#language-picker").selectOption("en");
+    await expect(page.locator("#connect")).toHaveText("Connect board");
+    await expect(page.locator("#editor .cm-content")).toContainText("保留");
+
+    await page.goto("/voice.html");
+    await expect(page.locator("h1")).toHaveText("ESP32 Voice Control");
+    await page.goto("/help.html");
+    await expect(page).toHaveURL(/help\.en\.html$/);
+
+    await page.locator("#language-picker").selectOption("zh-Hant");
+    await expect(page).toHaveURL(/\/help\.html$/);
+    await expect(page.locator("h1")).toContainText("使用說明");
+    await page.goto("/");
+    await expect(page.locator("#connect")).toHaveText("連接開發板");
+  });
+
+  test("asks before a switch would drop the board connection", async ({ page }) => {
+    await mockSerial(page);
+    await page.goto("/");
+    await page.locator("#connect").click();
+    await expect(page.locator("#upload")).toBeEnabled();
+
+    page.once("dialog", (dialog) => dialog.dismiss());
+    await openSettings(page);
+    await page.locator("#language-picker").selectOption("en");
+    await expect(page.locator("#language-picker")).toHaveValue("zh-Hant");
+    await expect(page.locator("#upload")).toBeEnabled();
+    expect(await page.evaluate(() => localStorage.getItem("esp32-mp-lang"))).toBeNull();
+
+    page.once("dialog", (dialog) => dialog.accept());
+    await page.locator("#language-picker").selectOption("en");
+    await expect(page.locator("#connect")).toHaveText("Connect board");
+  });
+
+  test("a connected editor is not reloaded by a change in another tab", async ({ page, context }) => {
+    await mockSerial(page);
+    await page.goto("/");
+    await page.locator("#connect").click();
+    await expect(page.locator("#upload")).toBeEnabled();
+    await page.evaluate(() => ((globalThis as any).sameEditor = true));
+
+    const help = await context.newPage();
+    await help.goto("/help.html");
+    await help.locator("#language-picker").selectOption("en");
+    await expect(help).toHaveURL(/help\.en\.html$/);
+
+    await page.waitForTimeout(300);
+    expect(await page.evaluate(() => (globalThis as any).sameEditor)).toBe(true);
+    await expect(page.locator("#upload")).toBeEnabled();
+  });
+
+  test("an idle help page follows a change in the editor", async ({ page, context }) => {
+    const help = await context.newPage();
+    await help.goto("/help.html");
+    await page.goto("/");
+    await openSettings(page);
+    await page.locator("#language-picker").selectOption("en");
+    await expect(help).toHaveURL(/help\.en\.html$/);
+    await page.locator("#settings-button").click();
+    await page.locator("#language-picker").selectOption("zh-Hant");
+    await expect(help).toHaveURL(/\/help\.html$/);
+  });
+
+  test("still shows the page when the browser blocks storage", async ({ page }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(window, "localStorage", {
+        get() {
+          throw new Error("blocked");
+        },
+      });
+    });
+    await page.goto("/");
+    await expect(page.locator("#connect")).toBeVisible();
+    await openSettings(page);
+    await expect(page.locator("#language-picker option")).toHaveText(["繁體中文", "English"]);
+  });
+});

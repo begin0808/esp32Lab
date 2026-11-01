@@ -1,3 +1,5 @@
+import { t } from "./i18n";
+
 const CTRL_A = 0x01;
 const CTRL_B = 0x02;
 const CTRL_C = 0x03;
@@ -83,7 +85,7 @@ export class RawRepl {
         if (!(error instanceof ReplTimeoutError)) throw error;
       }
     }
-    throw new ReplTimeoutError("沒有偵測到 MicroPython");
+    throw new ReplTimeoutError(t("沒有偵測到 MicroPython"));
   }
 
   async exit(): Promise<void> {
@@ -156,7 +158,7 @@ export class RawRepl {
       15000,
     );
     if (stored.trim() !== `${data.length}|${byteChecksum(data)}`) {
-      throw new Error("檔案驗證失敗，請重新上傳");
+      throw new Error(t("檔案驗證失敗，請重新上傳"));
     }
 
     await this.exec(
@@ -183,7 +185,7 @@ export class RawRepl {
         return text;
       }
       const remaining = deadline - Date.now();
-      if (remaining <= 0) throw new ReplTimeoutError("等待開發板回應逾時");
+      if (remaining <= 0) throw new ReplTimeoutError(t("等待開發板回應逾時"));
       await new Promise<void>((resolve) => {
         const timer = setTimeout(resolve, remaining);
         this.waiter = () => {

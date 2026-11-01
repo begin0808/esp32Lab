@@ -11,6 +11,16 @@
         document.documentElement.dataset.style = localStorage.getItem("esp32-mp-style") || "mat";
       } catch {}
     </script>
+    <script>
+      // The English help page is its own file, so it is opened before anything is drawn.
+      (function () {
+        var saved = "";
+        try {
+          saved = localStorage.getItem("esp32-mp-lang") || "";
+        } catch {}
+        if (!/^zh/i.test(saved || navigator.language)) location.replace("./help.en.html" + location.hash);
+      })();
+    </script>
     <link rel="icon" href="/icons/logo.svg" type="image/svg+xml" />
     <link rel="icon" href="/icons/logo-32.png" type="image/png" sizes="32x32" />
     <link rel="apple-touch-icon" href="/icons/logo-180.png" />
@@ -31,6 +41,10 @@
         <label class="style-picker">
           風格
           <select id="style-picker"></select>
+        </label>
+        <label class="style-picker language-picker">
+          語言 Language
+          <select id="language-picker"></select>
         </label>
       </div>
     </header>
@@ -56,7 +70,7 @@
         <h2>開始使用</h2>
         <p>這個網站不用安裝 Arduino IDE，也不需要設定開發環境。請用<strong>電腦版 Chrome 或 Edge</strong> 開啟，用能傳輸資料的 USB 線接上開發板。</p>
         <ol>
-          <li><strong>安裝驅動程式：</strong>電腦找不到開發板時才需要；USB 直接接 S2、S3、C3 晶片的板子通常不用裝。板子上的 USB 晶片是 CP2102 就裝 <a href="https://www.silabs.com/software-and-tools/usb-to-uart-bridge-vcp-drivers?tab=downloads" target="_blank" rel="noopener">CP210x 驅動</a>，是 CH340 就裝 <a href="https://www.wch-ic.com/downloads/CH341SER_EXE.html" target="_blank" rel="noopener">CH340 驅動</a>。編輯器右上角的「設定與說明」也有這些連結，以及腳位圖、語音控制頁、風格和字體設定。</li>
+          <li><strong>安裝驅動程式：</strong>電腦找不到開發板時才需要；USB 直接接 S2、S3、C3 晶片的板子通常不用裝。板子上的 USB 晶片是 CP2102 就裝 <a href="https://www.silabs.com/software-and-tools/usb-to-uart-bridge-vcp-drivers?tab=downloads" target="_blank" rel="noopener">CP210x 驅動</a>，是 CH340 就裝 <a href="https://www.wch-ic.com/downloads/CH341SER_EXE.html" target="_blank" rel="noopener">CH340 驅動</a>。編輯器右上角的「設定與說明」也有這些連結，以及腳位圖、語音控制頁、語言、風格和字體設定。</li>
           <li><strong>連接開發板：</strong>先關閉 Arduino IDE 這類會佔用序列埠的程式，再按「連接開發板」，選擇跳出的序列埠。</li>
           <li><strong>安裝韌體：</strong>第一次使用，或燒錄過 Arduino 程式時才需要。按「安裝韌體」後，<strong>板子上原有的程式和檔案都會被清除</strong>，安裝期間不要拔 USB 線。USB 直接接晶片的板子，裝完要按一下 RST 鍵並重新連接。</li>
           <li><strong>準備程式：</strong>選內建範例，或按「複製 Gemini 提示詞」，填入接線和功能後貼給 Gemini，再把產生的 MicroPython 程式貼回編輯器。</li>

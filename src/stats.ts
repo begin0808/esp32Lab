@@ -1,3 +1,5 @@
+import { t } from "./i18n";
+
 const STATS_SITE = "https://esp32lab.goatcounter.com";
 const LIVE_HOST = "begin0808.github.io";
 // The all-time count keeps a "not found" for 4 hours. An explicit start from before launch covers
@@ -27,7 +29,7 @@ async function showVisitCount(): Promise<void> {
     if (!response.ok) return;
     const { count } = (await response.json()) as { count?: unknown };
     if (typeof count !== "string" || !/[1-9]/.test(count)) return;
-    node.textContent = `累計瀏覽 ${count} 人次`;
+    node.textContent = t("累計瀏覽 {count} 人次", { count });
     node.hidden = false;
   } catch {
     // The page works the same without the counter.

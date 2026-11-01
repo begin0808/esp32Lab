@@ -10,18 +10,21 @@ import {
   type BrokerSettings,
   type LedCommand,
 } from "./text";
+import { lang, setupLanguagePicker, t, translatePage } from "./i18n";
 import { setupHomeLinks } from "./nav";
 import { setupStats } from "./stats";
 import { setupStylePicker } from "./theme";
+
+translatePage();
 
 const CHANNEL_KEY = "esp32-mp-voice-channel";
 const BROKER_KEY = "esp32-mp-voice-broker";
 const BOARD_REPLY_TIMEOUT = 4000;
 
 const BOARD_STATES: Record<string, string> = {
-  on: "開發板：LED 開啟",
-  off: "開發板：LED 關閉",
-  blink: "開發板：LED 閃爍",
+  on: t("開發板：LED 開啟"),
+  off: t("開發板：LED 關閉"),
+  blink: t("開發板：LED 閃爍"),
 };
 
 interface SpeechResultEvent {
@@ -80,7 +83,7 @@ function setControlsEnabled(enabled: boolean): void {
 function onBoardState(state: string): void {
   clearTimeout(replyTimer);
   if (state === "offline") {
-    setStatus(ui.boardStatus, "開發板：離線，請確認程式正在執行", "error");
+    setStatus(ui.boardStatus, t("開發板：離線，請確認程式正在執行"), "error");
     return;
   }
   const text = BOARD_STATES[state];
@@ -92,8 +95,8 @@ function connect(name: string, broker: BrokerSettings, password: string): void {
   clearTimeout(replyTimer);
   channel = name;
   setControlsEnabled(false);
-  setStatus(ui.linkStatus, "正在連線", "busy");
-  setStatus(ui.boardStatus, "開發板：尚未回報", "idle");
+  setStatus(ui.linkStatus, t("正在連線"), "busy");
+  setStatus(ui.boardStatus, t("開發板：尚未回報"), "idle");
 
   const current = mqtt.connect(brokerUrl(broker), {
     connectTimeout: 10_000,
@@ -103,7 +106,7 @@ function connect(name: string, broker: BrokerSettings, password: string): void {
   });
   client = current;
   current.on("connect", () => {
-    setStatus(ui.linkStatus, `已連線，主題：${name}`, "ready");
+    setStatus(ui.linkStatus, t("已連線，主題：{name}", { name }), "ready");
     setControlsEnabled(true);
     current.subscribe(stateTopic(name));
   });
@@ -111,7 +114,7 @@ function connect(name: string, broker: BrokerSettings, password: string): void {
   const onLost = () => {
     // A client replaced by a new connection must not overwrite the current status.
     if (client !== current) return;
-    setStatus(ui.linkStatus, "連不上伺服器，正在重試。請確認這台裝置可以上網，以及伺服器設定正確", "error");
+    setStatus(ui.linkStatus, t("連不上伺服器，正在重試。請確認這台裝置可以上網，以及伺服器設定正確"), "error");
     setControlsEnabled(false);
   };
   current.on("offline", onLost);
@@ -120,7 +123,7 @@ function connect(name: string, broker: BrokerSettings, password: string): void {
       // Retrying a rejected password only repeats the failure and may lock the account.
       client = null;
       current.end(true);
-      setStatus(ui.linkStatus, "MQTT 帳號或密碼不正確，或這個帳號沒有使用權限", "error");
+      setStatus(ui.linkStatus, t("MQTT 帳號或密碼不正確，或這個帳號沒有使用權限"), "error");
       setControlsEnabled(false);
       return;
     }
@@ -132,41 +135,41 @@ function sendCommand(command: LedCommand): void {
   client?.publish(commandTopic(channel), command);
   clearTimeout(replyTimer);
   replyTimer = setTimeout(() => {
-    setStatus(ui.boardStatus, "開發板：沒有回應，請確認主題名稱和程式是否正在執行", "error");
+    setStatus(ui.boardStatus, t("開發板：沒有回應，請確認主題名稱和程式是否正在執行"), "error");
   }, BOARD_REPLY_TIMEOUT);
 }
 
 function runText(text: string): void {
   const command = parseVoiceCommand(text);
   if (command) {
-    ui.message.textContent = `收到：${text}`;
+    ui.message.textContent = t("收到：{text}", { text });
     sendCommand(command);
   } else {
-    ui.message.textContent = `聽不懂「${text}」，請說開燈、關燈或閃爍`;
+    ui.message.textContent = t("聽不懂「{text}」，請說開燈、關燈或閃爍", { text });
   }
 }
 
 function speechErrorMessage(error: string): string {
-  if (error === "not-allowed" || error === "service-not-allowed") return "麥克風沒有開放，請到瀏覽器的網站設定允許使用麥克風";
-  if (error === "network") return "語音辨識需要連上網際網路，請確認這台裝置可以上網";
-  if (error === "no-speech") return "沒有聽到聲音，請再試一次";
-  return `語音辨識失敗，請再試一次（${error}）`;
+  if (error === "not-allowed" || error === "service-not-allowed") return t("麥克風沒有開放，請到瀏覽器的網站設定允許使用麥克風");
+  if (error === "network") return t("語音辨識需要連上網際網路，請確認這台裝置可以上網");
+  if (error === "no-speech") return t("沒有聽到聲音，請再試一次");
+  return t("語音辨識失敗，請再試一次（{error}）", { error });
 }
 
 function startVoice(): void {
   const scope = window as unknown as Record<string, (new () => SpeechRecognizer) | undefined>;
   const Recognizer = scope.SpeechRecognition ?? scope.webkitSpeechRecognition;
   if (!Recognizer) {
-    ui.message.textContent = "這個瀏覽器不支援語音辨識，請改用文字指令或鍵盤的麥克風";
+    ui.message.textContent = t("這個瀏覽器不支援語音辨識，請改用文字指令或鍵盤的麥克風");
     return;
   }
   const recognizer = new Recognizer();
-  recognizer.lang = "zh-TW";
+  recognizer.lang = lang === "en" ? "en-US" : "zh-TW";
   recognizer.onresult = (event) => runText(event.results[0][0].transcript);
   recognizer.onerror = (event) => {
     ui.message.textContent = speechErrorMessage(event.error);
   };
-  ui.message.textContent = "聆聽中，請說話";
+  ui.message.textContent = t("聆聽中，請說話");
   recognizer.start();
 }
 
@@ -212,8 +215,8 @@ function showBroker(broker: BrokerSettings): void {
 }
 
 function showTopics(): void {
-  const name = ui.channel.value.trim() || "主題名稱";
-  ui.topicPreview.textContent = `實際使用的 Topic：${commandTopic(name)}（指令）、${stateTopic(name)}（回報）`;
+  const name = ui.channel.value.trim() || t("主題名稱");
+  ui.topicPreview.textContent = t("實際使用的 Topic：{command}（指令）、{state}（回報）", { command: commandTopic(name), state: stateTopic(name) });
 }
 
 function readBrokerFields(): BrokerSettings {
@@ -229,19 +232,19 @@ ui.channelForm.addEventListener("submit", (event) => {
   event.preventDefault();
   const name = ui.channel.value.trim();
   if (!isValidChannel(name)) {
-    ui.message.textContent = "主題名稱只能使用英文、數字、底線和連字號，最多 32 個字";
+    ui.message.textContent = t("主題名稱只能使用英文、數字、底線和連字號，最多 32 個字");
     return;
   }
   const broker = readBrokerFields();
   if (!isValidBroker(broker)) {
     ui.brokerSettings.open = true;
-    ui.message.textContent = "伺服器設定不正確：連接埠是 1–65535 的數字，路徑以 / 開頭";
+    ui.message.textContent = t("伺服器設定不正確：連接埠是 1–65535 的數字，路徑以 / 開頭");
     return;
   }
   const password = ui.brokerPassword.value;
   if (password && !broker.username) {
     ui.brokerSettings.open = true;
-    ui.message.textContent = "有填密碼時也要填帳號";
+    ui.message.textContent = t("有填密碼時也要填帳號");
     return;
   }
   ui.message.textContent = "";
@@ -268,6 +271,8 @@ ui.textForm.addEventListener("submit", (event) => {
 });
 
 setupStylePicker(el<HTMLSelectElement>("style-picker"));
+// Reloading reconnects by itself unless the broker needs a password, which is not saved.
+setupLanguagePicker(el<HTMLSelectElement>("language-picker"), { canFollow: () => !ui.brokerPassword.value });
 setupHomeLinks();
 setupStats();
 
@@ -280,7 +285,7 @@ showTopics();
 if (isValidChannel(initialChannel)) {
   saveChannel(initialChannel);
   if (initialBroker.username) {
-    ui.message.textContent = "請輸入 MQTT 密碼後按「連線」";
+    ui.message.textContent = t("請輸入 MQTT 密碼後按「連線」");
   } else {
     connect(initialChannel, initialBroker, "");
   }

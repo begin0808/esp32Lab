@@ -1,3 +1,5 @@
+import { t } from "./i18n";
+
 export type ChipId = "esp32" | "esp32s2" | "esp32s3" | "esp32c3";
 
 export interface Chip {
@@ -20,8 +22,7 @@ const S2_S3_PINS = { 2: 18, 4: 4, 5: 10, 13: 13, 16: 16, 18: 18, 19: 17, 21: 8, 
 const C3_PINS = { 2: 4, 4: 5, 5: 7, 13: 6, 16: 6, 18: 4, 19: 5, 21: 6, 22: 7, 23: 6, 25: 6, 26: 6, 27: 7, 33: 7, 34: 3 };
 
 function promptLines(label: string): string {
-  return `- 開發板：${label}（MicroPython v1.29.0）
-- 板載 LED：（請看板子標示填寫，不同板子的腳位不同）`;
+  return t("- 開發板：{label}（MicroPython v1.29.0）\n- 板載 LED：（請看板子標示填寫，不同板子的腳位不同）", { label });
 }
 
 export const CHIPS: Record<ChipId, Chip> = {
@@ -35,8 +36,7 @@ export const CHIPS: Record<ChipId, Chip> = {
       address: 0x1000,
     },
     pins: null,
-    promptLines: `- 開發板：NodeMCU ESP-32S（ESP32，MicroPython v1.29.0）
-- 板載 LED：GPIO 2`,
+    promptLines: t("- 開發板：NodeMCU ESP-32S（ESP32，MicroPython v1.29.0）\n- 板載 LED：GPIO 2"),
   },
   esp32s2: {
     id: "esp32s2",
@@ -101,6 +101,6 @@ export function adaptExamplePins(code: string, chip: Chip): string {
     .replace(/\bGPIO (\d+)/g, (_match, pin: string) => `GPIO ${move(pin)}`)
     .replace(/^(\w*_PIN = )(\d+)/gm, (_match, name: string, pin: string) => `${name}${move(pin)}`)
     // Each board puts its onboard LED somewhere else, so this example needs a wired LED instead.
-    .replace(/^# .*板載.*$/m, `# 接線：LED 經 220Ω 電阻接 GPIO ${pins[2]}，短腳接 GND（各板子的板載 LED 腳位不同）`);
-  return `# 腳位已依 ${chip.label} 調整。不同板子引出的腳位可能不同，請對照板子標示\n${adapted}`;
+    .replace(/^# .*(?:板載|onboard).*$/m, t("# 接線：LED 經 220Ω 電阻接 GPIO {pin}，短腳接 GND（各板子的板載 LED 腳位不同）", { pin: pins[2] }));
+  return `${t("# 腳位已依 {chip} 調整。不同板子引出的腳位可能不同，請對照板子標示", { chip: chip.label })}\n${adapted}`;
 }

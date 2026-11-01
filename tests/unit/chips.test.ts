@@ -4,10 +4,11 @@ import { describe, expect, it } from "vitest";
 import { adaptExamplePins, chipFromMachine, chipFromName, CHIPS } from "../../src/chips";
 import { geminiPrompt } from "../../src/text";
 
-const EXAMPLES = readdirSync("src/examples").map((file) => ({
-  file,
-  code: readFileSync(`src/examples/${file}`, "utf8"),
-}));
+const EXAMPLES = ["src/examples", "src/examples/en"].flatMap((dir) =>
+  readdirSync(dir)
+    .filter((file) => file.endsWith(".py"))
+    .map((file) => ({ file: `${dir}/${file}`.replace("src/examples/", ""), code: readFileSync(`${dir}/${file}`, "utf8") })),
+);
 
 function pinsOf(code: string): Map<string, number> {
   return new Map([...code.matchAll(/^(\w*_PIN) = (\d+)/gm)].map((match) => [match[1], Number(match[2])]));

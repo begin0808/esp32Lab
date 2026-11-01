@@ -11,6 +11,18 @@
         document.documentElement.dataset.style = localStorage.getItem("esp32-mp-style") || "mat";
       } catch {}
     </script>
+    <script>
+      // Decides the language before the first paint. The text stays hidden until it is translated.
+      (function () {
+        var saved = "";
+        try {
+          saved = localStorage.getItem("esp32-mp-lang") || "";
+        } catch {}
+        if (/^zh/i.test(saved || navigator.language)) return;
+        document.documentElement.lang = "en";
+        document.documentElement.classList.add("translating");
+      })();
+    </script>
     <link rel="icon" href="/icons/voice.svg" type="image/svg+xml" />
     <link rel="icon" href="/icons/voice-32.png" type="image/png" sizes="32x32" />
     <link rel="apple-touch-icon" href="/icons/voice-180.png" />
@@ -24,10 +36,16 @@
           <img class="brand-logo" src="/icons/voice.svg" alt="" width="38" height="38" />
           <h1>ESP32 語音控制</h1>
         </div>
-        <label class="style-picker">
-          風格
-          <select id="style-picker"></select>
-        </label>
+        <div class="page-pickers">
+          <label class="style-picker">
+            風格
+            <select id="style-picker"></select>
+          </label>
+          <label class="style-picker language-picker">
+            語言 Language
+            <select id="language-picker"></select>
+          </label>
+        </div>
       </div>
 
       <form id="channel-form" class="row">

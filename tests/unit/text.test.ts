@@ -71,8 +71,22 @@ describe("parseVoiceCommand", () => {
     expect(parseVoiceCommand("閃爍")).toBe("blink");
   });
 
+  it("understands English commands", () => {
+    expect(parseVoiceCommand("on")).toBe("on");
+    expect(parseVoiceCommand("Turn the light on.")).toBe("on");
+    expect(parseVoiceCommand("turn off the light")).toBe("off");
+    expect(parseVoiceCommand("Blink")).toBe("blink");
+    expect(parseVoiceCommand("flashing")).toBe("blink");
+  });
+
+  it("does not hear a command inside another word", () => {
+    expect(parseVoiceCommand("button")).toBeNull();
+    expect(parseVoiceCommand("coffee")).toBeNull();
+  });
+
   it("returns null for anything else", () => {
     expect(parseVoiceCommand("你好")).toBeNull();
+    expect(parseVoiceCommand("hello")).toBeNull();
   });
 });
 
