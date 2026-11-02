@@ -197,6 +197,21 @@ os.listdir()</pre>
             </tbody>
           </table>
         </div>
+        <h3>Can I use an Arduino UNO?</h3>
+        <p><strong>No.</strong> This site only has MicroPython firmware for the ESP32 family, and the classic UNO R3 has too little memory to run MicroPython. ESP32 Lab also has an Arduino edition, but "Arduino" there means the Arduino framework you write code with (<code>setup()</code>, <code>digitalWrite()</code> and so on), not the Arduino board, so it does not support the UNO either.</p>
+        <h3>Boards supported by the two editions</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Board</th><th scope="col">MicroPython edition (this site)</th><th scope="col">Arduino edition</th></tr></thead>
+            <tbody>
+              <tr><td>Classic ESP32 (such as NodeMCU-32S)</td><td><span class="badge tested">Tested</span></td><td><span class="badge tested">Tested</span></td></tr>
+              <tr><td>ESP32-S2, S3, C3</td><td><span class="badge expected">Not yet tested</span></td><td><span class="badge no">Not supported</span></td></tr>
+              <tr><td>ESP32-C6 and other ESP32 chips</td><td><span class="badge no">Not supported</span></td><td><span class="badge no">Not supported</span></td></tr>
+              <tr><td>ESP8266, Arduino UNO</td><td><span class="badge no">Not supported</span></td><td><span class="badge no">Not supported</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>The Arduino edition compiles on a cloud server, so for now it is open only to the teachers and students at the author's school and is not public.</p>
 
         <h3>Supported browsers</h3>
         <div class="table-wrap">
