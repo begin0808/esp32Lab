@@ -82,6 +82,10 @@ function numberedName(item: (typeof EXAMPLES)[number]): string {
 const STORAGE_KEY = "esp32-mp-code";
 const CHIP_KEY = "esp32-mp-chip";
 const MONITOR_LIMIT = 200_000;
+// Output is drawn in batches, so a program printing as fast as it can does not freeze the page.
+const MONITOR_FLUSH_MS = 50;
+// Long runs of output are split across several text nodes, so adding to the end never copies a huge string.
+const MONITOR_NODE_CHARS = 4096;
 const FONT_SIZE_KEY = "esp32-mp-font-size";
 const FONT_SIZE_DEFAULT = 14;
 const FONT_SIZE_MIN = 12;
@@ -146,9 +150,21 @@ const link = new SerialLink();
 const decoder = new TextDecoder();
 let busy = false;
 let hasFirmware = false;
+/** The board's recent output, searched for addresses and errors. */
 let monitorText = "";
 let scanFrom = 0;
+/** Board output received but not yet added to monitorText. */
+let pendingBoardText = "";
+/** Counts every character the board has sent, including any not drawn yet. */
+let receivedChars = 0;
+let promptTail = "";
 let atPrompt = false;
+/** Text waiting to be drawn; neighbouring pieces of the same kind are merged. */
+let monitorQueue: { text: string; className?: string }[] = [];
+let queuedChars = 0;
+/** Characters currently drawn in the monitor, kept here because counting the page's text is slow. */
+let monitorChars = 0;
+let flushTimer: ReturnType<typeof setTimeout> | null = null;
 let completing = false;
 const commandHistory = new CommandHistory();
 
@@ -330,19 +346,82 @@ function hideProgress(): void {
 
 function appendMonitor(text: string, className?: string): void {
   if (!text) return;
-  const atBottom = ui.monitor.scrollHeight - ui.monitor.scrollTop - ui.monitor.clientHeight < 40;
-  if (className) {
-    const span = document.createElement("span");
-    span.className = className;
-    span.textContent = text;
-    ui.monitor.append(span);
-  } else {
-    ui.monitor.append(text);
+  const last = monitorQueue.at(-1);
+  if (last && last.className === className) last.text += text;
+  else monitorQueue.push({ text, className });
+  queuedChars += text.length;
+  // A hidden tab may draw rarely, and text older than the monitor keeps would never be shown anyway.
+  while (queuedChars > MONITOR_LIMIT) {
+    const first = monitorQueue[0];
+    const excess = queuedChars - MONITOR_LIMIT;
+    if (first.text.length <= excess) {
+      monitorQueue.shift();
+      queuedChars -= first.text.length;
+    } else {
+      first.text = first.text.slice(excess);
+      queuedChars -= excess;
+    }
   }
-  if (ui.monitor.textContent!.length > MONITOR_LIMIT) {
-    ui.monitor.textContent = ui.monitor.textContent!.slice(-MONITOR_LIMIT / 2);
+  flushTimer ??= setTimeout(flushMonitor, MONITOR_FLUSH_MS);
+}
+
+/** Draws the waiting text, then checks the new output for an address or an error. */
+function flushMonitor(): void {
+  if (flushTimer !== null) clearTimeout(flushTimer);
+  flushTimer = null;
+  if (pendingBoardText) {
+    const combined = monitorText + pendingBoardText;
+    const dropped = Math.max(0, combined.length - MONITOR_LIMIT);
+    monitorText = combined.slice(dropped);
+    // Text dropped from the front moves everything else, so the scan position moves with it.
+    scanFrom = Math.max(0, scanFrom - dropped);
+    pendingBoardText = "";
+    scanOutput();
   }
-  if (atBottom) ui.monitor.scrollTop = ui.monitor.scrollHeight;
+  drawQueue();
+}
+
+function drawQueue(): void {
+  if (monitorQueue.length === 0) return;
+  const pieces = monitorQueue;
+  monitorQueue = [];
+  queuedChars = 0;
+  const box = ui.monitor;
+  const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
+  for (const { text, className } of pieces) {
+    if (className) {
+      const span = document.createElement("span");
+      span.className = className;
+      span.textContent = text;
+      box.append(span);
+    } else if (box.lastChild instanceof Text && box.lastChild.length < MONITOR_NODE_CHARS) {
+      box.lastChild.appendData(text);
+    } else {
+      box.append(text);
+    }
+    monitorChars += text.length;
+  }
+  if (monitorChars > MONITOR_LIMIT) trimMonitor(monitorChars - MONITOR_LIMIT / 2);
+  if (atBottom) box.scrollTop = box.scrollHeight;
+}
+
+/** Removes the oldest text, keeping the colour of the system messages that remain. */
+function trimMonitor(excess: number): void {
+  const box = ui.monitor;
+  while (excess > 0 && box.firstChild) {
+    const node = box.firstChild;
+    const length = node.textContent?.length ?? 0;
+    if (length <= excess) {
+      node.remove();
+      excess -= length;
+      monitorChars -= length;
+    } else {
+      const text = node instanceof Text ? node : (node.firstChild as Text);
+      text.deleteData(0, excess);
+      monitorChars -= excess;
+      excess = 0;
+    }
+  }
 }
 
 function systemMessage(text: string): void {
@@ -350,8 +429,14 @@ function systemMessage(text: string): void {
 }
 
 function clearMonitor(): void {
+  if (flushTimer !== null) clearTimeout(flushTimer);
+  flushTimer = null;
+  monitorQueue = [];
+  queuedChars = 0;
   ui.monitor.textContent = "";
+  monitorChars = 0;
   monitorText = "";
+  pendingBoardText = "";
   scanFrom = 0;
   ui.ipCard.hidden = true;
   ui.errorCard.hidden = true;
@@ -359,12 +444,16 @@ function clearMonitor(): void {
 
 function onBoardOutput(data: Uint8Array): void {
   const text = stripTerminalCodes(decoder.decode(data, { stream: true }));
+  if (!text) return;
+  receivedChars += text.length;
   appendMonitor(text);
-  monitorText = (monitorText + text).slice(-MONITOR_LIMIT);
-  atPrompt = /(?:^|\n)>>> $/.test(monitorText);
-  refreshButtons();
-  scanFrom = Math.min(scanFrom, monitorText.length);
-  scanOutput();
+  pendingBoardText += text;
+  if (pendingBoardText.length > MONITOR_LIMIT) pendingBoardText = pendingBoardText.slice(-MONITOR_LIMIT);
+  // Only the last few characters decide whether the board is waiting at its prompt.
+  promptTail = (promptTail + text).slice(-5);
+  const wasAtPrompt = atPrompt;
+  atPrompt = /(?:^|\n)>>> $/.test(promptTail);
+  if (atPrompt !== wasAtPrompt) refreshButtons();
 }
 
 /** Only complete lines are scanned, so an address split across two reads is not misread. */
@@ -465,11 +554,11 @@ async function disconnect(): Promise<void> {
 async function restartBoard(): Promise<void> {
   clearMonitor();
   atPrompt = false;
-  const before = monitorText.length;
+  const before = receivedChars;
   await link.hardReset();
   // Boards without an auto-reset circuit print nothing, so fall back to a soft reset.
   await new Promise((resolve) => setTimeout(resolve, 1500));
-  if (monitorText.length === before) await link.write(Uint8Array.of(0x03, 0x04));
+  if (receivedChars === before) await link.write(Uint8Array.of(0x03, 0x04));
 }
 
 async function upload(): Promise<void> {
@@ -736,6 +825,7 @@ ui.copyPrompt.addEventListener("click", () => void copyText(geminiPrompt(selecte
 ui.copyConvert.addEventListener("click", () => void copyText(arduinoConvertPrompt(getCode()), ui.copyConvert));
 ui.copyIp.addEventListener("click", () => void copyText(ui.ipLink.href, ui.copyIp));
 ui.copyError.addEventListener("click", () => {
+  flushMonitor();
   void copyText(fixErrorPrompt(getCode(), findLastTraceback(monitorText) ?? ""), ui.copyError);
 });
 

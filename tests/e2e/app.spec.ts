@@ -765,6 +765,60 @@ test("reports an unplugged board", async ({ page }) => {
   await expect(page.locator("#upload")).toBeDisabled();
 });
 
+test.describe("serial monitor", () => {
+  const MONITOR_LIMIT = 200_000;
+
+  async function connectBoard(page: Page) {
+    await mockSerial(page);
+    await page.goto("/");
+    await page.locator("#connect").click();
+    await expect(page.locator("#upload")).toBeEnabled();
+  }
+
+  /** Sends `count` lines of about 20 characters, one read per line, as a program printing in a loop would. */
+  async function printLines(page: Page, from: number, count: number) {
+    await page.evaluate(
+      ([start, total]) => {
+        const board = (globalThis as any).board;
+        for (let i = start; i < start + total; i++) board.emit(`reading ${String(i).padStart(8, "0")}\r\n`);
+      },
+      [from, count],
+    );
+  }
+
+  test("keeps up with a program that prints very fast", async ({ page }) => {
+    await connectBoard(page);
+    await printLines(page, 0, 5000);
+    await expect(page.locator("#monitor")).toContainText("reading 00004999");
+    // One text node per read would make the page slow; the output is drawn in batches instead.
+    expect(await page.locator("#monitor").evaluate((node) => node.childNodes.length)).toBeLessThan(100);
+  });
+
+  test("still finds the address after a long run of output", async ({ page }) => {
+    await connectBoard(page);
+    await printLines(page, 0, 12_000);
+    await expect(page.locator("#monitor")).toContainText("reading 00011999");
+    await page.evaluate(() => (globalThis as any).board.emit("IP: 10.0.0.7\r\n"));
+    await expect(page.locator("#ip-link")).toHaveText("http://10.0.0.7");
+  });
+
+  test("drops the oldest output but keeps the colour of recent system messages", async ({ page }) => {
+    await connectBoard(page);
+    await printLines(page, 0, 7000);
+    // A block sent while a program runs is refused with a system message.
+    await page.locator("#repl-input").fill("for i in range(3):\n    print(i)");
+    await page.locator("#repl-input").press("Control+Enter");
+    await expect(page.locator("#monitor .system").filter({ hasText: "請先按「停止」" })).toHaveCount(1);
+    await printLines(page, 7000, 5000);
+    await expect(page.locator("#monitor")).toContainText("reading 00011999");
+
+    const text = (await page.locator("#monitor").textContent()) ?? "";
+    expect(text.length).toBeLessThanOrEqual(MONITOR_LIMIT);
+    expect(text).not.toContain("reading 00000000");
+    await expect(page.locator("#monitor .system").filter({ hasText: "請先按「停止」" })).toHaveCount(1);
+  });
+});
+
 test("serves the complete firmware file", async ({ page }) => {
   await page.goto("/");
   const size = await page.evaluate(async () => {
