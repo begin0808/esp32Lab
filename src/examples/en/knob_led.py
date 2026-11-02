@@ -1,6 +1,7 @@
 # Example 4 | Potentiometer LED dimmer: turning the knob brightens or dims the LED
 # Wiring: potentiometer ends to 3V3 and GND, middle pin to GPIO 34
 #         LED through a 220Ω resistor to GPIO 18, short leg to GND
+# Chart: after uploading, switch the monitor to "Chart" and turn the knob to watch the line follow
 from machine import ADC, Pin, PWM
 import time
 

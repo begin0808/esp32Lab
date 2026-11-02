@@ -1,6 +1,7 @@
 # 範例 9｜HC-SR04 超音波測距：每半秒在監控窗顯示距離
 # 接線：VCC 接 5V（VIN）、GND 接 GND、Trig 接 GPIO 26
 #       Echo 是 5V 訊號，一定要先分壓：Echo 經 1kΩ 接 GPIO 33，GPIO 33 再經 2kΩ 接 GND
+# 圖表：上傳後把監控窗切到「圖表」，手在感測器前面前後移動，可以看到距離的變化
 from machine import Pin, time_pulse_us
 import time
 

@@ -1,6 +1,7 @@
 # Example 9 | HC-SR04 ultrasonic distance: shows the distance in the monitor every half second
 # Wiring: VCC to 5V (VIN), GND to GND, Trig to GPIO 26
 #         Echo is a 5V signal and must be divided first: Echo through 1kΩ to GPIO 33, and GPIO 33 through 2kΩ to GND
+# Chart: after uploading, switch the monitor to "Chart" and move your hand in front of the sensor to watch the distance change
 from machine import Pin, time_pulse_us
 import time
 

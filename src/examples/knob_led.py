@@ -1,6 +1,7 @@
 # 範例 4｜可變電阻調整 LED 亮度：轉動旋鈕，LED 跟著變亮或變暗
 # 接線：可變電阻兩端接 3V3 和 GND，中間腳接 GPIO 34
 #       LED 經 220Ω 電阻接 GPIO 18，短腳接 GND
+# 圖表：上傳後把監控窗切到「圖表」，轉動旋鈕，折線會跟著上下
 from machine import ADC, Pin, PWM
 import time
 

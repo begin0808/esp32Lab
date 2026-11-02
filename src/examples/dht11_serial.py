@@ -1,5 +1,6 @@
 # 範例 10｜DHT11 溫濕度（不需 Wi-Fi）：每 2 秒在監控窗顯示溫度和濕度
 # 接線：DHT11 VCC 接 3V3、GND 接 GND、DATA 接 GPIO 4
+# 圖表：上傳後把監控窗切到「圖表」，會看到溫度和濕度兩條線；對感測器哈氣，濕度會往上升
 import dht
 import time
 from machine import Pin

@@ -1,5 +1,6 @@
 # Example 10 | DHT11 (no Wi-Fi needed): shows temperature and humidity in the monitor every 2 seconds
 # Wiring: DHT11 VCC to 3V3, GND to GND, DATA to GPIO 4
+# Chart: after uploading, switch the monitor to "Chart" to see temperature and humidity; breathe on the sensor and the humidity rises
 import dht
 import time
 from machine import Pin

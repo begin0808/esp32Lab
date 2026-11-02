@@ -2,6 +2,7 @@
 # Wiring: photoresistor between 3V3 and GPIO 34, and GPIO 34 through a 10kΩ resistor to GND
 #         LED through a 220Ω resistor to GPIO 18, short leg to GND
 # More light gives a higher reading. Check the number in the monitor, then adjust DARK_LEVEL
+# Chart: after uploading, switch the monitor to "Chart" and cover the sensor to watch the light level drop
 from machine import ADC, Pin
 import time
 

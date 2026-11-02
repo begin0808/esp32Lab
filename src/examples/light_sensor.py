@@ -2,6 +2,7 @@
 # 接線：光敏電阻一腳接 3V3、另一腳接 GPIO 34，GPIO 34 再經 10kΩ 電阻接 GND
 #       LED 經 220Ω 電阻接 GPIO 18，短腳接 GND
 # 光線越亮，讀值越大。先看監控窗的數字，再調整 DARK_LEVEL
+# 圖表：上傳後把監控窗切到「圖表」，用手遮住光敏電阻，可以看到亮度往下掉
 from machine import ADC, Pin
 import time
 

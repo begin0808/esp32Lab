@@ -1,6 +1,7 @@
 # Example 11 | DS18B20 thermometer: shows the temperature in the monitor every 2 seconds
 # Wiring: VCC to 3V3, GND to GND, DATA to GPIO 4
 # A bare sensor needs a 4.7kΩ resistor between DATA and 3V3; modules usually include one
+# Chart: after uploading, switch the monitor to "Chart" and hold the sensor to watch it warm up; "Show the last" 5 or 10 minutes shows it best
 from machine import Pin
 import ds18x20
 import onewire
