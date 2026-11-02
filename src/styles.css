@@ -408,6 +408,133 @@ input:focus-visible,
   color: var(--monitor-system);
 }
 
+.view-switch {
+  display: inline-flex;
+  gap: 4px;
+}
+
+/* The header's colour differs between styles, so the chosen view uses the monitor's own dark colours. */
+.view-switch .btn[aria-pressed="true"],
+.plot-bar .btn[aria-pressed="true"] {
+  background: var(--monitor-bg);
+  color: var(--monitor-text);
+  font-weight: 700;
+}
+
+.plot-view {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 300px;
+  font-family: var(--font-code);
+  font-size: var(--code-font-size);
+}
+
+.plot-view[hidden],
+.monitor[hidden] {
+  display: none;
+}
+
+.plot-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+}
+
+.plot-note {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.plot-area {
+  position: relative;
+  flex: 1;
+  min-height: 240px;
+  background: var(--monitor-bg);
+}
+
+.plot-area canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  color: var(--monitor-text);
+  font: inherit;
+}
+
+.plot-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+  gap: 4px;
+  margin: 0;
+  padding: 16px;
+  color: var(--monitor-text);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  text-align: center;
+}
+
+.plot-empty[hidden] {
+  display: none;
+}
+
+.plot-empty code {
+  font-family: var(--font-code);
+}
+
+.plot-empty a {
+  color: var(--monitor-system);
+}
+
+.plot-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 10px 8px;
+  background: var(--monitor-bg);
+}
+
+.plot-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--monitor-text);
+  font: inherit;
+  font-size: 0.85em;
+  cursor: pointer;
+}
+
+.plot-key:focus-visible {
+  outline: 3px solid var(--focus);
+}
+
+.plot-key[aria-pressed="false"] {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+
+.plot-swatch {
+  width: 14px;
+  height: 4px;
+  border-radius: 2px;
+}
+
+.plot-value {
+  font-weight: 700;
+}
+
 .repl-form {
   display: flex;
   align-items: flex-end;
@@ -537,5 +664,14 @@ input:focus-visible,
   .monitor {
     flex: none;
     height: 300px;
+  }
+
+  .plot-view {
+    flex: none;
+  }
+
+  .plot-area {
+    flex: none;
+    height: 260px;
   }
 }

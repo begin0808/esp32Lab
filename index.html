@@ -127,6 +127,10 @@
         <div class="panel-head">
           <strong>序列埠監控窗</strong>
           <div class="tools">
+            <div class="view-switch" role="group" aria-label="監控窗顯示方式">
+              <button id="view-text" class="btn small" type="button" aria-pressed="true">文字</button>
+              <button id="view-plot" class="btn small" type="button" aria-pressed="false">圖表</button>
+            </div>
             <button id="reset" class="btn small" disabled>重新啟動</button>
             <button id="clear" class="btn small">清除</button>
           </div>
@@ -146,6 +150,25 @@
         </div>
 
         <pre id="monitor" class="monitor" tabindex="0" aria-live="off"></pre>
+        <div id="plot-view" class="plot-view" hidden>
+          <div class="plot-bar">
+            <label class="select">顯示最近
+              <select id="plot-window">
+                <option value="10">10 秒</option>
+                <option value="60" selected>1 分鐘</option>
+                <option value="300">5 分鐘</option>
+              </select>
+            </label>
+            <button id="plot-pause" class="btn small" type="button" aria-pressed="false">暫停</button>
+            <button id="plot-export" class="btn small" type="button" disabled>匯出 CSV</button>
+            <span id="plot-note" class="plot-note" role="status" hidden></span>
+          </div>
+          <div class="plot-area">
+            <canvas id="plot-canvas" role="img" aria-label="序列埠資料折線圖"></canvas>
+            <p id="plot-empty" class="plot-empty">還沒有可以畫圖的資料。程式用 <code>print("溫度:", t)</code> 這樣的格式印出數字，就會畫成折線圖。<a href="./help.html#plot" target="_blank" rel="opener">圖表教學</a></p>
+          </div>
+          <div id="plot-legend" class="plot-legend" aria-label="圖例"></div>
+        </div>
         <p id="repl-choices" class="repl-choices" role="status" hidden></p>
         <form id="repl-form" class="repl-form">
           <textarea id="repl-input" rows="1" placeholder="輸入 MicroPython 指令後按 Enter" aria-label="MicroPython 指令" autocomplete="off" autocapitalize="off" spellcheck="false" disabled></textarea>

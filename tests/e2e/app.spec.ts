@@ -819,6 +819,113 @@ test.describe("serial monitor", () => {
   });
 });
 
+test.describe("chart", () => {
+  async function connectBoard(page: Page) {
+    await mockSerial(page);
+    await page.goto("/");
+    await page.locator("#connect").click();
+    await expect(page.locator("#upload")).toBeEnabled();
+  }
+
+  /** Starts on a new line, because the board's ">>> " prompt has no line end and a line joined to it is skipped. */
+  async function print(page: Page, lines: string[]) {
+    await page.evaluate((all) => {
+      const board = (globalThis as any).board;
+      board.emit("\r\n");
+      for (const line of all) board.emit(`${line}\r\n`);
+    }, lines);
+  }
+
+  const legend = (page: Page) => page.locator("#plot-legend .plot-key");
+
+  test("draws the values an example prints and lists them with their newest value", async ({ page }) => {
+    await connectBoard(page);
+    await page.locator("#view-plot").click();
+    await expect(page.locator("#plot-empty")).toBeVisible();
+    await expect(page.locator("#plot-export")).toBeDisabled();
+    await expect(page.locator("#monitor")).toBeHidden();
+
+    await print(page, ["溫度: 25 °C  濕度: 60 %", "讀取失敗，請檢查接線", "溫度: 26 °C  濕度: 58 %"]);
+    await expect(legend(page)).toHaveText(["溫度26", "濕度58"]);
+    await expect(page.locator("#plot-empty")).toBeHidden();
+    await expect(page.locator("#plot-export")).toBeEnabled();
+    // The first line's colour must appear on the canvas.
+    await expect
+      .poll(() =>
+        page.locator("#plot-canvas").evaluate((canvas: HTMLCanvasElement) => {
+          const data = canvas.getContext("2d")!.getImageData(0, 0, canvas.width, canvas.height).data;
+          for (let i = 0; i < data.length; i += 4) if (data[i] > 240 && data[i + 1] > 195 && data[i + 1] < 225 && data[i + 2] < 90) return true;
+          return false;
+        }),
+      )
+      .toBe(true);
+
+    await page.locator("#view-text").click();
+    await expect(page.locator("#plot-view")).toBeHidden();
+    await expect(page.locator("#monitor")).toContainText("溫度: 26 °C");
+  });
+
+  test("keeps recording while the text view is shown", async ({ page }) => {
+    await connectBoard(page);
+    await print(page, ["1 2", "3 4"]);
+    await page.locator("#view-plot").click();
+    await expect(legend(page)).toHaveText(["數值13", "數值24"]);
+  });
+
+  test("exports the data as CSV", async ({ page }) => {
+    await connectBoard(page);
+    await print(page, ["溫度: 25 °C  濕度: 60 %", "距離: 12.5 公分"]);
+    await page.locator("#view-plot").click();
+    await expect(legend(page)).toHaveCount(3);
+    const [download] = await Promise.all([page.waitForEvent("download"), page.locator("#plot-export").click()]);
+    expect(download.suggestedFilename()).toMatch(/^esp32-data-\d{8}-\d{6}\.csv$/);
+    const csv = readFileSync((await download.path())!, "utf8");
+    const rows = csv.replace(/^﻿/, "").trim().split("\r\n");
+    expect(csv.startsWith("﻿")).toBe(true);
+    expect(rows[0]).toBe("時間（秒）,溫度,濕度,距離");
+    expect(rows[1]).toMatch(/^0\.000,25,60,$/);
+    expect(rows[2]).toMatch(/^\d+\.\d{3},,,12\.5$/);
+  });
+
+  test("pauses the picture, hides a line and clears only the chart", async ({ page }) => {
+    await connectBoard(page);
+    await print(page, ["a: 1 b: 2"]);
+    await page.locator("#view-plot").click();
+    await page.locator("#plot-pause").click();
+    await expect(page.locator("#plot-pause")).toHaveText("繼續");
+    await expect(page.locator("#plot-note")).toContainText("暫停");
+    await print(page, ["a: 5 b: 6"]);
+    // The values keep being recorded while the picture is paused.
+    await expect(legend(page)).toHaveText(["a5", "b6"]);
+    await page.locator("#plot-pause").click();
+    await expect(page.locator("#plot-note")).toBeHidden();
+
+    await legend(page).first().click();
+    await expect(legend(page).first()).toHaveAttribute("aria-pressed", "false");
+
+    page.once("dialog", (dialog) => dialog.dismiss());
+    await page.locator("#clear").click();
+    await expect(legend(page)).toHaveCount(2);
+    page.once("dialog", (dialog) => dialog.accept());
+    await page.locator("#clear").click();
+    await expect(legend(page)).toHaveCount(0);
+    await expect(page.locator("#plot-empty")).toBeVisible();
+    await page.locator("#view-text").click();
+    await expect(page.locator("#monitor")).toContainText("a: 5 b: 6");
+  });
+
+  test("keeps up with a program that prints values very fast", async ({ page }) => {
+    await connectBoard(page);
+    await page.locator("#view-plot").click();
+    await page.evaluate(() => {
+      const board = (globalThis as any).board;
+      board.emit("\r\n");
+      for (let i = 0; i < 20_000; i++) board.emit(`value: ${i}\r\n`);
+    });
+    await expect(legend(page)).toHaveText(["value19999"]);
+  });
+});
+
 test("serves the complete firmware file", async ({ page }) => {
   await page.goto("/");
   const size = await page.evaluate(async () => {

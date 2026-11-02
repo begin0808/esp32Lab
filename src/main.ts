@@ -6,6 +6,8 @@ import { CommandHistory, enterAction, nextIndent, parseCompletion } from "./comm
 import { adaptExamplePins, chipFromMachine, CHIPS, FIRMWARE_VERSION, isChipId, type ChipId } from "./chips";
 import { installFirmware, isConnectFailure } from "./flasher";
 import { lang, setupLanguagePicker, t, translatePage } from "./i18n";
+import { DataLog, LineBuffer, parseDataLine } from "./plot";
+import { Plotter } from "./plotter";
 import { pasteModeBytes, RawRepl, ReplExecError, ReplTimeoutError } from "./repl";
 import { SerialLink } from "./serial";
 import { setupStats } from "./stats";
@@ -146,6 +148,8 @@ const ui = {
   workspace: el("workspace"),
   splitter: el("splitter"),
   language: el<HTMLSelectElement>("language-picker"),
+  viewText: el<HTMLButtonElement>("view-text"),
+  viewPlot: el<HTMLButtonElement>("view-plot"),
 };
 
 const link = new SerialLink();
@@ -169,6 +173,20 @@ let monitorChars = 0;
 let flushTimer: ReturnType<typeof setTimeout> | null = null;
 let completing = false;
 const commandHistory = new CommandHistory();
+/** Every number the board printed in a form the chart understands, kept even while the text view is shown. */
+const dataLog = new DataLog();
+const dataLines = new LineBuffer();
+const plotter = new Plotter(dataLog, {
+  view: el("plot-view"),
+  canvas: el<HTMLCanvasElement>("plot-canvas"),
+  empty: el("plot-empty"),
+  legend: el("plot-legend"),
+  note: el("plot-note"),
+  pause: el<HTMLButtonElement>("plot-pause"),
+  windowPicker: el<HTMLSelectElement>("plot-window"),
+  exportButton: el<HTMLButtonElement>("plot-export"),
+});
+const unnamedSeries = (position: number) => t("數值{position}", { position });
 
 function readSaved(): string | null {
   try {
@@ -449,6 +467,7 @@ function onBoardOutput(data: Uint8Array): void {
   if (!text) return;
   receivedChars += text.length;
   appendMonitor(text);
+  recordData(text);
   pendingBoardText += text;
   if (pendingBoardText.length > MONITOR_LIMIT) pendingBoardText = pendingBoardText.slice(-MONITOR_LIMIT);
   // Only the last few characters decide whether the board is waiting at its prompt.
@@ -456,6 +475,40 @@ function onBoardOutput(data: Uint8Array): void {
   const wasAtPrompt = atPrompt;
   atPrompt = /(?:^|\n)>>> $/.test(promptTail);
   if (atPrompt !== wasAtPrompt) refreshButtons();
+}
+
+function recordData(text: string): void {
+  const now = performance.now();
+  let added = false;
+  for (const line of dataLines.push(text)) {
+    const samples = parseDataLine(line, unnamedSeries);
+    if (samples && dataLog.add(now, samples)) added = true;
+  }
+  if (added) plotter.changed();
+}
+
+function showPlot(plot: boolean): void {
+  ui.viewText.setAttribute("aria-pressed", String(!plot));
+  ui.viewPlot.setAttribute("aria-pressed", String(plot));
+  ui.monitor.hidden = plot;
+  if (plot) {
+    plotter.show();
+  } else {
+    plotter.hide();
+    // A hidden monitor cannot scroll, so it returns to the newest output.
+    flushMonitor();
+    ui.monitor.scrollTop = ui.monitor.scrollHeight;
+  }
+}
+
+function clearView(): void {
+  if (!plotter.isShown) {
+    clearMonitor();
+    return;
+  }
+  if (dataLog.rowCount > 0 && !confirm(t("要清除圖表的所有資料嗎？還沒匯出的資料會不見。"))) return;
+  dataLog.clear();
+  plotter.cleared();
 }
 
 /** Only complete lines are scanned, so an address split across two reads is not misread. */
@@ -555,6 +608,8 @@ async function disconnect(): Promise<void> {
 
 async function restartBoard(): Promise<void> {
   clearMonitor();
+  // A line left unfinished before the reset, such as the prompt, must not swallow the program's first value.
+  dataLines.reset();
   atPrompt = false;
   const before = receivedChars;
   await link.hardReset();
@@ -687,7 +742,9 @@ ui.connect.addEventListener("click", guarded(() => (link.isOpen ? disconnect() :
 ui.upload.addEventListener("click", guarded(upload));
 ui.stop.addEventListener("click", guarded(stopProgram));
 ui.reset.addEventListener("click", guarded(restartBoard));
-ui.clear.addEventListener("click", clearMonitor);
+ui.clear.addEventListener("click", clearView);
+ui.viewText.addEventListener("click", () => showPlot(false));
+ui.viewPlot.addEventListener("click", () => showPlot(true));
 
 ui.install.addEventListener("click", () => {
   ui.installDialog.returnValue = "";

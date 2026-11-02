@@ -54,6 +54,7 @@
         <a href="#start">開始使用</a>
         <a href="#languages">MicroPython 與 Arduino</a>
         <a href="#repl">REPL 即時指令</a>
+        <a href="#plot">圖表與 CSV</a>
         <a href="#boards">支援的開發板</a>
         <a href="#parts">電子元件與感測器</a>
         <a href="#wiring">接線注意事項</a>
@@ -186,6 +187,52 @@ os.listdir()</pre>
     print(i)</pre>
         <p>較長的程式請放到左邊的編輯器，用「上傳並執行」，才會保存下來。</p>
         <p class="tip warn"><strong>REPL 會真的控制硬體。</strong>和寫在程式裡一樣，錯誤的腳位設定仍可能影響接在上面的元件，也不要輸入不了解的刪除檔案指令。之前的指令只留在這個分頁的記憶體，重新整理或切換語言後就會清除，不會存進瀏覽器。</p>
+      </section>
+
+      <section id="plot">
+        <h2>用圖表看感測器數值</h2>
+        <p>監控窗右上角可以切換「文字」和「圖表」。切到「圖表」時，程式印出的數字會畫成折線圖，很適合觀察溫度變化、旋鈕轉動或距離遠近。不管停在哪一頁，資料都會持續記錄，切回來不會漏掉。</p>
+        <h3>怎麼印才畫得出來</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">程式這樣印</th><th scope="col">圖上出現</th></tr></thead>
+            <tbody>
+              <tr><td><code>print("溫度:", t)</code></td><td>一條「溫度」線</td></tr>
+              <tr><td><code>print("溫度:", t, "°C  濕度:", h, "%")</code></td><td>「溫度」和「濕度」兩條線，數字後面的單位會略過</td></tr>
+              <tr><td><code>print(t, h)</code></td><td>只印數字時，依順序叫做「數值1」、「數值2」</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <ul>
+          <li>名稱是冒號（或等號）前面的一個詞，<strong>中間不能有空格</strong>。例如 <code>室內溫度:</code> 可以；<code>room temp:</code> 只會取 <code>temp</code>。</li>
+          <li>沒有數字的行、錯誤訊息、<code>&gt;&gt;&gt;</code> 指令列，以及重新啟動時晶片印的系統訊息都不會畫。最多畫 8 條線。</li>
+          <li>「可變電阻調亮度」、「光敏電阻自動夜燈」、「超音波測距（HC-SR04）」、「DHT11 溫濕度（監控窗）」和「DS18B20 溫度計」範例不用修改，就能直接畫圖。</li>
+        </ul>
+        <h3>動手試試看</h3>
+        <p>不接任何元件也能試。上傳下面的程式，再切到「圖表」，會看到兩條波浪線。</p>
+        <pre class="code-block" tabindex="0">import math, time
+
+i = 0
+while True:
+    print("sin:", math.sin(i / 10), "cos:", math.cos(i / 10))
+    i += 1
+    time.sleep(0.05)</pre>
+        <h3>圖表上的按鈕</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">按鈕</th><th scope="col">功能</th></tr></thead>
+            <tbody>
+              <tr><td>顯示最近</td><td>選看最近 10 秒、1 分鐘或 5 分鐘。剛開始記錄時，會從 0 秒開始撐滿整個寬度</td></tr>
+              <tr><td>暫停／繼續</td><td>停住畫面方便觀察，資料仍在背景記錄</td></tr>
+              <tr><td>圖例</td><td>顯示每條線的最新數值。點一下可以隱藏或顯示那條線</td></tr>
+              <tr><td>清除</td><td>在圖表頁按，只清掉圖表資料，按之前會先詢問</td></tr>
+              <tr><td>匯出 CSV</td><td>把記錄的資料下載成 CSV 檔</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>匯出 CSV</h3>
+        <p>按「匯出 CSV」會下載 <code>esp32-data-日期-時間.csv</code>。第一欄是時間（秒，從第一筆資料開始算），後面每條線一欄；某一行沒有印到的值會留空。用 Excel 或 Google 試算表打開，中文都不會變成亂碼，可以拿來畫圖、算平均或寫實驗報告。</p>
+        <p class="tip">網站最多保留最近 10 萬筆資料，超過時會丟掉最舊的資料，圖表上方會提示。資料只存在這個分頁，<strong>重新整理網頁就會清除</strong>，長時間記錄請記得匯出。要長期保存，可以參考<a href="#google-sheets">把感測器資料存到 Google 試算表</a>。</p>
       </section>
 
       <section id="boards">

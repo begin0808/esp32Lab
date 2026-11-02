@@ -44,6 +44,7 @@
         <a href="#start">Getting started</a>
         <a href="#languages">MicroPython and Arduino</a>
         <a href="#repl">The REPL</a>
+        <a href="#plot">Charts and CSV</a>
         <a href="#boards">Supported boards</a>
         <a href="#parts">Parts and sensors</a>
         <a href="#wiring">Wiring notes</a>
@@ -176,6 +177,52 @@ os.listdir()</pre>
     print(i)</pre>
         <p>Put longer programs in the editor on the left and use "Upload and run", so they are saved.</p>
         <p class="tip warn"><strong>The REPL really controls the hardware.</strong> As in a program, wrong pin settings can still affect connected parts, so do not type file-deleting commands you do not understand. Earlier commands stay only in this tab's memory. They are cleared when you reload or change the language, and are never saved in the browser.</p>
+      </section>
+
+      <section id="plot">
+        <h2>Watching sensor values on a chart</h2>
+        <p>The top right of the monitor switches between "Text" and "Chart". On "Chart", the numbers your program prints are drawn as a line chart, which is good for watching a temperature change, a knob turn or a distance. Data keeps being recorded whichever view is shown, so nothing is missed when you switch back.</p>
+        <h3>How to print values that can be charted</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">The program prints</th><th scope="col">The chart shows</th></tr></thead>
+            <tbody>
+              <tr><td><code>print("temp:", t)</code></td><td>One line called "temp"</td></tr>
+              <tr><td><code>print("Temperature:", t, "°C  Humidity:", h, "%")</code></td><td>Two lines, "Temperature" and "Humidity". Units after a number are ignored</td></tr>
+              <tr><td><code>print(t, h)</code></td><td>When only numbers are printed, they are called "value1", "value2" in order</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <ul>
+          <li>The name is the one word before the colon (or equals sign), <strong>with no spaces</strong>. For example <code>room_temp:</code> works, but <code>room temp:</code> only takes <code>temp</code>.</li>
+          <li>Lines without numbers, error messages, <code>&gt;&gt;&gt;</code> command lines and the chip's own messages after a restart are not drawn. Up to 8 lines can be drawn.</li>
+          <li>The "Potentiometer LED dimmer", "Automatic night light (photoresistor)", "Ultrasonic distance (HC-SR04)", "DHT11 temperature and humidity (monitor)" and "DS18B20 thermometer" examples can be charted without any changes.</li>
+        </ul>
+        <h3>Try it</h3>
+        <p>You can try this without any parts. Upload the program below and switch to "Chart" to see two waves.</p>
+        <pre class="code-block" tabindex="0">import math, time
+
+i = 0
+while True:
+    print("sin:", math.sin(i / 10), "cos:", math.cos(i / 10))
+    i += 1
+    time.sleep(0.05)</pre>
+        <h3>The chart's buttons</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Button</th><th scope="col">What it does</th></tr></thead>
+            <tbody>
+              <tr><td>Show the last</td><td>Shows the last 10 seconds, 1 minute or 5 minutes. Right after recording starts, the chart begins at 0 seconds and fills the whole width</td></tr>
+              <tr><td>Pause / Resume</td><td>Freezes the picture so you can look closely. Data is still recorded</td></tr>
+              <tr><td>Legend</td><td>Shows each line's newest value. Click one to hide or show that line</td></tr>
+              <tr><td>Clear</td><td>On the chart view, clears only the chart data, after asking first</td></tr>
+              <tr><td>Export CSV</td><td>Downloads the recorded data as a CSV file</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Exporting CSV</h3>
+        <p>"Export CSV" downloads <code>esp32-data-date-time.csv</code>. The first column is the time in seconds since the first value, followed by one column per line. A value not printed on a row is left empty. Excel and Google Sheets open it with Chinese names intact, so you can make charts, take averages or write a lab report.</p>
+        <p class="tip">The site keeps up to the latest 100,000 rows. Beyond that the oldest are dropped, and a note appears above the chart. Data lives only in this tab and <strong>is cleared when the page is reloaded</strong>, so export long recordings. To keep data for longer, see <a href="#google-sheets">Saving sensor data to Google Sheets</a>.</p>
       </section>
 
       <section id="boards">

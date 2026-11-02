@@ -21,6 +21,10 @@ If no serial port appears, check that the USB cable carries data, and install th
 
 Press "Stop", then type MicroPython commands in the box below the monitor to see the results straight away. The arrow keys bring back earlier commands, Tab completes names, and a block ending in a colon can span several lines and runs when you press Enter on a blank line. Earlier commands stay only in memory and are never saved in the browser, because they may contain passwords. See the REPL section of the help page for a tutorial.
 
+## Charts and CSV
+
+The monitor can switch to "Chart", which draws output such as `print("temp:", t)` (name and number) or lines of plain numbers as a line chart, showing the last 10 seconds, 1 minute or 5 minutes. The recorded data can be exported as CSV, which Excel opens with Chinese names intact. The chart is drawn with the browser's own Canvas and needs no extra package; the code is in `src/plot.ts` (reading and storing values) and `src/plotter.ts` (drawing).
+
 ## Voice control
 
 Phone and computer browsers only allow the microphone on HTTPS pages, so voice commands do not go directly to the board's `http://` page. Instead, `voice.html` relays them through an MQTT broker:
