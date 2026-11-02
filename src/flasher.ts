@@ -12,11 +12,14 @@ const NATIVE_USB_CONNECT_TRIES = 2;
 const RESETS_PER_TRY = 2;
 const PAUSE_BEFORE_TRY_MS = 500;
 const ESPRESSIF_VENDOR_ID = 0x303a;
+const DETAIL_PREFIX = "Debug: ";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export interface FlashCallbacks {
   onLog: (line: string) => void;
+  /** esptool's detailed log, kept apart so that it is only shown when connecting fails. */
+  onDetail: (line: string) => void;
   onStage: (label: string) => void;
   onProgress: (fraction: number) => void;
 }
@@ -86,10 +89,14 @@ export async function installFirmware(port: SerialPort, callbacks: FlashCallback
       transport,
       baudrate: FLASH_BAUD,
       romBaudrate: ROM_BAUD,
+      debugLogging: true,
       terminal: {
         clean: () => {},
         write: () => {},
-        writeLine: callbacks.onLog,
+        writeLine: (line) => {
+          if (line.startsWith(DETAIL_PREFIX)) callbacks.onDetail(line.slice(DETAIL_PREFIX.length));
+          else callbacks.onLog(line);
+        },
       },
     });
     try {

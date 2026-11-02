@@ -4,7 +4,7 @@ import { python } from "@codemirror/lang-python";
 import { tags } from "@lezer/highlight";
 import { CommandHistory, enterAction, nextIndent, parseCompletion } from "./command";
 import { adaptExamplePins, chipFromMachine, CHIPS, FIRMWARE_VERSION, isChipId, type ChipId } from "./chips";
-import { installFirmware } from "./flasher";
+import { installFirmware, isConnectFailure } from "./flasher";
 import { lang, setupLanguagePicker, t, translatePage } from "./i18n";
 import { pasteModeBytes, RawRepl, ReplExecError, ReplTimeoutError } from "./repl";
 import { SerialLink } from "./serial";
@@ -101,6 +101,8 @@ const PASTE_CHUNK_GAP = 20;
 const COMPLETION_QUIET = 80;
 const COMPLETION_TIMEOUT = 400;
 const REPL_MAX_ROWS = 8;
+// Enough to see how the chip started after the last few resets.
+const CONNECT_LOG_LINES = 60;
 
 function el<T extends HTMLElement>(id: string): T {
   return document.getElementById(id) as T;
@@ -594,12 +596,17 @@ async function install(): Promise<void> {
   const port = link.selectedPort;
   if (!port) return;
   setBusy(true);
+  const connectLog: string[] = [];
   try {
     await link.close();
     hasFirmware = false;
     systemMessage(t("開始安裝 {version}，會依晶片自動選擇韌體", { version: FIRMWARE_VERSION }));
     const chip = await installFirmware(port, {
       onLog: (line) => appendMonitor(`${line}\n`, "system"),
+      onDetail: (line) => {
+        connectLog.push(line);
+        if (connectLog.length > CONNECT_LOG_LINES) connectLog.shift();
+      },
       onStage: (label) => {
         setStatus(label, "busy");
         showProgress(label, null);
@@ -615,6 +622,9 @@ async function install(): Promise<void> {
         ? t("韌體安裝失敗：{message}。請按住 BOOT 鍵，按一下 RST 鍵，再放開 BOOT 鍵，然後重新按「連接開發板」並再裝一次。", { message: failureMessage(error) })
         : t("韌體安裝失敗：{message}。連不上時，請按住 IO0 鍵再重試。", { message: failureMessage(error) }),
     );
+    if (isConnectFailure(error)) {
+      appendMonitor(`\n${t("[連線紀錄：回報問題時請一起提供]")}\n${connectLog.join("\n")}\n\n`, "system");
+    }
   } finally {
     hideProgress();
   }
