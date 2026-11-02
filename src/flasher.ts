@@ -4,6 +4,16 @@ import { t } from "./i18n";
 const MIN_FLASH_MB = 4;
 const FLASH_BAUD = 460800;
 const ROM_BAUD = 115200;
+// The auto-reset circuit sometimes restarts the program instead of entering the bootloader.
+// On the Arduino edition, reopening the port worked where more resets in a row did not, so each try is short.
+const CONNECT_TRIES = 6;
+// Built-in USB usually drops the port when the chip resets, so more tries would only delay the BOOT and RST advice.
+const NATIVE_USB_CONNECT_TRIES = 2;
+const RESETS_PER_TRY = 2;
+const PAUSE_BEFORE_TRY_MS = 500;
+const ESPRESSIF_VENDOR_ID = 0x303a;
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export interface FlashCallbacks {
   onLog: (line: string) => void;
@@ -17,6 +27,26 @@ export function isFlashTooSmall(size: string | undefined): boolean {
   if (!match) return false;
   const megabytes = match[2] === "KB" ? Number(match[1]) / 1024 : Number(match[1]);
   return megabytes < MIN_FLASH_MB;
+}
+
+/** True when the chip never answered, as opposed to answering with something unsuitable. */
+export function isConnectFailure(error: unknown): boolean {
+  return error instanceof Error && /Failed to connect/.test(error.message);
+}
+
+/**
+ * Runs `attempt` until it succeeds, retrying only when the chip never answered.
+ * Any other error, such as an unsupported chip, stops at once.
+ */
+export async function retryConnect<T>(attempt: (count: number) => Promise<T>, tries: number, pauseMs = PAUSE_BEFORE_TRY_MS): Promise<T> {
+  for (let count = 1; ; count++) {
+    await sleep(pauseMs);
+    try {
+      return await attempt(count);
+    } catch (error) {
+      if (!isConnectFailure(error) || count >= tries) throw error;
+    }
+  }
 }
 
 export async function verifySha256(data: Uint8Array, expected: string): Promise<boolean> {
@@ -41,22 +71,37 @@ async function loadFirmware(chip: Chip): Promise<Uint8Array> {
  */
 export async function installFirmware(port: SerialPort, callbacks: FlashCallbacks): Promise<Chip> {
   const { ESPLoader, Transport } = await import("esptool-js");
-  const transport = new Transport(port, false);
-  const loader = new ESPLoader({
-    transport,
-    baudrate: FLASH_BAUD,
-    romBaudrate: ROM_BAUD,
-    terminal: {
-      clean: () => {},
-      write: () => {},
-      writeLine: callbacks.onLog,
-    },
-  });
+  class ShortTryLoader extends ESPLoader {
+    override detectChip(mode?: Parameters<InstanceType<typeof ESPLoader>["detectChip"]>[0]): Promise<void> {
+      return super.detectChip(mode, RESETS_PER_TRY);
+    }
+  }
+  const tries = port.getInfo().usbVendorId === ESPRESSIF_VENDOR_ID ? NATIVE_USB_CONNECT_TRIES : CONNECT_TRIES;
+
+  // Only connecting is retried, and nothing has been erased by then. Each try reopens the port.
+  const { transport, loader } = await retryConnect(async (count) => {
+    callbacks.onStage(count === 1 ? t("正在連接開發板（連不上時請按住 IO0 鍵）") : t("正在重新連接開發板（第 {count} 次）", { count }));
+    const transport = new Transport(port, false);
+    const loader = new ShortTryLoader({
+      transport,
+      baudrate: FLASH_BAUD,
+      romBaudrate: ROM_BAUD,
+      terminal: {
+        clean: () => {},
+        write: () => {},
+        writeLine: callbacks.onLog,
+      },
+    });
+    try {
+      await loader.main();
+      return { transport, loader };
+    } catch (error) {
+      await transport.disconnect().catch(() => {});
+      throw error;
+    }
+  }, tries);
 
   try {
-    callbacks.onStage(t("正在連接開發板（連不上時請按住 IO0 鍵）"));
-    await loader.main();
-
     // Refuse before erasing anything: a board without a matching firmware must stay untouched.
     const chip = chipFromName(loader.chip.CHIP_NAME);
     if (!chip) {

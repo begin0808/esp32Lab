@@ -161,6 +161,7 @@ const en = {
   "無法下載韌體（HTTP {status}）": "Could not download the firmware (HTTP {status})",
   "韌體檔案驗證失敗，請重新整理網頁再試一次": "The firmware file failed verification. Reload the page and try again",
   "正在連接開發板（連不上時請按住 IO0 鍵）": "Connecting to the board (hold the IO0 button if it cannot connect)",
+  "正在重新連接開發板（第 {count} 次）": "Connecting to the board again (try {count})",
   "這塊板子是 {chip}，目前只支援 ESP32、ESP32-S2、S3 和 C3": "This board is an {chip}. Only ESP32, ESP32-S2, S3 and C3 are supported",
   "快閃記憶體只有 {size}，至少需要 {min}MB": "The flash is only {size}, and at least {min}MB is needed",
   "正在下載 {chip} 的韌體": "Downloading the firmware for {chip}",
