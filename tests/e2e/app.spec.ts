@@ -1425,6 +1425,15 @@ test.describe("edition name", () => {
     await expect(page.locator("h1 .edition")).toHaveText("MicroPython 版");
   });
 
+  test("shows the version from package.json on the editor and both help pages", async ({ page }) => {
+    const { version } = JSON.parse(readFileSync("package.json", "utf8")) as { version: string };
+    const shown = `v${version.replace(/\.0$/, "")}`;
+    for (const path of ["/", "/help.html", "/help.en.html"]) {
+      await page.goto(path);
+      await expect(page.locator("h1 .version"), path).toHaveText(shown);
+    }
+  });
+
   test.describe("in an English browser", () => {
     test.use({ locale: "en-US" });
 

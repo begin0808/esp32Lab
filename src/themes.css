@@ -120,6 +120,19 @@
   white-space: nowrap;
 }
 
+/* Small and quiet: it answers "which version is this?" without competing with the title. */
+.version {
+  display: inline-block;
+  padding: 1px 6px;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  vertical-align: middle;
+  opacity: 0.85;
+  white-space: nowrap;
+}
+
 .brand {
   display: flex;
   align-items: center;

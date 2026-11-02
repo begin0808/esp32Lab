@@ -237,6 +237,7 @@ const en = {
   "伺服器設定不正確：連接埠是 1–65535 的數字，路徑以 / 開頭": "The broker settings are not valid: the port must be a number from 1 to 65535, and the path must start with /",
   有填密碼時也要填帳號: "A password also needs a username",
   "請輸入 MQTT 密碼後按「連線」": 'Enter the MQTT password and press "Connect"',
+  版本: "Version",
   監控窗顯示方式: "Monitor view",
   文字: "Text",
   圖表: "Chart",
