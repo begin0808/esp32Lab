@@ -6,7 +6,8 @@ const FLASH_BAUD = 460800;
 const ROM_BAUD = 115200;
 // The auto-reset circuit sometimes restarts the program instead of entering the bootloader.
 // On the Arduino edition, reopening the port worked where more resets in a row did not, so each try is short.
-const CONNECT_TRIES = 6;
+// On a NodeMCU-32S, one install connected only on the sixth try, so ten leaves some room.
+const CONNECT_TRIES = 10;
 // Built-in USB usually drops the port when the chip resets, so more tries would only delay the BOOT and RST advice.
 const NATIVE_USB_CONNECT_TRIES = 2;
 const RESETS_PER_TRY = 2;
@@ -75,8 +76,15 @@ async function loadFirmware(chip: Chip): Promise<Uint8Array> {
 export async function installFirmware(port: SerialPort, callbacks: FlashCallbacks): Promise<Chip> {
   const { ESPLoader, Transport } = await import("esptool-js");
   class ShortTryLoader extends ESPLoader {
+    /** The detailed log only matters while connecting, so it stops once the chip has answered. */
+    keepDetails = true;
+
     override detectChip(mode?: Parameters<InstanceType<typeof ESPLoader>["detectChip"]>[0]): Promise<void> {
       return super.detectChip(mode, RESETS_PER_TRY);
+    }
+
+    override debug(text: string, withNewline?: boolean): void {
+      if (this.keepDetails) super.debug(text, withNewline);
     }
   }
   const tries = port.getInfo().usbVendorId === ESPRESSIF_VENDOR_ID ? NATIVE_USB_CONNECT_TRIES : CONNECT_TRIES;
@@ -107,6 +115,7 @@ export async function installFirmware(port: SerialPort, callbacks: FlashCallback
       throw error;
     }
   }, tries);
+  loader.keepDetails = false;
 
   try {
     // Refuse before erasing anything: a board without a matching firmware must stay untouched.

@@ -610,6 +610,8 @@ async function install(): Promise<void> {
       onStage: (label) => {
         setStatus(label, "busy");
         showProgress(label, null);
+        // The status line changes quickly, so each step also stays in the monitor, showing how many tries it took.
+        appendMonitor(`${t("[系統]")} ${label}\n`, "system");
       },
       onProgress: (fraction) => showProgress(t("正在寫入韌體"), fraction),
     });
