@@ -431,7 +431,7 @@ os.listdir()</pre>
         <details><summary>按「連接開發板」後，清單裡沒有序列埠</summary><p>先換一條確定能傳輸資料的 USB 線，有些線只能充電。接著確認已安裝對應的驅動程式，並重新插拔開發板。</p></details>
         <details><summary>連接失敗，或顯示序列埠被佔用</summary><p>關閉 Arduino IDE 和其他分頁裡的本網站，一次只能有一個程式使用序列埠。</p></details>
         <details><summary>顯示「沒有偵測到 MicroPython」</summary><p>第一次使用，或燒錄過 Arduino 程式時都會這樣。按「安裝韌體」即可，不用另外下載韌體。</p></details>
-        <details><summary>安裝韌體時一直連不上</summary><p>按住板子上的 IO0（BOOT）鍵再重試，開始寫入後就可以放開。</p></details>
+        <details><summary>安裝韌體時一直連不上</summary><p>網站會自動重新連接，最多試 10 次，每一次都會寫在監控窗。10 次都失敗時，請按住板子上的 IO0（BOOT）鍵再按「安裝韌體」，開始寫入後就可以放開。有些板子的自動重置電路不太穩，按住 IO0 是最可靠的做法。回報問題時，請一起提供監控窗裡「連線紀錄」下面的內容。</p></details>
         <details><summary>顯示「這塊板子是 ESP32-xx，目前只支援 ESP32、ESP32-S2、S3 和 C3」</summary><p>這塊板子的晶片不在支援範圍內，內建韌體不能用。請改用這四種晶片的開發板。</p></details>
         <details><summary>監控窗出現紅色的「程式發生錯誤」</summary><p>按「複製給 Gemini」，把錯誤訊息和程式碼一起貼給 Gemini 修正，再把新程式貼回來上傳。</p></details>
         <details><summary>顯示 Wi-Fi 連線失敗</summary><p>確認名稱和密碼完全正確（包含大小寫），並確認是 2.4GHz 網路。</p></details>
