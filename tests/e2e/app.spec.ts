@@ -844,6 +844,8 @@ test.describe("chart", () => {
     await expect(page.locator("#plot-empty")).toBeVisible();
     await expect(page.locator("#plot-export")).toBeDisabled();
     await expect(page.locator("#monitor")).toBeHidden();
+    await expect(page.locator("#plot-window option")).toHaveText(["10 秒", "30 秒", "1 分鐘", "5 分鐘", "10 分鐘"]);
+    await expect(page.locator("#plot-window")).toHaveValue("60");
 
     await print(page, ["溫度: 25 °C  濕度: 60 %", "讀取失敗，請檢查接線", "溫度: 26 °C  濕度: 58 %"]);
     await expect(legend(page)).toHaveText(["溫度26", "濕度58"]);

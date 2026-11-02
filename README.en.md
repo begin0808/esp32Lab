@@ -23,7 +23,7 @@ Press "Stop", then type MicroPython commands in the box below the monitor to see
 
 ## Charts and CSV
 
-The monitor can switch to "Chart", which draws output such as `print("temp:", t)` (name and number) or lines of plain numbers as a line chart, showing the last 10 seconds, 1 minute or 5 minutes. The recorded data can be exported as CSV, which Excel opens with Chinese names intact. The chart is drawn with the browser's own Canvas and needs no extra package; the code is in `src/plot.ts` (reading and storing values) and `src/plotter.ts` (drawing).
+The monitor can switch to "Chart", which draws output such as `print("temp:", t)` (name and number) or lines of plain numbers as a line chart, showing the last 10 seconds, 30 seconds, 1 minute, 5 minutes or 10 minutes. The recorded data can be exported as CSV, which Excel opens with Chinese names intact. The chart is drawn with the browser's own Canvas and needs no extra package; the code is in `src/plot.ts` (reading and storing values) and `src/plotter.ts` (drawing).
 
 ## Voice control
 
