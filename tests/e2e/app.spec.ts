@@ -139,6 +139,17 @@ test("changes the code font size and remembers it", async ({ page }) => {
   await expect(page.locator("#font-up")).toBeDisabled();
 });
 
+test("keeps the editor's menus and buttons on one row in a narrower editor", async ({ page }) => {
+  // About 700 px of editor, as on a 1200-pixel-wide window or a wider one with the divider moved left.
+  await page.setViewportSize({ width: 1200, height: 768 });
+  await page.goto("/");
+  const top = async (selector: string) => Math.round((await page.locator(selector).boundingBox())!.y);
+  const row = await top("#chip");
+  for (const selector of ["#examples", "#copy-prompt", "#open-file", "#save-file", "#board-files"]) {
+    expect(Math.abs((await top(selector)) - row), selector).toBeLessThanOrEqual(4);
+  }
+});
+
 test("resizes the editor and monitor by dragging the divider", async ({ page }) => {
   await page.setViewportSize({ width: 1366, height: 768 });
   await page.goto("/");

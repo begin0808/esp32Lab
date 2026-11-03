@@ -325,6 +325,21 @@ input:focus-visible,
   font: inherit;
 }
 
+/* The example menu gives up width first, so the buttons beside it stay on one row in a narrower editor. */
+.select.shrinkable {
+  display: flex;
+  flex: 1 1 120px;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.select.shrinkable select {
+  flex: 0 1 220px;
+  min-width: 0;
+}
+
 .editor {
   flex: 1;
   min-height: 420px;
