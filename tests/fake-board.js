@@ -32,6 +32,12 @@
       this.dirs = new Set();
       /** Bytes left on the flash, or null for plenty. */
       this.freeBytes = null;
+      /** Programs run from memory, and the variables they left for the prompt. */
+      this.ranInRam = [];
+      this.globals = {};
+      this.rawSoftResets = 0;
+      this.waitingInput = false;
+      this.inputLine = [];
       this.mode = "friendly";
       this.command = [];
       this.line = "";
@@ -68,6 +74,19 @@
     }
 
     receiveByte(byte) {
+      if (this.mode === "running") {
+        // A program started from raw REPL: Ctrl-C stops it, and a line typed while it waits for input reaches it.
+        if (byte === 0x03) {
+          this.mode = "raw";
+          this.emit('\x04Traceback (most recent call last):\r\n  File "<stdin>", line 3, in <module>\r\nKeyboardInterrupt: \r\n\x04>');
+        } else if (this.waitingInput && byte === 0x0d) {
+          this.mode = "raw";
+          this.emit(`got: ${new TextDecoder().decode(new Uint8Array(this.inputLine))}\r\n` + END);
+        } else if (this.waitingInput) {
+          this.inputLine.push(byte);
+        }
+        return;
+      }
       if (this.mode === "rawpaste") {
         if (byte === 0x04) {
           const code = new TextDecoder().decode(new Uint8Array(this.command));
@@ -114,6 +133,11 @@
         }
         if (byte === 0x05 && this.command.length === 0) {
           this.probe = [byte];
+        } else if (byte === 0x04 && this.command.length === 0) {
+          // Ctrl-D on an empty line restarts MicroPython; from raw REPL it skips main.py and comes back to raw REPL.
+          this.rawSoftResets++;
+          this.globals = {};
+          this.emit("OK\r\nMPY: soft reboot\r\nraw REPL; CTRL-B to exit\r\n>");
         } else if (byte === 0x04) {
           const code = new TextDecoder().decode(new Uint8Array(this.command));
           this.command = [];
@@ -155,7 +179,8 @@
         const command = this.line;
         this.line = "";
         if (command) this.commands.push(command);
-        this.emit(`\r\n${command === "1+1" ? "2\r\n" : ""}>>> `);
+        const answer = command === "1+1" ? "2" : this.globals[command];
+        this.emit(`\r\n${answer !== undefined ? `${answer}\r\n` : ""}>>> `);
       } else if (byte >= 0x20 && byte < 0x7f) {
         this.line += String.fromCharCode(byte);
         this.emit(String.fromCharCode(byte));
@@ -236,10 +261,32 @@
           this.bytes[path] = data;
         }
         this.emit(END);
+      } else if (/while True|input\(|print\(|^raise /m.test(code)) {
+        this.runProgram(code);
       } else if (code.includes("__fail__")) {
         this.emit("\x04Traceback (most recent call last):\r\nOSError: 28\r\n\x04>");
       } else {
         this.emit(END);
+      }
+    }
+
+    /**
+     * Pretends to run a student's program: prints its print("...") texts, keeps `name = number` assignments
+     * for the prompt, and keeps running while it loops forever or waits for input.
+     */
+    runProgram(code) {
+      this.ranInRam.push(code);
+      for (const match of code.matchAll(/^(\w+)\s*=\s*(\d+)\s*$/gm)) this.globals[match[1]] = match[2];
+      const printed = [...code.matchAll(/print\("([^"]*)"\)/g)].map((match) => `${match[1]}\r\n`).join("");
+      if (code.includes("input(") || code.includes("while True")) {
+        this.mode = "running";
+        this.waitingInput = code.includes("input(");
+        this.inputLine = [];
+        this.emit(printed);
+      } else if (/^raise /m.test(code)) {
+        this.emit(`${printed}\x04Traceback (most recent call last):\r\n  File "<stdin>", line 2, in <module>\r\nValueError: bad value\r\n\x04>`);
+      } else {
+        this.emit(printed + END);
       }
     }
 

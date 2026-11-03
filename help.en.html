@@ -42,6 +42,7 @@
     <main class="doc">
       <nav class="toc" aria-label="On this page">
         <a href="#start">Getting started</a>
+        <a href="#run">Run (no save)</a>
         <a href="#languages">MicroPython and Arduino</a>
         <a href="#repl">The REPL</a>
         <a href="#plot">Charts and CSV</a>
@@ -68,6 +69,7 @@
           <li><strong>Install the firmware:</strong> only needed the first time, or after flashing an Arduino program. Pressing "Install firmware" <strong>erases all programs and files on the board</strong>, so do not unplug the USB cable while it runs. For boards whose USB goes straight to the chip, press RST afterwards and connect again.</li>
           <li><strong>Get a program:</strong> choose a built-in example, or press "Copy Gemini prompt", fill in your wiring and what you want, paste it into Gemini, and paste the MicroPython program it writes back into the editor.</li>
           <li><strong>Upload and run:</strong> press "Upload and run". The program is saved as <code>main.py</code> on the board and runs automatically whenever the board powers up. The first line in the serial monitor shows the program's size and how many seconds the upload took, followed by the program's output and errors.</li>
+          <li><strong>Just trying something:</strong> press "Run (no save)" or <kbd>F5</kbd>. The program runs straight from the board's memory and is not saved as <code>main.py</code>; see <a href="#run">Run (no save)</a>.</li>
         </ol>
 
         <h3>Built-in examples</h3>
@@ -99,6 +101,29 @@
             </tbody>
           </table>
         </div>
+      </section>
+
+      <section id="run">
+        <h2>Run (no save) and Upload and run</h2>
+        <p>"Run (no save)" stops the current program, clears the variables left from last time, and sends the code in the editor to the board's memory to run at once. <strong>It is not saved as <code>main.py</code>.</strong> While a board is connected you can also press <kbd>F5</kbd>; without a board, <kbd>F5</kbd> still reloads the page.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col"></th><th scope="col">Run (no save)</th><th scope="col">Upload and run</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Speed</th><td>Faster: no file to write and no restart</td><td>A little slower</td></tr>
+              <tr><th scope="row">After a restart or power cycle</th><td>The program is gone and the board runs its own <code>main.py</code> again</td><td>The program stays on the board and runs at every power-up</td></tr>
+              <tr><th scope="row">Best for</th><td>Trying things, changing values, finding mistakes</td><td>Finished projects, or running away from the computer</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>A broken program is nothing to worry about: press "Restart" or unplug the power, and the board runs its own <code>main.py</code> again. Once the program works, press "Upload and run" to keep it on the board.</p>
+        <h3>Looking at variables after the program ends</h3>
+        <p>After the program ends, or after you press "Stop", <strong>its variables are still on the board</strong>. Type a variable's name in the REPL below the serial monitor to see its last value. For example:</p>
+        <pre class="code-block" tabindex="0">total = 0
+for i in range(1, 11):
+    total = total + i</pre>
+        <p>When it has run, typing <code>total</code> in the REPL shows <code>55</code>, and <code>i</code> shows <code>10</code>. When hunting for a mistake, this is easier than adding <code>print</code> everywhere. "Upload and run" restarts the board, so this works only with "Run (no save)".</p>
+        <p class="tip">In error messages, <code>File "&lt;stdin&gt;", line 3</code> means line 3 in the editor, the same line numbers as <code>main.py</code>. "Copy for Gemini" works as usual.</p>
       </section>
 
       <section id="languages">
@@ -514,6 +539,7 @@ mylib.hello("ESP32")</pre>
         <details><summary>The voice control page says the MQTT username or password is wrong</summary><p>Check that the login matches the broker's settings, and that this account may use topics starting with <code>esp32-mp-class/</code>. The password is not saved, so enter it again after reloading.</p></details>
         <details><summary>The Google Sheets example says "Google did not return ok"</summary><p>Usually access was not set to "Anyone" when deploying, or a school account does not allow it. Test the URL in a private browser window, where it should show <code>ok</code>. If no data is added, also check that the URL ends in <code>/exec</code>.</p></details>
         <details><summary>After pressing "Stop", will the program run again by itself?</summary><p>Yes. "Stop" only interrupts the current run. <code>main.py</code> stays on the board, and runs again at the next power-up or restart.</p></details>
+        <details><summary>My program works with "Run (no save)". How do I make it run at power-up?</summary><p>Press "Upload and run" to save it as <code>main.py</code>. A program started with "Run (no save)" lives only in memory and is gone after a restart or power cycle.</p></details>
       </section>
 
       <p class="help-bottom"><a class="home-link" href="./index.html"><span aria-hidden="true">←</span> Back to the editor</a></p>

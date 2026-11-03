@@ -52,6 +52,7 @@
     <main class="doc">
       <nav class="toc" aria-label="本頁目錄">
         <a href="#start">開始使用</a>
+        <a href="#run">執行（不存檔）</a>
         <a href="#languages">MicroPython 與 Arduino</a>
         <a href="#repl">REPL 即時指令</a>
         <a href="#plot">圖表與 CSV</a>
@@ -78,6 +79,7 @@
           <li><strong>安裝韌體：</strong>第一次使用，或燒錄過 Arduino 程式時才需要。按「安裝韌體」後，<strong>板子上原有的程式和檔案都會被清除</strong>，安裝期間不要拔 USB 線。USB 直接接晶片的板子，裝完要按一下 RST 鍵並重新連接。</li>
           <li><strong>準備程式：</strong>選內建範例，或按「複製 Gemini 提示詞」，填入接線和功能後貼給 Gemini，再把產生的 MicroPython 程式貼回編輯器。</li>
           <li><strong>上傳並執行：</strong>按「上傳並執行」，程式會存成板子上的 <code>main.py</code>，之後通電就會自動執行。監控窗第一行會顯示程式大小和上傳花了幾秒，接著是程式的輸出和錯誤訊息。</li>
+          <li><strong>只是試試看：</strong>按「執行（不存檔）」或 <kbd>F5</kbd>，程式會直接在板子的記憶體裡執行，不會存成 <code>main.py</code>，見<a href="#run">執行（不存檔）</a>。</li>
         </ol>
 
         <h3>內建範例</h3>
@@ -109,6 +111,29 @@
             </tbody>
           </table>
         </div>
+      </section>
+
+      <section id="run">
+        <h2>執行（不存檔）和上傳並執行</h2>
+        <p>「執行（不存檔）」會先停止目前的程式、清空上一次留下的變數，再把編輯器裡的程式送到板子的記憶體直接執行，<strong>不會存成 <code>main.py</code></strong>。連接開發板時，也可以按 <kbd>F5</kbd>；沒有連接時，<kbd>F5</kbd> 照樣是重新整理網頁。</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col"></th><th scope="col">執行（不存檔）</th><th scope="col">上傳並執行</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">速度</th><td>比較快，不用寫檔也不用重新開機</td><td>稍慢</td></tr>
+              <tr><th scope="row">重新啟動或拔掉電源後</th><td>程式消失，板子回到原本的 <code>main.py</code></td><td>程式留在板子上，通電就自動執行</td></tr>
+              <tr><th scope="row">適合</th><td>試東西、改參數、找錯誤</td><td>完成的作品，或要離開電腦執行</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>程式寫壞了也不用擔心：按「重新啟動」或拔掉電源，板子就會執行原本的 <code>main.py</code>。試好之後，再按「上傳並執行」存到板子上。</p>
+        <h3>程式結束後查看變數</h3>
+        <p>程式結束或按「停止」之後，<strong>變數還留在板子上</strong>，可以在監控窗下方的 REPL 輸入變數名稱，看最後的值。例如：</p>
+        <pre class="code-block" tabindex="0">total = 0
+for i in range(1, 11):
+    total = total + i</pre>
+        <p>執行完在 REPL 輸入 <code>total</code>，會看到 <code>55</code>；輸入 <code>i</code> 會看到 <code>10</code>。找錯誤時，這比到處加 <code>print</code> 方便。用「上傳並執行」時板子會重新開機，所以要用「執行（不存檔）」才能這樣看。</p>
+        <p class="tip">錯誤訊息裡的 <code>File "&lt;stdin&gt;", line 3</code> 指的是編輯器第 3 行，和 <code>main.py</code> 的行號一樣。「複製給 Gemini」照樣可以用。</p>
       </section>
 
       <section id="languages">
@@ -524,6 +549,7 @@ mylib.hello("ESP32")</pre>
         <details><summary>語音控制頁顯示「MQTT 帳號或密碼不正確」</summary><p>確認帳號密碼和伺服器設定相同，以及這個帳號有權限使用 <code>esp32-mp-class/</code> 開頭的 Topic。密碼不會儲存，重新整理後要再輸入一次。</p></details>
         <details><summary>Google 試算表範例顯示「Google 沒有回傳 ok」</summary><p>通常是部署時存取權沒有選「所有人」，或學校帳號不允許。請先用瀏覽器的無痕視窗開啟網址測試，應該要顯示 <code>ok</code>。資料沒有增加時，也請確認網址結尾是 <code>/exec</code>。</p></details>
         <details><summary>按下「停止」後，程式之後還會自動執行嗎？</summary><p>會。「停止」只中斷目前的執行，<code>main.py</code> 還在板子上，下次通電或重新啟動時會再次執行。</p></details>
+        <details><summary>用「執行（不存檔）」試好了，怎麼讓它通電就自動執行？</summary><p>按「上傳並執行」，程式會存成 <code>main.py</code>。「執行（不存檔）」的程式只在記憶體裡，重新啟動或拔掉電源就會消失。</p></details>
       </section>
 
       <p class="help-bottom"><a class="home-link" href="./index.html"><span aria-hidden="true">←</span> 回程式編輯頁</a></p>

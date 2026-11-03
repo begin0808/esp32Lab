@@ -9,6 +9,7 @@ import { installFirmware, isConnectFailure } from "./flasher";
 import { lang, setupLanguagePicker, t, translatePage } from "./i18n";
 import { DataLog, LineBuffer, parseDataLine } from "./plot";
 import { Plotter } from "./plotter";
+import { RawRunWatcher } from "./rawrun";
 import { pasteModeBytes, RawRepl, ReplExecError, ReplTimeoutError } from "./repl";
 import { SerialLink } from "./serial";
 import { setupStats } from "./stats";
@@ -117,6 +118,7 @@ const ui = {
   connect: el<HTMLButtonElement>("connect"),
   install: el<HTMLButtonElement>("install"),
   upload: el<HTMLButtonElement>("upload"),
+  run: el<HTMLButtonElement>("run"),
   stop: el<HTMLButtonElement>("stop"),
   reset: el<HTMLButtonElement>("reset"),
   clear: el<HTMLButtonElement>("clear"),
@@ -175,6 +177,9 @@ let queuedChars = 0;
 let monitorChars = 0;
 let flushTimer: ReturnType<typeof setTimeout> | null = null;
 let completing = false;
+/** Set while a program sent by "Run (no save)" is running, so the end of its output can be noticed. */
+let rawRun: RawRunWatcher | null = null;
+let shownVariablesTip = false;
 const commandHistory = new CommandHistory();
 /** Every number the board printed in a form the chart understands, kept even while the text view is shown. */
 const dataLog = new DataLog();
@@ -366,6 +371,7 @@ function refreshButtons(): void {
   ui.install.textContent = hasFirmware ? t("重新安裝韌體") : t("安裝韌體");
   ui.install.classList.toggle("primary", !!link.selectedPort && !hasFirmware);
   ui.upload.disabled = busy || !open || !hasFirmware;
+  ui.run.disabled = busy || !open || !hasFirmware;
   ui.boardFiles.disabled = busy || !open || !hasFirmware;
   ui.stop.disabled = busy || !open;
   ui.reset.disabled = busy || !open;
@@ -490,7 +496,19 @@ function clearMonitor(): void {
 }
 
 function onBoardOutput(data: Uint8Array): void {
-  const text = stripTerminalCodes(decoder.decode(data, { stream: true }));
+  const decoded = decoder.decode(data, { stream: true });
+  if (!rawRun) {
+    showBoardText(decoded);
+    return;
+  }
+  const followed = rawRun.push(decoded);
+  showBoardText(followed.text);
+  // After the program's last words, so the note that follows stays below them.
+  if (followed.finished) finishRun();
+}
+
+function showBoardText(decoded: string): void {
+  const text = stripTerminalCodes(decoded);
   if (!text) return;
   receivedChars += text.length;
   appendMonitor(text);
@@ -564,6 +582,8 @@ function failureMessage(error: unknown): string {
 
 /** Runs one REPL session, then gives the serial stream back to the monitor. */
 async function withRepl<T>(action: (repl: RawRepl) => Promise<T>): Promise<T> {
+  // A program started by "Run (no save)" is stopped here, and its raw REPL is reused.
+  rawRun = null;
   const repl = new RawRepl(link);
   repl.attach();
   try {
@@ -626,6 +646,7 @@ async function connect(): Promise<void> {
 
 async function disconnect(): Promise<void> {
   setBusy(true);
+  rawRun = null;
   await link.close();
   hasFirmware = false;
   atPrompt = false;
@@ -641,13 +662,16 @@ async function restartBoard(note?: string): Promise<void> {
   // A line left unfinished before the reset, such as the prompt, must not swallow the program's first value.
   dataLines.reset();
   atPrompt = false;
+  const wasRunning = rawRun !== null;
+  rawRun = null;
   const before = receivedChars;
   await link.hardReset();
   // The chip reports its start within a few hundred milliseconds, so the buttons come back as soon as it does.
   // Boards without an auto-reset circuit print nothing, so after a while fall back to a soft reset.
   const deadline = Date.now() + RESET_WAIT_MS;
   while (receivedChars === before && Date.now() < deadline) await new Promise((resolve) => setTimeout(resolve, 50));
-  if (receivedChars === before) await link.write(Uint8Array.of(0x03, 0x04));
+  // From raw REPL a soft reset would skip main.py, so a program started by "Run (no save)" leaves raw REPL first.
+  if (receivedChars === before) await link.write(wasRunning ? Uint8Array.of(0x03, 0x02, 0x04) : Uint8Array.of(0x03, 0x04));
 }
 
 async function upload(): Promise<void> {
@@ -674,6 +698,57 @@ async function upload(): Promise<void> {
   } finally {
     hideProgress();
     setBusy(false);
+  }
+}
+
+/**
+ * Runs the editor's code from the board's memory without saving it, like mpremote's `run`: stop the program,
+ * soft reset for a clean start, send the code, and show its output as it comes.
+ */
+async function runWithoutSaving(): Promise<void> {
+  const code = getCode();
+  if (looksLikeArduino(code) && !confirm(t("這段程式看起來是 Arduino C++，上傳後會出現語法錯誤。仍要上傳嗎？"))) return;
+
+  setBusy(true);
+  setStatus(t("正在送出程式"), "busy");
+  rawRun = null;
+  const repl = new RawRepl(link);
+  repl.attach();
+  try {
+    await enterRawRepl(repl);
+    await repl.softReset();
+    clearMonitor();
+    appendMonitor(`${t("[系統]")} ${t("執行（不存檔）：程式在板子的記憶體裡執行，沒有存成 main.py。重新啟動或拔掉電源後，板子會執行原本的 main.py。")}
+`, "system");
+    dataLines.reset();
+    atPrompt = false;
+    // An empty command would mean "soft reset" to the board instead of "run nothing".
+    await repl.send(code.trim() ? code : "pass");
+    rawRun = new RawRunWatcher();
+    setStatus(t("程式執行中（未存檔）"), "ready");
+  } catch (error) {
+    rawRun = null;
+    setStatus(t("執行失敗"), "error");
+    systemMessage(t("執行失敗：{message}", { message: failureMessage(error) }));
+    // Leave raw REPL, so the box below talks to the ordinary prompt again.
+    await link.write(Uint8Array.of(0x03, 0x02)).catch(() => {});
+  } finally {
+    link.setSink(onBoardOutput);
+    // The program's first output may have arrived together with the board's go-ahead.
+    const unread = repl.takeUnread();
+    if (unread.length) onBoardOutput(unread);
+    setBusy(false);
+  }
+}
+
+/** The program from "Run (no save)" ended or was stopped. Leaving raw REPL keeps its variables for the box below. */
+function finishRun(): void {
+  rawRun = null;
+  setStatus(t("程式已停止"), "ready");
+  link.write(Uint8Array.of(0x02)).catch(() => {});
+  if (!shownVariablesTip) {
+    shownVariablesTip = true;
+    systemMessage(t("程式結束了，變數還留著：可以在下方輸入變數名稱，查看最後的值。"));
   }
 }
 
@@ -787,6 +862,7 @@ function guarded(action: () => Promise<void>): () => void {
 }
 
 link.onLost = () => {
+  rawRun = null;
   hasFirmware = false;
   atPrompt = false;
   fileManager.close();
@@ -797,6 +873,14 @@ link.onLost = () => {
 
 ui.connect.addEventListener("click", guarded(() => (link.isOpen ? disconnect() : connect())));
 ui.upload.addEventListener("click", guarded(upload));
+ui.run.addEventListener("click", guarded(runWithoutSaving));
+// F5 runs the code, as in Thonny, but only while a board is connected; otherwise it still reloads the page.
+window.addEventListener("keydown", (event) => {
+  if (event.key !== "F5" || event.ctrlKey || event.shiftKey || event.altKey || event.metaKey) return;
+  if (!link.isOpen || !hasFirmware) return;
+  event.preventDefault();
+  if (!ui.run.disabled && !document.querySelector("dialog[open]")) guarded(runWithoutSaving)();
+});
 ui.boardFiles.addEventListener("click", guarded(openBoardFiles));
 ui.stop.addEventListener("click", guarded(stopProgram));
 ui.reset.addEventListener("click", guarded(restartBoard));

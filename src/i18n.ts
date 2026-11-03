@@ -240,6 +240,15 @@ const en = {
   版本: "Version",
   開發板傳回非預期的資料: "The board sent unexpected data",
   "上傳完成：main.py，{size} KB，用了 {seconds} 秒": "Uploaded main.py: {size} KB in {seconds} s",
+  "執行（不存檔）": "Run (no save)",
+  "把程式送到板子的記憶體執行，不會存成 main.py（快捷鍵 F5）": "Runs the code from the board's memory without saving it as main.py (shortcut: F5)",
+  正在送出程式: "Sending the program",
+  "執行（不存檔）：程式在板子的記憶體裡執行，沒有存成 main.py。重新啟動或拔掉電源後，板子會執行原本的 main.py。":
+    "Run (no save): the program runs from the board's memory and was not saved as main.py. After a restart or power cycle, the board runs its own main.py again.",
+  "程式執行中（未存檔）": "Program running (not saved)",
+  執行失敗: "Run failed",
+  "執行失敗：{message}": "Run failed: {message}",
+  "程式結束了，變數還留著：可以在下方輸入變數名稱，查看最後的值。": "The program has ended but its variables remain: type a variable's name in the box below to see its last value.",
   板上檔案: "Board files",
   "連接開發板後，可以查看、下載、上傳和刪除板子上的檔案": "Once a board is connected, view, download, upload and delete the files on it",
   "打開這個視窗時，板子上正在執行的程式會停止。也可以把電腦裡的檔案拖進這個視窗上傳。":

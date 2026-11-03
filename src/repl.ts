@@ -121,21 +121,46 @@ export class RawRepl {
 
   /** Runs code and returns its stdout. Must be in raw REPL. */
   async exec(code: string, timeoutMs = 5000): Promise<string> {
-    const bytes = this.encoder.encode(code);
-    if (!(await this.tryRawPaste(bytes, timeoutMs))) {
-      for (let offset = 0; offset < bytes.length; offset += WRITE_CHUNK) {
-        await this.io.write(bytes.subarray(offset, offset + WRITE_CHUNK));
-        await sleep(WRITE_GAP_MS);
-      }
-      await this.io.write(Uint8Array.of(CTRL_D));
-      const ack = await this.readUntil("OK", timeoutMs);
-      if (ack !== "OK") throw new ReplExecError(ack);
-    }
+    await this.send(code, timeoutMs);
     const stdout = await this.readUntil("\x04", timeoutMs);
     const stderr = await this.readUntil("\x04", timeoutMs);
     await this.readUntil(">", timeoutMs);
     if (stderr.length > 1) throw new ReplExecError(stderr.slice(0, -1));
     return stdout.slice(0, -1);
+  }
+
+  /**
+   * Sends code and returns as soon as the board has accepted it and started running it, leaving its output unread,
+   * like mpremote's `run`. The output ends with Ctrl-D, the error text, another Ctrl-D and the raw prompt.
+   */
+  async send(code: string, timeoutMs = 5000): Promise<void> {
+    const bytes = this.encoder.encode(code);
+    if (await this.tryRawPaste(bytes, timeoutMs)) return;
+    for (let offset = 0; offset < bytes.length; offset += WRITE_CHUNK) {
+      await this.io.write(bytes.subarray(offset, offset + WRITE_CHUNK));
+      await sleep(WRITE_GAP_MS);
+    }
+    await this.io.write(Uint8Array.of(CTRL_D));
+    const ack = await this.readUntil("OK", timeoutMs);
+    if (ack !== "OK") throw new ReplExecError(ack);
+  }
+
+  /**
+   * Restarts MicroPython from raw REPL, clearing variables, timers and pin interrupts. In raw REPL the board
+   * runs boot.py but skips main.py, then comes back to raw REPL.
+   */
+  async softReset(timeoutMs = 5000): Promise<void> {
+    await this.io.write(Uint8Array.of(CTRL_D));
+    await this.readUntil("soft reboot\r\n", timeoutMs);
+    // boot.py may print first, and may take a while.
+    await this.readUntil(RAW_BANNER, timeoutMs * 2);
+  }
+
+  /** Output that arrived but was not read, for passing on once the board's output goes somewhere else. */
+  takeUnread(): Uint8Array {
+    const unread = this.buffer;
+    this.buffer = new Uint8Array(0);
+    return unread;
   }
 
   /**

@@ -100,6 +100,27 @@ describe("RawRepl", () => {
     await expect(session.repl.exec("__fail__")).rejects.toBeInstanceOf(ReplExecError);
   });
 
+  it("soft resets from raw REPL without running main.py, and stays in raw REPL", async () => {
+    session.board.files["/main.py"] = "print(1)\n";
+    await session.repl.enter();
+    await session.repl.softReset();
+    expect(session.board.rawSoftResets).toBe(1);
+    expect(session.board.mode).toBe("raw");
+    expect(await session.repl.exec("x = 1")).toBe("");
+  });
+
+  for (const rawPaste of ["on", "off"]) {
+    it(`starts a program and leaves its output unread, with raw-paste mode ${rawPaste}`, async () => {
+      const { board, repl } = connect({ rawPaste });
+      await repl.enter();
+      await repl.send('print("第一行")\nwhile True:\n    pass');
+      expect(board.mode).toBe("running");
+      expect(new TextDecoder().decode(repl.takeUnread())).toBe("第一行\r\n");
+      expect(repl.takeUnread().length).toBe(0);
+      expect(board.files["/main.py"]).toBeUndefined();
+    });
+  }
+
   it("times out when the board has no MicroPython", async () => {
     const { repl } = connect({ hasMicroPython: false });
     await expect(repl.enter(50, 2)).rejects.toBeInstanceOf(ReplTimeoutError);

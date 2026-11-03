@@ -16,6 +16,8 @@ export class SerialLink {
   private reader: ReadableStreamDefaultReader<Uint8Array> | null = null;
   private readLoopDone: Promise<void> | null = null;
   private sink: (data: Uint8Array) => void = () => {};
+  /** The last write, so a write made while another is under way waits its turn instead of failing. */
+  private writing: Promise<void> = Promise.resolve();
 
   /** Called when the port goes away without close() being called. */
   onLost: () => void = () => {};
@@ -72,7 +74,17 @@ export class SerialLink {
     await this.port?.close().catch(() => {});
   }
 
-  async write(data: Uint8Array): Promise<void> {
+  /**
+   * Writes in order. The board can answer while a write is still under way, and the answer may need a write of
+   * its own, such as leaving raw REPL once a program ends; only one writer may hold the port at a time.
+   */
+  write(data: Uint8Array): Promise<void> {
+    const next = this.writing.then(() => this.writeNow(data));
+    this.writing = next.catch(() => {});
+    return next;
+  }
+
+  private async writeNow(data: Uint8Array): Promise<void> {
     const writable = this.port?.writable;
     if (!writable) throw new Error(t("開發板尚未連接"));
     const writer = writable.getWriter();

@@ -719,7 +719,7 @@ test("keeps settings and links in a panel that closes", async ({ page }) => {
   await page.goto("/");
   const panel = page.locator("#settings-panel");
   await expect(panel).toBeHidden();
-  await expect(page.locator(".actions > *")).toHaveText(["連接開發板", "安裝韌體", "上傳並執行", "停止", "設定與說明"]);
+  await expect(page.locator(".actions > *")).toHaveText(["連接開發板", "安裝韌體", "上傳並執行", "執行（不存檔）", "停止", "設定與說明"]);
 
   await page.locator("#settings-button").click();
   await expect(panel).toBeVisible();
@@ -848,6 +848,136 @@ test.describe("serial monitor", () => {
     expect(text.length).toBeLessThanOrEqual(MONITOR_LIMIT);
     expect(text).not.toContain("reading 00000000");
     await expect(page.locator("#monitor .system").filter({ hasText: "請先按「停止」" })).toHaveCount(1);
+  });
+});
+
+test.describe("run without saving", () => {
+  async function connectBoard(page: Page, options: object = {}) {
+    await mockSerial(page, options);
+    await page.goto("/");
+    await expect(page.locator("#run")).toBeDisabled();
+    await page.locator("#connect").click();
+    await expect(page.locator("#run")).toBeEnabled();
+    await page.evaluate(() => ((globalThis as any).board.files["/main.py"] = 'print("old program")\n'));
+  }
+
+  const board = (page: Page) => page.evaluate(() => {
+    const b = (globalThis as any).board;
+    return { mode: b.mode, rawSoftResets: b.rawSoftResets, resets: b.resets, ran: b.ranInRam.length, main: b.files["/main.py"] };
+  });
+
+  test("runs from memory after a clean start, without touching main.py, then keeps the variables", async ({ page }) => {
+    await connectBoard(page);
+    await page.locator("#editor .cm-content").fill('count = 5\nprint("溫度: 25")\nprint("完成")\n');
+    await page.locator("#run").click();
+
+    await expect(page.locator("#monitor .system").first()).toContainText("執行（不存檔）：程式在板子的記憶體裡執行");
+    await expect(page.locator("#monitor")).toContainText("溫度: 25\n完成");
+    expect(await board(page)).toEqual({ mode: "friendly", rawSoftResets: 1, resets: 0, ran: 1, main: 'print("old program")\n' });
+    // The raw REPL markers never show.
+    expect(await page.locator("#monitor").textContent()).not.toContain("\x04");
+    await expect(page.locator("#monitor .system").filter({ hasText: "變數還留著" })).toHaveCount(1);
+    await expect(page.locator("#status")).toHaveText("程式已停止");
+
+    // The first value arrived together with the board's go-ahead, and still reaches the chart.
+    await page.locator("#view-plot").click();
+    await expect(page.locator("#plot-legend .plot-key")).toHaveText(["溫度25"]);
+    await page.locator("#view-text").click();
+
+    await page.locator("#repl-input").fill("count");
+    await page.locator("#repl-input").press("Enter");
+    await expect(page.locator("#monitor")).toContainText(">>> count\n5\n>>> ");
+
+    // The tip is shown only once.
+    await page.locator("#run").click();
+    await expect(page.locator("#monitor")).toContainText("完成");
+    await expect(page.locator("#repl-input")).toBeEnabled();
+    await expect(page.locator("#monitor .system").filter({ hasText: "變數還留著" })).toHaveCount(0);
+  });
+
+  test("Stop ends a looping program without calling it an error, and Restart brings back main.py", async ({ page }) => {
+    await connectBoard(page);
+    await page.locator("#editor .cm-content").fill('print("開始")\nwhile True:\n    pass\n');
+    await page.locator("#run").click();
+    await expect(page.locator("#status")).toHaveText("程式執行中（未存檔）");
+    await expect(page.locator("#monitor")).toContainText("開始");
+    await page.evaluate(() => (globalThis as any).board.emit("tick\r\n"));
+    await expect(page.locator("#monitor")).toContainText("tick");
+
+    await page.locator("#stop").click();
+    await expect(page.locator("#monitor")).toContainText("KeyboardInterrupt");
+    await expect.poll(async () => (await board(page)).mode).toBe("friendly");
+    await expect(page.locator("#error-card")).toBeHidden();
+
+    await page.locator("#reset").click();
+    await expect.poll(async () => (await board(page)).resets).toBe(1);
+    await expect(page.locator("#monitor")).toContainText("rst:0x1");
+  });
+
+  test("offers help for an error, which names the line in the editor", async ({ page }) => {
+    await connectBoard(page);
+    await page.locator("#editor .cm-content").fill('print("before")\nraise ValueError("bad value")\n');
+    await page.locator("#run").click();
+    await expect(page.locator("#error-card")).toBeVisible();
+    await expect(page.locator("#monitor")).toContainText("ValueError: bad value");
+    await expect.poll(async () => (await board(page)).mode).toBe("friendly");
+  });
+
+  test("a line typed in the box reaches a program waiting for input", async ({ page }) => {
+    await connectBoard(page);
+    await page.locator("#editor .cm-content").fill('name = input("名字？")\nprint(name)\n');
+    await page.locator("#run").click();
+    await expect(page.locator("#status")).toHaveText("程式執行中（未存檔）");
+    await page.locator("#repl-input").fill("小明");
+    await page.locator("#repl-input").press("Enter");
+    await expect(page.locator("#monitor")).toContainText("got: 小明");
+    await expect.poll(async () => (await board(page)).mode).toBe("friendly");
+    // The note about variables comes after the program's last line, not before it.
+    const text = (await page.locator("#monitor").textContent()) ?? "";
+    expect(text.indexOf("got: 小明")).toBeLessThan(text.indexOf("變數還留著"));
+  });
+
+  test("Restart on built-in USB leaves raw REPL first, so main.py runs again", async ({ page }) => {
+    await connectBoard(page, { machine: "Generic ESP32S3 module with ESP32S3", usb: { usbVendorId: 0x303a, usbProductId: 0x4001 } });
+    await page.locator("#editor .cm-content").fill('print("開始")\nwhile True:\n    pass\n');
+    await page.locator("#run").click();
+    await expect(page.locator("#status")).toHaveText("程式執行中（未存檔）");
+    const softResets = await page.evaluate(() => (globalThis as any).board.softResets);
+    await page.locator("#reset").click();
+    await expect(page.locator("#monitor")).toContainText("IP: 192.168.1.105");
+    expect(await page.evaluate(() => (globalThis as any).board.softResets)).toBe(softResets + 1);
+    expect((await board(page)).mode).toBe("friendly");
+  });
+
+  test("F5 runs the code while a board is connected, and reloads the page otherwise", async ({ page }) => {
+    await mockSerial(page);
+    await page.goto("/");
+    const pressF5 = () =>
+      page.evaluate(() => {
+        const event = new KeyboardEvent("keydown", { key: "F5", bubbles: true, cancelable: true });
+        document.body.dispatchEvent(event);
+        return event.defaultPrevented;
+      });
+    // Not connected: the browser keeps F5 for reloading.
+    expect(await pressF5()).toBe(false);
+
+    await page.locator("#connect").click();
+    await expect(page.locator("#run")).toBeEnabled();
+    await page.locator("#editor .cm-content").fill('print("from F5")\n');
+    await page.locator("#editor .cm-content").press("F5");
+    await expect(page.locator("#monitor")).toContainText("from F5");
+    expect((await board(page)).ran).toBe(1);
+    expect(await pressF5()).toBe(true);
+  });
+
+  test("uploading after a run works as usual", async ({ page }) => {
+    await connectBoard(page);
+    await page.locator("#editor .cm-content").fill('print("開始")\nwhile True:\n    pass\n');
+    await page.locator("#run").click();
+    await expect(page.locator("#status")).toHaveText("程式執行中（未存檔）");
+    await page.locator("#upload").click();
+    await expect(page.locator("#monitor .system").first()).toContainText("上傳完成：main.py");
+    expect((await board(page)).main).toBe('print("開始")\nwhile True:\n    pass\n');
   });
 });
 
