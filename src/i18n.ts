@@ -122,6 +122,13 @@ const en = {
   "DHT11 溫濕度警報": "DHT11 humidity alarm",
   "Telegram 機器人控制 LED": "Telegram bot LED",
   "DHT11 資料存到 Google 試算表": "Log DHT11 data to Google Sheets",
+  進階技巧: "Advanced techniques",
+  "I2C 掃描（找出裝置位址）": "I2C scan (find device addresses)",
+  "按鈕中斷（IRQ）": "Button interrupt (IRQ)",
+  "計時器讓 LED 自己閃（Timer）": "Timer blinks the LED by itself",
+  深度睡眠定時醒來: "Deep sleep with timed wake-ups",
+  "ESP-NOW 多塊板子互傳": "ESP-NOW between boards",
+  "asyncio 同時做三件事": "asyncio: three things at once",
   "選擇範例…": "Choose an example…",
   "要用「{name}」取代目前的程式嗎？": 'Replace the current program with "{name}"?',
 
@@ -143,6 +150,8 @@ const en = {
   "這段程式看起來是 Arduino C++，上傳後會出現語法錯誤。仍要上傳嗎？": "This code looks like Arduino C++ and will give a syntax error. Upload it anyway?",
   正在上傳程式: "Uploading the program",
   程式執行中: "Program running",
+  "開發板重新開機了，「執行（不存檔）」的程式已經不在記憶體裡，現在執行的是板子上的 main.py。":
+    'The board restarted, so the program from "Run (no save)" is no longer in memory; the board is now running its own main.py.',
   上傳失敗: "Upload failed",
   "上傳失敗：{message}": "Upload failed: {message}",
   程式已停止: "Program stopped",

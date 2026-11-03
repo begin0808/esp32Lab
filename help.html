@@ -109,9 +109,16 @@
               <tr><td>DHT11 溫濕度警報</td><td>手機網頁每 2 秒更新，濕度超過 50% 發出警報</td><td>DHT11 DATA 接 GPIO 4</td><td>手機和板子要同一個 Wi-Fi</td></tr>
               <tr><td>Telegram 機器人控制 LED</td><td>傳 /on、/off、/status 控制 LED，按按鈕時通知手機</td><td>LED GPIO 18、按鈕 GPIO 19</td><td>板子要能上網</td></tr>
               <tr><td>DHT11 資料存到 Google 試算表</td><td>每分鐘把溫度和濕度新增成一列，步驟見 <a href="#google-sheets">Google 試算表</a></td><td>DATA GPIO 4</td><td>板子要能上網</td></tr>
+              <tr><td>I2C 掃描（找出裝置位址）</td><td>列出接在 I2C 上的裝置位址和可能的型號，OLED、LCD 沒反應時先用它檢查</td><td>SDA GPIO 21、SCL GPIO 22</td><td>不需要</td></tr>
+              <tr><td>按鈕中斷（IRQ）</td><td>按鈕一按下就記錄，主程式每 2 秒才看一次也不會漏掉</td><td>同範例 2：按鈕 GPIO 19、LED GPIO 18</td><td>不需要</td></tr>
+              <tr><td>計時器讓 LED 自己閃（Timer）</td><td>計時器讓 LED 每 0.5 秒閃一次，主程式同時計數</td><td>LED GPIO 18</td><td>不需要</td></tr>
+              <tr><td>深度睡眠定時醒來</td><td>醒來閃一下 LED、記下第幾次醒來，再睡 10 秒</td><td>板載 LED（GPIO 2）</td><td>不需要</td></tr>
+              <tr><td>ESP-NOW 多塊板子互傳</td><td>按任一塊板子的按鈕，所有板子的 LED 一起切換</td><td>每塊板子都同範例 2</td><td>不需要，板子之間直接傳</td></tr>
+              <tr><td>asyncio 同時做三件事</td><td>LED 閃爍、監看按鈕、每 2 秒報告執行時間同時進行</td><td>同範例 2：按鈕 GPIO 19、LED GPIO 18</td><td>不需要</td></tr>
             </tbody>
           </table>
         </div>
+        <p class="tip"><strong>進階技巧範例（21–26）：</strong>22、23、25、26 都沿用範例 2 的接線，接好一次就能全部試。中斷和計時器的範例按「停止」時會關掉中斷和計時器，不然程式停了 LED 還會繼續動。ESP-NOW 要兩塊以上的板子，每塊都上傳同一份程式。深度睡眠請用「上傳並執行」，板子醒來後有 5 秒可以按「停止」；USB 直接接晶片的板子（S2、S3、C3）睡著時會斷線，醒來後要重新連接。</p>
       </section>
 
       <section id="run">
@@ -127,7 +134,7 @@
             </tbody>
           </table>
         </div>
-        <p>程式寫壞了也不用擔心：按「重新啟動」或拔掉電源，板子就會執行原本的 <code>main.py</code>。試好之後，再按「上傳並執行」存到板子上。</p>
+        <p>程式寫壞了也不用擔心：按「重新啟動」或拔掉電源，板子就會執行原本的 <code>main.py</code>。試好之後，再按「上傳並執行」存到板子上。程式讓板子重新開機時（例如深度睡眠或 <code>machine.reset()</code>）也一樣，醒來後執行的是板子上的 <code>main.py</code>，監控窗會提示。</p>
         <h3>程式結束後查看變數</h3>
         <p>程式結束或按「停止」之後，<strong>變數還留在板子上</strong>，可以在監控窗下方的 REPL 輸入變數名稱，看最後的值。例如：</p>
         <pre class="code-block" tabindex="0">total = 0

@@ -78,6 +78,17 @@ const EXAMPLE_GROUPS = [
       { name: t("DHT11 資料存到 Google 試算表"), code: example("sheets_dht11") },
     ],
   },
+  {
+    label: t("進階技巧"),
+    examples: [
+      { name: t("I2C 掃描（找出裝置位址）"), code: example("i2c_scan") },
+      { name: t("按鈕中斷（IRQ）"), code: example("button_irq") },
+      { name: t("計時器讓 LED 自己閃（Timer）"), code: example("timer_blink") },
+      { name: t("深度睡眠定時醒來"), code: example("deep_sleep") },
+      { name: t("ESP-NOW 多塊板子互傳"), code: example("espnow_led") },
+      { name: t("asyncio 同時做三件事"), code: example("asyncio_tasks") },
+    ],
+  },
 ];
 const EXAMPLES = EXAMPLE_GROUPS.flatMap((group) => group.examples);
 
@@ -511,6 +522,12 @@ function onBoardOutput(data: Uint8Array): void {
     return;
   }
   const followed = rawRun.push(decoded);
+  if (followed.restarted) {
+    // Deep sleep, machine.reset() or a crash: the board now runs its own main.py, which is ordinary output.
+    rawRun = null;
+    systemMessage(t("開發板重新開機了，「執行（不存檔）」的程式已經不在記憶體裡，現在執行的是板子上的 main.py。"));
+    setStatus(t("程式執行中"), "ready");
+  }
   showBoardText(followed.text);
   // After the program's last words, so the note that follows stays below them.
   if (followed.finished) finishRun();

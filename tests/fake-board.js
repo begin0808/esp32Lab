@@ -278,7 +278,13 @@
       this.ranInRam.push(code);
       for (const match of code.matchAll(/^(\w+)\s*=\s*(\d+)\s*$/gm)) this.globals[match[1]] = match[2];
       const printed = [...code.matchAll(/print\("([^"]*)"\)/g)].map((match) => `${match[1]}\r\n`).join("");
-      if (code.includes("input(") || code.includes("while True")) {
+      if (code.includes("machine.deepsleep(")) {
+        // Sleeping ends the program without any raw REPL markers; waking is a fresh start that runs main.py.
+        const main = [...(this.files["/main.py"] ?? "").matchAll(/print\("([^"]*)"\)/g)].map((match) => `${match[1]}\r\n`).join("");
+        this.mode = "friendly";
+        this.globals = {};
+        this.emit(`${printed}ets Jul 29 2019 12:21:46\r\n\r\nrst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)\r\n${main}MicroPython v1.29.0 on 2026-08-24; Generic ESP32 module with ESP32\r\nType "help()" for more information.\r\n>>> `);
+      } else if (code.includes("input(") || code.includes("while True")) {
         this.mode = "running";
         this.waitingInput = code.includes("input(");
         this.inputLine = [];

@@ -744,8 +744,8 @@ for (const id of STYLE_IDS) {
 
 test("offers every example, grouped, and loads the wiring notes into the editor", async ({ page }) => {
   await page.goto("/");
-  await expect(page.locator("#examples optgroup")).toHaveCount(4);
-  await expect(page.locator("#examples optgroup option")).toHaveCount(20);
+  await expect(page.locator("#examples optgroup")).toHaveCount(5);
+  await expect(page.locator("#examples optgroup option")).toHaveCount(26);
   page.on("dialog", (dialog) => dialog.accept());
   await page.locator("#examples").selectOption({ label: "13. SSD1306 OLED 顯示器" });
   await expect(page.locator("#editor .cm-content")).toContainText("class SSD1306");
@@ -953,6 +953,24 @@ test.describe("run without saving", () => {
   const board = (page: Page) => page.evaluate(() => {
     const b = (globalThis as any).board;
     return { mode: b.mode, rawSoftResets: b.rawSoftResets, resets: b.resets, ran: b.ranInRam.length, main: b.files["/main.py"] };
+  });
+
+  test("notices when the board restarts, as after deep sleep, and stops waiting for the run to end", async ({ page }) => {
+    await connectBoard(page);
+    await page.locator("#editor .cm-content").fill('import machine\nprint("睡覺了")\nmachine.deepsleep(10000)\n');
+    await page.locator("#run").click();
+
+    await expect(page.locator("#monitor")).toContainText("睡覺了");
+    await expect(page.locator("#monitor .system").filter({ hasText: "開發板重新開機了" })).toHaveCount(1);
+    await expect(page.locator("#monitor")).toContainText("old program");
+    await expect(page.locator("#status")).toHaveText("程式執行中");
+    await expect(page.locator("#monitor .system").filter({ hasText: "變數還留著" })).toHaveCount(0);
+
+    // The box talks to the ordinary prompt the board woke into, not to a raw REPL run.
+    await page.locator("#repl-input").fill("1+1");
+    await page.locator("#repl-input").press("Enter");
+    await expect(page.locator("#monitor")).toContainText(">>> 1+1");
+    expect(await page.locator("#monitor").textContent()).not.toContain("\x04");
   });
 
   test("runs from memory after a clean start, without touching main.py, then keeps the variables", async ({ page }) => {
@@ -1425,7 +1443,7 @@ test.describe("in an English browser", () => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     await page.goto("/");
     await expect(page.locator("#editor .cm-content")).toContainText("Blink an LED");
-    await expect(page.locator("#examples optgroup option")).toHaveCount(20);
+    await expect(page.locator("#examples optgroup option")).toHaveCount(26);
 
     page.on("dialog", (dialog) => dialog.accept());
     await page.locator("#examples").selectOption({ label: "17. Voice-controlled LED (MQTT)" });
@@ -1871,7 +1889,7 @@ test.describe("example numbers", () => {
         page.on("dialog", (dialog) => void dialog.accept());
         await page.goto("/");
         const options = await page.locator("#examples optgroup option").evaluateAll((items) => items.map((item) => (item as HTMLOptionElement).value));
-        expect(options).toHaveLength(20);
+        expect(options).toHaveLength(26);
         for (const [index, value] of options.entries()) {
           const label = await page.locator(`#examples option[value="${value}"]`).textContent();
           expect(label!.startsWith(`${index + 1}. `)).toBe(true);

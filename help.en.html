@@ -99,9 +99,16 @@
               <tr><td>DHT11 humidity alarm</td><td>A phone web page updates every 2 seconds and alarms when humidity is over 50%</td><td>DHT11 DATA on GPIO 4</td><td>Phone and board on the same Wi-Fi</td></tr>
               <tr><td>Telegram bot LED</td><td>Send /on, /off or /status to control the LED; the button notifies your phone</td><td>LED GPIO 18, button GPIO 19</td><td>Board online</td></tr>
               <tr><td>Log DHT11 data to Google Sheets</td><td>Adds a row of temperature and humidity every minute; see <a href="#google-sheets">Google Sheets</a></td><td>DATA GPIO 4</td><td>Board online</td></tr>
+              <tr><td>I2C scan (find device addresses)</td><td>Lists the addresses and likely models of the devices on I2C; try it first when an OLED or LCD does not respond</td><td>SDA GPIO 21, SCL GPIO 22</td><td>Not needed</td></tr>
+              <tr><td>Button interrupt (IRQ)</td><td>Notes each press at once, so none are missed though the program looks only every 2 seconds</td><td>As example 2: button GPIO 19, LED GPIO 18</td><td>Not needed</td></tr>
+              <tr><td>Timer blinks the LED by itself</td><td>A timer blinks the LED every 0.5 seconds while the program counts</td><td>LED GPIO 18</td><td>Not needed</td></tr>
+              <tr><td>Deep sleep with timed wake-ups</td><td>Wakes, blinks the LED, counts the wake-ups, then sleeps 10 seconds</td><td>Onboard LED (GPIO 2)</td><td>Not needed</td></tr>
+              <tr><td>ESP-NOW between boards</td><td>Press the button on any board and every board's LED toggles</td><td>Every board as example 2</td><td>Not needed; boards talk directly</td></tr>
+              <tr><td>asyncio: three things at once</td><td>Blinks the LED, watches the button and reports the running time, all at once</td><td>As example 2: button GPIO 19, LED GPIO 18</td><td>Not needed</td></tr>
             </tbody>
           </table>
         </div>
+        <p class="tip"><strong>Advanced examples (21–26):</strong> 22, 23, 25 and 26 all use the wiring of example 2, so one setup covers them all. The interrupt and timer examples turn their interrupt or timer off when you press "Stop"; otherwise the LED would keep changing after the program stopped. ESP-NOW needs two or more boards, each running the same program. Use "Upload and run" for deep sleep; after waking, the board gives you 5 seconds to press "Stop". Boards with built-in USB (S2, S3, C3) drop the connection while asleep; connect again after they wake.</p>
       </section>
 
       <section id="run">
@@ -117,7 +124,7 @@
             </tbody>
           </table>
         </div>
-        <p>A broken program is nothing to worry about: press "Restart" or unplug the power, and the board runs its own <code>main.py</code> again. Once the program works, press "Upload and run" to keep it on the board.</p>
+        <p>A broken program is nothing to worry about: press "Restart" or unplug the power, and the board runs its own <code>main.py</code> again. Once the program works, press "Upload and run" to keep it on the board. The same goes for a program that restarts the board, for example with deep sleep or <code>machine.reset()</code>: it wakes into its own <code>main.py</code>, and the monitor says so.</p>
         <h3>Looking at variables after the program ends</h3>
         <p>After the program ends, or after you press "Stop", <strong>its variables are still on the board</strong>. Type a variable's name in the REPL below the serial monitor to see its last value. For example:</p>
         <pre class="code-block" tabindex="0">total = 0
