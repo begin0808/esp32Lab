@@ -177,3 +177,92 @@ ${traceback}
 程式碼：
 ${hideWifiSettings(code)}`;
 }
+
+export interface LineRange {
+  from: number;
+  to: number;
+}
+
+function lineCount(code: string): number {
+  return code.replace(/\n+$/, "").split("\n").length;
+}
+
+/** The lines a selection covers, or null when nothing is selected or the selection takes in the whole program. */
+export function selectedLineRange(code: string, from: number, to: number): LineRange | null {
+  const start = Math.min(from, to);
+  const end = Math.max(from, to);
+  if (start === end) return null;
+  const lineAt = (offset: number) => code.slice(0, offset).split("\n").length;
+  const first = lineAt(start);
+  let last = lineAt(end);
+  // A selection dragged over whole lines ends at the start of the next one, which is not part of it.
+  if (last > first && code[end - 1] === "\n") last--;
+  if (first === 1 && last >= lineCount(code)) return null;
+  return { from: first, to: last };
+}
+
+export function describeLines(range: LineRange): string {
+  if (lang === "en") return range.from === range.to ? `line ${range.from}` : `lines ${range.from}–${range.to}`;
+  return range.from === range.to ? `第 ${range.from} 行` : `第 ${range.from}–${range.to} 行`;
+}
+
+/** Gemini can only point to "line 8" if the lines carry the editor's numbers. */
+export function numberLines(code: string): string {
+  const lines = code.replace(/\n+$/, "").split("\n");
+  const width = String(lines.length).length;
+  return lines.map((line, index) => `${String(index + 1).padStart(width)} | ${line}`.trimEnd()).join("\n");
+}
+
+export function explainPrompt(code: string, boardLines: string, range: LineRange | null = null): string {
+  const shown = hideWifiSettings(code);
+  const hidden = shown !== code;
+  const numbered = numberLines(shown);
+  if (lang === "en") {
+    const part = range ? describeLines(range) : "";
+    return `I am new to MicroPython. Please explain ${range ? `${part} of ` : ""}the ESP32 program below (MicroPython v1.29.0).${range ? " The other lines are only there so you can see the context; you do not need to explain them." : ""}
+
+Hardware:
+${boardLines}
+
+Please explain in this order, in plain English, explaining any technical term the first time it appears:
+${
+  range
+    ? `1. In one sentence, what these lines do for the program as a whole
+2. Which parts and pins these lines use (say so if they use none)
+3. Section by section: give each section's line numbers (for example "lines 5–8"), what it does and why it is written that way
+4. What the serial monitor shows when these lines run (say so if nothing)`
+    : `1. In one sentence, what the program does
+2. Which parts to connect, and to which pins (say so if the program uses none)
+3. Section by section: give each section's line numbers (for example "lines 5–8"), what it does and why it is written that way
+4. What the serial monitor will roughly show when it runs`
+}
+
+Please do not change or rewrite the program; only explain it. The number before each line is its line number, not part of the program.${hidden ? "\nYOUR_WIFI_SETTING and YOUR_SCRIPT_URL stand for settings I have hidden, such as a Wi-Fi password or a web address." : ""}
+
+Code:
+${numbered}`;
+  }
+  const part = range ? describeLines(range) : "";
+  return `我是 MicroPython 初學者，請幫我解說下面這份 ESP32 程式（MicroPython v1.29.0）${range ? `的${part}。其他行只是讓你了解前後文，不用解說` : ""}。
+
+硬體：
+${boardLines}
+
+請依照下面的順序說明，用簡單的繁體中文，遇到專有名詞先解釋：
+${
+  range
+    ? `1. 一句話說明這幾行在整個程式裡負責什麼
+2. 這幾行用到哪些零件、接在哪個腳位（沒有用到就說沒有）
+3. 分段解說：每段標出行號（例如「第 5–8 行」），說明做什麼、為什麼這樣寫
+4. 這幾行執行時，序列埠監控窗會看到什麼（沒有輸出就說沒有）`
+    : `1. 一句話說明這個程式在做什麼
+2. 要接哪些零件、接在哪個腳位（程式沒寫到就說沒有）
+3. 分段解說：每段標出行號（例如「第 5–8 行」），說明做什麼、為什麼這樣寫
+4. 執行後，序列埠監控窗大概會看到什麼`
+}
+
+請不要改寫或重寫程式，只要解說。每行前面的數字是行號，不是程式的一部分。${hidden ? "\n程式裡的 YOUR_WIFI_SETTING、YOUR_SCRIPT_URL 是我先隱藏起來的 Wi-Fi 密碼、帳號或網址。" : ""}
+
+程式碼：
+${numbered}`;
+}

@@ -95,6 +95,74 @@ test("offers help for a Python error", async ({ page, context }) => {
   expect(copied).toContain("print(x)");
 });
 
+test.describe("Gemini prompt menu", () => {
+  const code = 'from machine import Pin\nled = Pin(2, Pin.OUT)\nled.on()\nprint("on")\n';
+
+  test.beforeEach(async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.goto("/");
+    await page.locator("#editor .cm-content").fill(code);
+  });
+
+  test("opens below its button and explains the whole program when nothing is selected", async ({ page }) => {
+    await page.locator("#gemini-button").click();
+    const menu = page.locator("#gemini-menu");
+    await expect(menu).toBeVisible();
+    const button = (await page.locator("#gemini-button").boundingBox())!;
+    const box = (await menu.boundingBox())!;
+    expect(box.y).toBeGreaterThanOrEqual(button.y + button.height);
+    expect(box.y).toBeLessThan(button.y + button.height + 20);
+    await expect(page.locator("#explain-title")).toHaveText("解說整份程式");
+
+    await page.locator("#copy-explain").click();
+    await expect(menu).toBeHidden();
+    await expect(page.locator("#gemini-label")).toHaveText("已複製");
+    const prompt = await page.evaluate(() => navigator.clipboard.readText());
+    expect(prompt).toContain("MicroPython 初學者");
+    expect(prompt).toContain("板載 LED：GPIO 2");
+    expect(prompt).toContain("2 | led = Pin(2, Pin.OUT)");
+    expect(prompt).not.toContain("其他行只是讓你了解前後文");
+    await expect(page.locator("#gemini-label")).toHaveText("Gemini 提示詞");
+  });
+
+  test("explains only the selected lines, sending the whole program for context", async ({ page }) => {
+    const editor = page.locator("#editor .cm-content");
+    await editor.press("ControlOrMeta+Home");
+    await editor.press("ArrowDown");
+    await editor.press("Shift+ArrowDown");
+    await editor.press("Shift+ArrowDown");
+    await page.locator("#gemini-button").click();
+    await expect(page.locator("#explain-title")).toHaveText("解說選取的程式（第 2–3 行）");
+    await expect(page.locator("#explain-note")).toHaveText("整份程式也會附上，讓 Gemini 了解前後文");
+
+    await page.locator("#copy-explain").click();
+    const prompt = await page.evaluate(() => navigator.clipboard.readText());
+    expect(prompt).toContain("的第 2–3 行。其他行只是讓你了解前後文");
+    expect(prompt).toContain("1 | from machine import Pin");
+    expect(prompt).toContain('4 | print("on")');
+
+    // Select-all is the whole program again.
+    await editor.press("ControlOrMeta+a");
+    await page.locator("#gemini-button").click();
+    await expect(page.locator("#explain-title")).toHaveText("解說整份程式");
+  });
+
+  test("works from the keyboard", async ({ page }) => {
+    await page.locator("#gemini-button").focus();
+    await page.keyboard.press("Enter");
+    await expect(page.locator("#copy-prompt")).toBeFocused();
+    await page.keyboard.press("ArrowDown");
+    await expect(page.locator("#copy-explain")).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(page.locator("#gemini-menu")).toBeHidden();
+    await expect(page.locator("#gemini-button")).toBeFocused();
+
+    await page.keyboard.press("Enter");
+    await page.keyboard.press("Enter");
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toContain("請用 MicroPython 幫我寫 ESP32 程式");
+  });
+});
+
 test("warns about Arduino code", async ({ page, context }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await mockSerial(page);
@@ -159,7 +227,7 @@ test("keeps the editor's menus and buttons on one row in a narrower editor", asy
   await page.goto("/");
   const top = async (selector: string) => Math.round((await page.locator(selector).boundingBox())!.y);
   const row = await top("#chip");
-  for (const selector of ["#examples", "#copy-prompt", "#open-file", "#save-file", "#board-files"]) {
+  for (const selector of ["#examples", "#gemini-button", "#open-file", "#save-file", "#board-files"]) {
     expect(Math.abs((await top(selector)) - row), selector).toBeLessThanOrEqual(4);
   }
 });
@@ -691,6 +759,7 @@ test("moves example pins to the chosen chip", async ({ page, context }) => {
   await expect(page.locator("#editor .cm-content")).toContainText("LED_PIN = 4");
   await expect(page.locator("#editor .cm-content")).toContainText("BUTTON_PIN = 5");
 
+  await page.locator("#gemini-button").click();
   await page.locator("#copy-prompt").click();
   expect(await page.evaluate(() => navigator.clipboard.readText())).toContain("開發板：ESP32-C3");
 
@@ -1359,6 +1428,8 @@ test.describe("in an English browser", () => {
     expect(code).toMatch(/TOPIC_NAME = "led-[0-9a-f]{12}"/);
     expect(CHINESE.test(code!)).toBe(false);
 
+    await page.locator("#gemini-button").click();
+    await expect(page.locator("#explain-title")).toHaveText("Explain the whole program");
     await page.locator("#copy-prompt").click();
     const prompt = await page.evaluate(() => navigator.clipboard.readText());
     expect(prompt).toContain("MicroPython, not Arduino C++");

@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { isFlashTooSmall, verifySha256 } from "../../src/flasher";
 import {
   arduinoConvertPrompt,
+  describeLines,
+  explainPrompt,
   brokerUrl,
   commandTopic,
   DEFAULT_BROKER,
@@ -13,8 +15,10 @@ import {
   isValidBroker,
   isValidChannel,
   looksLikeArduino,
+  numberLines,
   parseVoiceCommand,
   randomChannel,
+  selectedLineRange,
   stripTerminalCodes,
 } from "../../src/text";
 
@@ -194,5 +198,65 @@ describe("verifySha256", () => {
     const digest = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
     expect(await verifySha256(data, digest)).toBe(true);
     expect(await verifySha256(data, "00")).toBe(false);
+  });
+});
+
+describe("explain prompt", () => {
+  const code = "from machine import Pin\n\nled = Pin(2, Pin.OUT)\nled.on()\n";
+  const board = "- 開發板：NodeMCU ESP-32S（ESP32，MicroPython v1.29.0）\n- 板載 LED：GPIO 2";
+
+  it("finds the lines a selection covers", () => {
+    const third = code.indexOf("led =");
+    expect(selectedLineRange(code, third, third)).toBeNull();
+    expect(selectedLineRange(code, third, third + 3)).toEqual({ from: 3, to: 3 });
+    expect(selectedLineRange(code, code.length, third)).toEqual({ from: 3, to: 4 });
+    // Dragging over whole lines ends at the start of the next one.
+    expect(selectedLineRange(code, 0, third)).toEqual({ from: 1, to: 2 });
+  });
+
+  it("treats a selection of every line as the whole program", () => {
+    expect(selectedLineRange(code, 0, code.length)).toBeNull();
+    expect(selectedLineRange(code, 0, code.length - 1)).toBeNull();
+    expect(selectedLineRange(code, 3, code.length)).toBeNull();
+    expect(selectedLineRange(code, code.indexOf("\n") + 1, code.length)).toEqual({ from: 2, to: 4 });
+  });
+
+  it("names one line or a run of lines", () => {
+    expect(describeLines({ from: 5, to: 5 })).toBe("第 5 行");
+    expect(describeLines({ from: 5, to: 12 })).toBe("第 5–12 行");
+  });
+
+  it("numbers the lines as the editor does", () => {
+    const lines = numberLines("a = 1\n\n" + "b = 2\n".repeat(8)).split("\n");
+    expect(lines).toHaveLength(10);
+    expect(lines[0]).toBe(" 1 | a = 1");
+    expect(lines[1]).toBe(" 2 |");
+    expect(lines[9]).toBe("10 | b = 2");
+  });
+
+  it("asks for an explanation of the whole program, with the board and numbered code", () => {
+    const prompt = explainPrompt(code, board);
+    expect(prompt).toContain("MicroPython 初學者");
+    expect(prompt).toContain("板載 LED：GPIO 2");
+    expect(prompt).toContain("一句話說明這個程式在做什麼");
+    expect(prompt).toContain("請不要改寫或重寫程式");
+    expect(prompt).toContain("3 | led = Pin(2, Pin.OUT)");
+    expect(prompt).not.toContain("其他行只是讓你了解前後文");
+    expect(prompt).not.toContain("YOUR_WIFI_SETTING");
+  });
+
+  it("asks about the selected lines but still sends the whole program", () => {
+    const prompt = explainPrompt(code, board, { from: 3, to: 4 });
+    expect(prompt).toContain("程式（MicroPython v1.29.0）的第 3–4 行。其他行只是讓你了解前後文，不用解說。");
+    expect(prompt).toContain("這幾行在整個程式裡負責什麼");
+    expect(prompt).toContain("1 | from machine import Pin");
+    expect(prompt).toContain("4 | led.on()");
+  });
+
+  it("hides Wi-Fi details and says what the placeholders stand for", () => {
+    const prompt = explainPrompt('SSID = "home"\nPASSWORD = "secret"\nprint(1)\n', board);
+    expect(prompt).not.toContain("secret");
+    expect(prompt).toContain('2 | PASSWORD = "YOUR_WIFI_SETTING"');
+    expect(prompt).toContain("先隱藏起來的");
   });
 });

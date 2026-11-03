@@ -43,6 +43,7 @@
       <nav class="toc" aria-label="On this page">
         <a href="#start">Getting started</a>
         <a href="#run">Run (no save)</a>
+        <a href="#gemini">Gemini prompts</a>
         <a href="#languages">MicroPython and Arduino</a>
         <a href="#repl">The REPL</a>
         <a href="#plot">Charts and CSV</a>
@@ -67,7 +68,7 @@
           <li><strong>Install a driver:</strong> only if the computer cannot find the board. Boards whose USB goes straight to an S2, S3 or C3 chip usually need none. If the board's USB chip is a CP2102, install the <a href="https://www.silabs.com/software-and-tools/usb-to-uart-bridge-vcp-drivers?tab=downloads" target="_blank" rel="noopener">CP210x driver</a>; if it is a CH340, install the <a href="https://www.wch-ic.com/downloads/CH341SER_EXE.html" target="_blank" rel="noopener">CH340 driver</a>. "Settings and help" at the top right of the editor has these links too, along with the pinout, the voice control page, and the language, style and font settings.</li>
           <li><strong>Connect the board:</strong> close programs that hold the serial port, such as the Arduino IDE. Then press "Connect board" and choose the serial port that appears.</li>
           <li><strong>Install the firmware:</strong> only needed the first time, or after flashing an Arduino program. Pressing "Install firmware" <strong>erases all programs and files on the board</strong>, so do not unplug the USB cable while it runs. For boards whose USB goes straight to the chip, press RST afterwards and connect again.</li>
-          <li><strong>Get a program:</strong> choose a built-in example, or press "Copy Gemini prompt", fill in your wiring and what you want, paste it into Gemini, and paste the MicroPython program it writes back into the editor.</li>
+          <li><strong>Get a program:</strong> choose a built-in example, or press "Gemini prompts" → "Write a new program", fill in your wiring and what you want, paste it into Gemini, and paste the MicroPython program it writes back into the editor.</li>
           <li><strong>Upload and run:</strong> press "Upload and run". The program is saved as <code>main.py</code> on the board and runs automatically whenever the board powers up. The first line in the serial monitor shows the program's size and how many seconds the upload took, followed by the program's output and errors.</li>
           <li><strong>Just trying something:</strong> press "Run (no save)" or <kbd>F5</kbd>. The program runs straight from the board's memory and is not saved as <code>main.py</code>; see <a href="#run">Run (no save)</a>.</li>
         </ol>
@@ -124,6 +125,18 @@ for i in range(1, 11):
     total = total + i</pre>
         <p>When it has run, typing <code>total</code> in the REPL shows <code>55</code>, and <code>i</code> shows <code>10</code>. When hunting for a mistake, this is easier than adding <code>print</code> everywhere. "Upload and run" restarts the board, so this works only with "Run (no save)".</p>
         <p class="tip">In error messages, <code>File "&lt;stdin&gt;", line 3</code> means line 3 in the editor, the same line numbers as <code>main.py</code>. "Copy for Gemini" works as usual.</p>
+      </section>
+
+      <section id="gemini">
+        <h2>Gemini prompts</h2>
+        <p>The site writes the prompts for the chip you chose; copy one and paste it into Gemini. The "Gemini prompts" menu above the editor has two items:</p>
+        <ul>
+          <li><strong>Write a new program:</strong> asks Gemini for one complete <code>main.py</code>. After pasting, replace the wiring and the description in brackets with your own, then send it.</li>
+          <li><strong>Explain the program:</strong> for an example, or a program from Gemini, that you do not understand. Gemini says in plain words what the program does, which parts it needs and what the monitor will show, then explains it section by section. Each section names its line numbers, which match the numbers down the left of the editor.</li>
+        </ul>
+        <p>To ask about only a few lines, select them in the editor before opening the menu; the second item then reads "Explain the selection (lines 5–12)". The whole program goes too, so Gemini sees the context. With nothing selected, the whole program is explained.</p>
+        <p>Two more prompts appear when they are needed: when the program hits an error, "Copy for Gemini" on the error card sends the error message and asks for a fix; when you paste Arduino code, the button on the notice asks Gemini to rewrite it as MicroPython.</p>
+        <p class="tip">All of these prompts hide common forms of Wi-Fi passwords and tokens, but may not catch them all; see <a href="#privacy">Privacy and safety</a>.</p>
       </section>
 
       <section id="languages">
@@ -386,7 +399,7 @@ mylib.hello("ESP32")</pre>
         <ul>
           <li><strong>State the model and pins:</strong> for example, "MAX7219 8×8 LED matrix, DIN on GPIO 23, CLK on GPIO 18, CS on GPIO 5".</li>
           <li><strong>When a module is missing:</strong> an <code>ImportError</code> means the program uses a module the firmware lacks. Ask Gemini to "put this part's driver in the same main.py as the main program", or upload the module's file to the board with <a href="#files">Board files</a>.</li>
-          <li><strong>Name the language:</strong> ask for MicroPython v1.29.0, not Arduino C++. The site's "Copy Gemini prompt" already includes these requirements.</li>
+          <li><strong>Name the language:</strong> ask for MicroPython v1.29.0, not Arduino C++. The site's "Gemini prompts" → "Write a new program" already includes these requirements.</li>
         </ul>
       </section>
 
@@ -502,7 +515,7 @@ mylib.hello("ESP32")</pre>
           <li><strong>Code:</strong> the site does not upload your code to a server. It exists only in this browser and on your board. GitHub only serves the site's files and may log connection details such as IP addresses, but never receives your code.</li>
           <li><strong>Visit statistics:</strong> the site uses <a href="https://www.goatcounter.com/" target="_blank" rel="noopener">GoatCounter</a> to count page views, and the footer shows the editor page's total. Each page load sends only the page path, the page title and the referring site. GoatCounter also receives the IP address and browser details that every request carries, and uses them to estimate unique visitors. No cookies are used, and no code, Wi-Fi passwords, serial output or MQTT topic names are sent.</li>
           <li><strong>Wi-Fi passwords:</strong> the password is part of the program, so it is stored as plain text in the browser and in <code>main.py</code> on the board. Delete it before using a shared computer or lending out a board; see "Shared computers and boards" below.</li>
-          <li><strong>Before pasting into Gemini:</strong> "Copy for Gemini" and the "convert to MicroPython" prompt hide common forms of Wi-Fi details, logins, tokens and Apps Script URLs, but may not catch them all. Copying the program yourself hides nothing, so delete passwords first.</li>
+          <li><strong>Before pasting into Gemini:</strong> the "explain" prompt, "Copy for Gemini" and the "convert to MicroPython" prompt hide common forms of Wi-Fi details, logins, tokens and Apps Script URLs, but may not catch them all. Copying the program yourself hides nothing, so delete passwords first.</li>
           <li><strong>Screenshots and projectors:</strong> the editor shows your password, so cover it before projecting or sharing your screen. A dedicated class Wi-Fi or phone hotspot is recommended.</li>
           <li><strong>Voice control:</strong> commands pass through a public MQTT broker with no encryption or access control, and anyone who knows the topic name can send them. It only suits low-risk experiments such as LEDs. Do not control sockets or door locks, and keep personal details out of the topic name.</li>
           <li><strong>Speech recognition:</strong> your browser and its speech service handle recognition, which usually needs the internet.</li>
@@ -532,6 +545,7 @@ mylib.hello("ESP32")</pre>
         <details><summary>Firmware installation keeps failing to connect</summary><p>The site reconnects on its own, up to 10 tries, and writes each try in the monitor. If all 10 fail, hold the IO0 (BOOT) button on the board and press "Install firmware" again. You can let go once writing starts. Some boards have an unreliable auto-reset circuit, and holding IO0 is the most reliable fix. When reporting a problem, please include the lines under "Connection log" in the monitor.</p></details>
         <details><summary>It says "This board is an ESP32-xx. Only ESP32, ESP32-S2, S3 and C3 are supported"</summary><p>This board's chip is not supported, so the included firmware cannot be used. Please use a board with one of those four chips.</p></details>
         <details><summary>The monitor shows a red "The program hit an error"</summary><p>Press "Copy for Gemini", paste the error and code into Gemini to fix it, then paste the new program back and upload it.</p></details>
+        <details><summary>I do not understand an example, or a program from Gemini</summary><p>Press "Gemini prompts" → "Explain the whole program" and paste it into Gemini, which explains it section by section with line numbers. If only a few lines are unclear, select them before opening the menu; see <a href="#gemini">Gemini prompts</a>.</p></details>
         <details><summary>It says Wi-Fi connection failed</summary><p>Check that the name and password are exactly right, including capitals, and that the network is 2.4GHz.</p></details>
         <details><summary>My phone cannot open the 192.168.x.x page</summary><p>Check that the phone and board are on the same Wi-Fi, and try turning off the phone's mobile data. School networks may block devices from reaching each other, so try a phone hotspot or the voice control page (MQTT).</p></details>
         <details><summary>No microphone permission appears, and voice does not work</summary><p>Check that you opened the HTTPS voice control page, not <code>http://192.168.x.x</code>. If you refused before, allow it in the browser's site settings.</p></details>

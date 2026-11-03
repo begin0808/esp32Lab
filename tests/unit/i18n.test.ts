@@ -63,9 +63,17 @@ describe("English examples", () => {
 
 describe("English text that reaches students and Gemini", () => {
   it("writes prompts in English", async () => {
-    const { geminiPrompt, arduinoConvertPrompt, fixErrorPrompt } = await loadInEnglish<typeof import("../../src/text")>("../../src/text");
+    const { geminiPrompt, arduinoConvertPrompt, fixErrorPrompt, explainPrompt } = await loadInEnglish<typeof import("../../src/text")>("../../src/text");
     const { CHIPS } = await import("../../src/chips");
-    for (const prompt of [geminiPrompt(CHIPS.esp32.promptLines), geminiPrompt(CHIPS.esp32c3.promptLines), arduinoConvertPrompt("void setup() {}"), fixErrorPrompt("print(x)", "NameError")]) {
+    const code = 'PASSWORD = "secret"\nprint(x)\n';
+    for (const prompt of [
+      geminiPrompt(CHIPS.esp32.promptLines),
+      geminiPrompt(CHIPS.esp32c3.promptLines),
+      arduinoConvertPrompt("void setup() {}"),
+      fixErrorPrompt("print(x)", "NameError"),
+      explainPrompt(code, CHIPS.esp32.promptLines),
+      explainPrompt(code, CHIPS.esp32.promptLines, { from: 2, to: 2 }),
+    ]) {
       expect(HAS_CJK.test(prompt), prompt).toBe(false);
     }
   });

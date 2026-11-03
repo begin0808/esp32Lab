@@ -113,7 +113,17 @@
             <select id="examples"></select>
           </label>
           <div class="tools">
-            <button id="copy-prompt" class="btn small">複製 Gemini 提示詞</button>
+            <button id="gemini-button" class="btn small menu-button" popovertarget="gemini-menu"><span id="gemini-label">Gemini 提示詞</span><span class="menu-arrow" aria-hidden="true">▾</span></button>
+            <div id="gemini-menu" class="menu-panel" popover aria-label="Gemini 提示詞">
+              <button id="copy-prompt" class="menu-item">
+                <strong>寫新程式</strong>
+                <span>複製提示詞，填入接線和想做的功能後貼給 Gemini</span>
+              </button>
+              <button id="copy-explain" class="menu-item">
+                <strong id="explain-title">解說整份程式</strong>
+                <span id="explain-note">先在編輯器選取幾行，就只解說那幾行</span>
+              </button>
+            </div>
             <button id="open-file" class="btn small">開啟檔案</button>
             <button id="save-file" class="btn small">下載 main.py</button>
             <button id="board-files" class="btn small" disabled title="連接開發板後，可以查看、下載、上傳和刪除板子上的檔案">板上檔案</button>

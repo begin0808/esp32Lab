@@ -16,6 +16,8 @@ import { setupStats } from "./stats";
 import { setupStylePicker } from "./theme";
 import {
   arduinoConvertPrompt,
+  describeLines,
+  explainPrompt,
   findDeviceIp,
   fillExample,
   findLastTraceback,
@@ -23,6 +25,7 @@ import {
   geminiPrompt,
   looksLikeArduino,
   randomChannel,
+  selectedLineRange,
   stripTerminalCodes,
 } from "./text";
 
@@ -130,7 +133,13 @@ const ui = {
   progress: el<HTMLProgressElement>("progress"),
   examples: el<HTMLSelectElement>("examples"),
   chip: el<HTMLSelectElement>("chip"),
+  geminiButton: el<HTMLButtonElement>("gemini-button"),
+  geminiLabel: el("gemini-label"),
+  geminiMenu: el("gemini-menu"),
   copyPrompt: el<HTMLButtonElement>("copy-prompt"),
+  copyExplain: el<HTMLButtonElement>("copy-explain"),
+  explainTitle: el("explain-title"),
+  explainNote: el("explain-note"),
   openFile: el<HTMLButtonElement>("open-file"),
   saveFile: el<HTMLButtonElement>("save-file"),
   boardFiles: el<HTMLButtonElement>("board-files"),
@@ -838,7 +847,7 @@ async function install(): Promise<void> {
   }
 }
 
-async function copyText(text: string, button: HTMLButtonElement): Promise<void> {
+async function copyText(text: string, button: HTMLElement): Promise<void> {
   const original = button.textContent;
   try {
     await navigator.clipboard.writeText(text);
@@ -1032,7 +1041,39 @@ ui.chip.append(...Object.values(CHIPS).map((chip) => new Option(chip.label, chip
 ui.chip.value = readChip();
 ui.chip.addEventListener("change", () => setChip(ui.chip.value as ChipId));
 
-ui.copyPrompt.addEventListener("click", () => void copyText(geminiPrompt(selectedChip().promptLines), ui.copyPrompt));
+function selectedRange() {
+  const { from, to } = editor.state.selection.main;
+  return selectedLineRange(getCode(), from, to);
+}
+
+// The menu opens just below its button, and says whether it will explain a selection or the whole program.
+ui.geminiMenu.addEventListener("beforetoggle", (event) => {
+  if ((event as ToggleEvent).newState !== "open") return;
+  const button = ui.geminiButton.getBoundingClientRect();
+  const width = Math.min(320, window.innerWidth - 32);
+  ui.geminiMenu.style.top = `${button.bottom + 6}px`;
+  ui.geminiMenu.style.left = `${Math.max(16, Math.min(button.left, window.innerWidth - width - 16))}px`;
+  const range = selectedRange();
+  ui.explainTitle.textContent = range ? t("解說選取的程式（{lines}）", { lines: describeLines(range) }) : t("解說整份程式");
+  ui.explainNote.textContent = range ? t("整份程式也會附上，讓 Gemini 了解前後文") : t("先在編輯器選取幾行，就只解說那幾行");
+});
+ui.geminiMenu.addEventListener("toggle", (event) => {
+  if ((event as ToggleEvent).newState === "open") ui.copyPrompt.focus();
+});
+ui.geminiMenu.addEventListener("keydown", (event) => {
+  if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+  event.preventDefault();
+  (document.activeElement === ui.copyPrompt ? ui.copyExplain : ui.copyPrompt).focus();
+});
+
+function copyFromMenu(text: string): void {
+  ui.geminiMenu.hidePopover();
+  ui.geminiButton.focus();
+  void copyText(text, ui.geminiLabel);
+}
+
+ui.copyPrompt.addEventListener("click", () => copyFromMenu(geminiPrompt(selectedChip().promptLines)));
+ui.copyExplain.addEventListener("click", () => copyFromMenu(explainPrompt(getCode(), selectedChip().promptLines, selectedRange())));
 ui.copyConvert.addEventListener("click", () => void copyText(arduinoConvertPrompt(getCode()), ui.copyConvert));
 ui.copyIp.addEventListener("click", () => void copyText(ui.ipLink.href, ui.copyIp));
 ui.copyError.addEventListener("click", () => {

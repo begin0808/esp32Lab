@@ -12,7 +12,7 @@ The site shows English or Traditional Chinese depending on your browser. You can
 
 1. Connect the board with a USB cable, open the site and press "Connect board".
 2. On first use, press "Install firmware". After that you only need it again if you have flashed an Arduino program.
-3. Press "Copy Gemini prompt", fill in what you want the program to do, paste it into Gemini, and paste the generated program back into the editor.
+3. Press "Gemini prompts" → "Write a new program", fill in what you want the program to do, paste it into Gemini, and paste the generated program back into the editor.
 4. Press "Upload and run". The monitor shows the output, and any IP address the program prints becomes a link.
 
 If no serial port appears, check that the USB cable carries data, and install the driver for the board's USB chip (CP2102 or CH340).
@@ -24,6 +24,10 @@ Press "Stop", then type MicroPython commands in the box below the monitor to see
 ## Charts and CSV
 
 The monitor can switch to "Chart", which draws output such as `print("temp:", t)` (name and number) or lines of plain numbers as a line chart, showing the last 10 seconds, 30 seconds, 1 minute, 5 minutes or 10 minutes. The recorded data can be exported as CSV, which Excel opens with Chinese names intact. The chart is drawn with the browser's own Canvas and needs no extra package; the code is in `src/plot.ts` (reading and storing values) and `src/plotter.ts` (drawing).
+
+## Gemini prompts
+
+All prompts are in `src/text.ts`: `geminiPrompt` (write a new program), `explainPrompt` (explain the program), `fixErrorPrompt` (fix an error) and `arduinoConvertPrompt` (rewrite Arduino code). Each one hides passwords with `hideWifiSettings` first. The explain prompt numbers the lines; when lines are selected in the editor, `selectedLineRange` works out which, and the prompt asks Gemini to explain only those while still sending the whole program.
 
 ## Run (no save)
 

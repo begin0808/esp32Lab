@@ -53,6 +53,7 @@
       <nav class="toc" aria-label="本頁目錄">
         <a href="#start">開始使用</a>
         <a href="#run">執行（不存檔）</a>
+        <a href="#gemini">Gemini 提示詞</a>
         <a href="#languages">MicroPython 與 Arduino</a>
         <a href="#repl">REPL 即時指令</a>
         <a href="#plot">圖表與 CSV</a>
@@ -77,7 +78,7 @@
           <li><strong>安裝驅動程式：</strong>電腦找不到開發板時才需要；USB 直接接 S2、S3、C3 晶片的板子通常不用裝。板子上的 USB 晶片是 CP2102 就裝 <a href="https://www.silabs.com/software-and-tools/usb-to-uart-bridge-vcp-drivers?tab=downloads" target="_blank" rel="noopener">CP210x 驅動</a>，是 CH340 就裝 <a href="https://www.wch-ic.com/downloads/CH341SER_EXE.html" target="_blank" rel="noopener">CH340 驅動</a>。編輯器右上角的「設定與說明」也有這些連結，以及腳位圖、語音控制頁、語言、風格和字體設定。</li>
           <li><strong>連接開發板：</strong>先關閉 Arduino IDE 這類會佔用序列埠的程式，再按「連接開發板」，選擇跳出的序列埠。</li>
           <li><strong>安裝韌體：</strong>第一次使用，或燒錄過 Arduino 程式時才需要。按「安裝韌體」後，<strong>板子上原有的程式和檔案都會被清除</strong>，安裝期間不要拔 USB 線。USB 直接接晶片的板子，裝完要按一下 RST 鍵並重新連接。</li>
-          <li><strong>準備程式：</strong>選內建範例，或按「複製 Gemini 提示詞」，填入接線和功能後貼給 Gemini，再把產生的 MicroPython 程式貼回編輯器。</li>
+          <li><strong>準備程式：</strong>選內建範例，或按「Gemini 提示詞」→「寫新程式」，填入接線和功能後貼給 Gemini，再把產生的 MicroPython 程式貼回編輯器。</li>
           <li><strong>上傳並執行：</strong>按「上傳並執行」，程式會存成板子上的 <code>main.py</code>，之後通電就會自動執行。監控窗第一行會顯示程式大小和上傳花了幾秒，接著是程式的輸出和錯誤訊息。</li>
           <li><strong>只是試試看：</strong>按「執行（不存檔）」或 <kbd>F5</kbd>，程式會直接在板子的記憶體裡執行，不會存成 <code>main.py</code>，見<a href="#run">執行（不存檔）</a>。</li>
         </ol>
@@ -134,6 +135,18 @@ for i in range(1, 11):
     total = total + i</pre>
         <p>執行完在 REPL 輸入 <code>total</code>，會看到 <code>55</code>；輸入 <code>i</code> 會看到 <code>10</code>。找錯誤時，這比到處加 <code>print</code> 方便。用「上傳並執行」時板子會重新開機，所以要用「執行（不存檔）」才能這樣看。</p>
         <p class="tip">錯誤訊息裡的 <code>File "&lt;stdin&gt;", line 3</code> 指的是編輯器第 3 行，和 <code>main.py</code> 的行號一樣。「複製給 Gemini」照樣可以用。</p>
+      </section>
+
+      <section id="gemini">
+        <h2>Gemini 提示詞</h2>
+        <p>網站會依你選的晶片寫好提示詞，複製後貼到 Gemini 就好。編輯器上方的「Gemini 提示詞」選單有兩項：</p>
+        <ul>
+          <li><strong>寫新程式：</strong>請 Gemini 寫一份完整的 <code>main.py</code>。貼上後，把括號裡的接線和想做的功能改成你的，再送出。</li>
+          <li><strong>解說程式：</strong>看不懂範例或 Gemini 給的程式時使用。Gemini 會用簡單的中文說明程式在做什麼、要接哪些零件、執行後監控窗會看到什麼，再分段解說。每段都會標出行號，可以對照編輯器左邊的數字。</li>
+        </ul>
+        <p>只想問其中幾行，先在編輯器選取那幾行，再打開選單，第二項會變成「解說選取的程式（第 5–12 行）」。整份程式也會一起附上，讓 Gemini 了解前後文。沒有選取時，解說整份程式。</p>
+        <p>另外兩種提示詞會在需要時出現：程式出錯時，錯誤提示卡上的「複製給 Gemini」會附上錯誤訊息請 Gemini 修正；貼上 Arduino 程式時，提示列上的按鈕會請 Gemini 改寫成 MicroPython。</p>
+        <p class="tip">這些提示詞都會自動隱藏常見的 Wi-Fi 密碼和 Token 寫法，但不保證全部偵測得到，見<a href="#privacy">隱私與安全</a>。</p>
       </section>
 
       <section id="languages">
@@ -396,7 +409,7 @@ mylib.hello("ESP32")</pre>
         <ul>
           <li><strong>寫清楚型號和腳位：</strong>例如「MAX7219 8×8 點矩陣，DIN 接 GPIO 23，CLK 接 GPIO 18，CS 接 GPIO 5」。</li>
           <li><strong>缺少模組時：</strong>如果執行時出現 <code>ImportError</code>，代表程式用了韌體沒有的模組。可以請 Gemini「把這個元件的控制程式和主程式寫在同一份 main.py」，或用<a href="#files">板上檔案</a>把那個模組的檔案上傳到板子。</li>
-          <li><strong>指定語言：</strong>說明要 MicroPython v1.29.0，不要 Arduino C++。網站的「複製 Gemini 提示詞」已經包含這些要求。</li>
+          <li><strong>指定語言：</strong>說明要 MicroPython v1.29.0，不要 Arduino C++。網站的「Gemini 提示詞」→「寫新程式」已經包含這些要求。</li>
         </ul>
       </section>
 
@@ -512,7 +525,7 @@ mylib.hello("ESP32")</pre>
           <li><strong>程式碼：</strong>網站不會把程式碼上傳到伺服器。程式碼只存在這個瀏覽器和你的開發板上。GitHub 只提供網站檔案，可能記錄 IP 這類連線資訊，但收不到你的程式碼。</li>
           <li><strong>瀏覽統計：</strong>網站用 <a href="https://www.goatcounter.com/" target="_blank" rel="noopener">GoatCounter</a> 統計頁面瀏覽人次，頁尾顯示的是編輯器頁面的累計人次。每次開啟頁面時，只會送出頁面路徑、頁面標題和來源網站，GoatCounter 也會收到瀏覽器必然帶上的 IP 和瀏覽器資訊，用來估算不重複的訪客。統計不使用 Cookie，也不會送出程式碼、Wi-Fi 密碼、序列埠內容或 MQTT 主題名稱。</li>
           <li><strong>Wi-Fi 密碼：</strong>密碼寫在程式裡，所以會以明文存在瀏覽器和開發板的 <code>main.py</code>。使用共用電腦或借出開發板前，請先刪除密碼，做法見下方「共用電腦與開發板」。</li>
-          <li><strong>貼給 Gemini 前：</strong>「複製給 Gemini」和「改寫成 MicroPython」會自動隱藏常見的 Wi-Fi、帳號密碼、Token 和 Apps Script 網址寫法，但不保證全部偵測得到。自己全選複製程式時不會隱藏，請先刪除密碼。</li>
+          <li><strong>貼給 Gemini 前：</strong>「解說程式」、「複製給 Gemini」和「改寫成 MicroPython」會自動隱藏常見的 Wi-Fi、帳號密碼、Token 和 Apps Script 網址寫法，但不保證全部偵測得到。自己全選複製程式時不會隱藏，請先刪除密碼。</li>
           <li><strong>截圖和投影：</strong>編輯器會顯示密碼，投影或分享畫面前請先遮住。上課建議使用專用 Wi-Fi 或手機熱點。</li>
           <li><strong>語音控制：</strong>指令會經過公用 MQTT 伺服器，沒有加密保護和權限控管，知道主題名稱的人都能控制。只適合 LED 這類低風險實驗，不要控制插座或門鎖，也不要在主題名稱填入個人資料。</li>
           <li><strong>語音辨識：</strong>語音由瀏覽器和其語音服務辨識，通常需要連網。</li>
@@ -542,6 +555,7 @@ mylib.hello("ESP32")</pre>
         <details><summary>安裝韌體時一直連不上</summary><p>網站會自動重新連接，最多試 10 次，每一次都會寫在監控窗。10 次都失敗時，請按住板子上的 IO0（BOOT）鍵再按「安裝韌體」，開始寫入後就可以放開。有些板子的自動重置電路不太穩，按住 IO0 是最可靠的做法。回報問題時，請一起提供監控窗裡「連線紀錄」下面的內容。</p></details>
         <details><summary>顯示「這塊板子是 ESP32-xx，目前只支援 ESP32、ESP32-S2、S3 和 C3」</summary><p>這塊板子的晶片不在支援範圍內，內建韌體不能用。請改用這四種晶片的開發板。</p></details>
         <details><summary>監控窗出現紅色的「程式發生錯誤」</summary><p>按「複製給 Gemini」，把錯誤訊息和程式碼一起貼給 Gemini 修正，再把新程式貼回來上傳。</p></details>
+        <details><summary>看不懂範例或 Gemini 給的程式</summary><p>按「Gemini 提示詞」→「解說整份程式」，貼給 Gemini，它會分段解說並標出行號。只看不懂其中幾行，就先選取那幾行再打開選單，見 <a href="#gemini">Gemini 提示詞</a>。</p></details>
         <details><summary>顯示 Wi-Fi 連線失敗</summary><p>確認名稱和密碼完全正確（包含大小寫），並確認是 2.4GHz 網路。</p></details>
         <details><summary>手機打不開 192.168.x.x 的網頁</summary><p>確認手機和開發板連同一個 Wi-Fi，也關閉手機的行動數據試試。校園網路可能禁止裝置互連，可以改用手機熱點，或語音控制頁（MQTT）。</p></details>
         <details><summary>沒有跳出麥克風權限，語音不能用</summary><p>確認開啟的是 HTTPS 的語音控制頁，不是 <code>http://192.168.x.x</code>。如果之前拒絕過，請到瀏覽器的網站設定改成允許。</p></details>
