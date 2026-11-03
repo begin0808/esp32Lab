@@ -1057,8 +1057,21 @@ ui.geminiMenu.addEventListener("beforetoggle", (event) => {
   ui.explainTitle.textContent = range ? t("解說選取的程式（{lines}）", { lines: describeLines(range) }) : t("解說整份程式");
   ui.explainNote.textContent = range ? t("整份程式也會附上，讓 Gemini 了解前後文") : t("先在編輯器選取幾行，就只解說那幾行");
 });
+// Only a keyboard needs the focus moved into the menu; after a click it would look like a choice already made.
+let geminiByPointer = false;
+ui.geminiButton.addEventListener("pointerdown", () => {
+  geminiByPointer = true;
+});
+ui.geminiButton.addEventListener("keydown", (event) => {
+  geminiByPointer = false;
+  if (event.key === "ArrowDown" && ui.geminiMenu.matches(":popover-open")) {
+    event.preventDefault();
+    ui.copyPrompt.focus();
+  }
+});
 ui.geminiMenu.addEventListener("toggle", (event) => {
-  if ((event as ToggleEvent).newState === "open") ui.copyPrompt.focus();
+  if ((event as ToggleEvent).newState === "open" && !geminiByPointer) ui.copyPrompt.focus();
+  geminiByPointer = false;
 });
 ui.geminiMenu.addEventListener("keydown", (event) => {
   if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;

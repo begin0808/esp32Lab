@@ -220,8 +220,22 @@ input:focus-visible,
   white-space: nowrap;
 }
 
+/* Drawn like a select's arrow, big enough to say there is a menu here. */
 .menu-arrow {
-  font-size: 0.9em;
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin-right: -2px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 0.15s;
+}
+
+.menu-button:has(+ .menu-panel:popover-open) .menu-arrow {
+  transform: rotate(180deg);
 }
 
 /* Opened just below its button from main.ts; a closed popover stays hidden by the browser. */

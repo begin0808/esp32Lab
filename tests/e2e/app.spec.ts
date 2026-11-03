@@ -113,6 +113,12 @@ test.describe("Gemini prompt menu", () => {
     expect(box.y).toBeGreaterThanOrEqual(button.y + button.height);
     expect(box.y).toBeLessThan(button.y + button.height + 20);
     await expect(page.locator("#explain-title")).toHaveText("解說整份程式");
+    // A click leaves no focus ring on the first item, which would look like a choice already made.
+    await expect(page.locator("#copy-prompt")).not.toBeFocused();
+    // The arrow is big enough to notice, and turns over while the menu is open.
+    const arrow = page.locator("#gemini-button .menu-arrow");
+    expect((await arrow.boundingBox())!.width).toBeGreaterThanOrEqual(12);
+    expect(await arrow.evaluate((node) => getComputedStyle(node).transform)).not.toBe("none");
 
     await page.locator("#copy-explain").click();
     await expect(menu).toBeHidden();
