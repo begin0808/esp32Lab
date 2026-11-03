@@ -15,6 +15,8 @@ async function loadInEnglish<T>(path: string): Promise<T> {
 /** What the board actually runs: comments, page markup and message wording are allowed to differ. */
 function programOf(code: string): string {
   return code
+    // Git on Windows may check files out with CRLF line ends.
+    .replace(/\r\n/g, "\n")
     .replace(/"""[\s\S]*?"""/g, '""')
     .replace(/"[^"\n]*"/g, '""')
     .replace(/#.*$/gm, "")

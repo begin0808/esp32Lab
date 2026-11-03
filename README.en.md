@@ -56,6 +56,8 @@ npm run test:e2e   # browser tests, using a simulated board
 npm run build      # outputs to dist/
 ```
 
+Uploads use raw REPL's raw-paste mode, as mpremote does, so the board sets the pace. Files go in 2 KB pieces as base64 into a temporary file, which replaces `main.py` only after its SHA-256 matches. Firmware without raw-paste mode falls back to plain raw REPL. The code is in [src/repl.ts](src/repl.ts).
+
 ## Deployment
 
 Pushing to the `main` branch on GitHub deploys the site through `.github/workflows/deploy.yml`. The first time, go to Settings → Pages in the repository and set Source to GitHub Actions.

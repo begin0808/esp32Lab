@@ -56,6 +56,8 @@ npm run test:e2e   # 瀏覽器測試（使用模擬開發板）
 npm run build      # 輸出到 dist/
 ```
 
+上傳程式時和 mpremote 一樣使用 raw REPL 的 raw-paste 模式，由開發板控制傳送速度；檔案每 2 KB 一段、以 base64 傳送，先寫成暫存檔，用 SHA-256 驗證後才取代 `main.py`。韌體不支援 raw-paste 模式時，會自動改用一般 raw REPL。程式在 [src/repl.ts](src/repl.ts)。
+
 ## 部署
 
 推送到 GitHub 的 `main` 分支後，`.github/workflows/deploy.yml` 會自動部署。第一次要到儲存庫的 Settings → Pages，把 Source 設為 GitHub Actions。

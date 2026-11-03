@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import "../fake-board.js";
-import { byteChecksum, pythonBytesLiteral, RawRepl, ReplExecError, ReplTimeoutError, type ByteIO } from "../../src/repl";
+import { RawRepl, ReplExecError, ReplTimeoutError, sha256Hex, toBase64, type ByteIO } from "../../src/repl";
 
 declare const FakeBoard: any;
 
@@ -19,16 +19,17 @@ function connect(options?: object) {
   return { board, repl };
 }
 
-describe("pythonBytesLiteral", () => {
-  it("escapes quotes, backslashes and non-ASCII bytes", () => {
-    const literal = pythonBytesLiteral(new TextEncoder().encode("a'\\\n溫"));
-    expect(literal).toBe("b'a\\x27\\x5c\\x0a\\xe6\\xba\\xab'");
+describe("toBase64", () => {
+  it("encodes any bytes, including UTF-8 text", () => {
+    expect(toBase64(new TextEncoder().encode("溫"))).toBe("5rqr");
+    expect(toBase64(Uint8Array.of(0, 255, 39, 92))).toBe("AP8nXA==");
+    expect(toBase64(new Uint8Array(0))).toBe("");
   });
 });
 
-describe("byteChecksum", () => {
-  it("wraps at 16 bits", () => {
-    expect(byteChecksum(new Uint8Array(300).fill(255))).toBe((300 * 255) & 0xffff);
+describe("sha256Hex", () => {
+  it("matches the known digest of a short text", async () => {
+    expect(await sha256Hex(new TextEncoder().encode("abc"))).toBe("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
   });
 });
 
@@ -54,6 +55,39 @@ describe("RawRepl", () => {
     expect(seen.at(-1)).toBe(1);
     expect(seen.length).toBeGreaterThan(1);
   });
+
+  it("sends commands in raw-paste mode without outrunning the board", async () => {
+    const code = "# 溫濕度\n".repeat(700);
+    await session.repl.enter();
+    await session.repl.writeFile("/main.py", new TextEncoder().encode(code));
+    expect(session.board.files["/main.py"]).toBe(code);
+    expect(session.repl.usedRawPaste).toBe(true);
+    expect(session.board.overflow).toBe(false);
+  });
+
+  it("needs only a few round trips for a large program", async () => {
+    // About the size of the largest example, with Chinese comments.
+    const data = new TextEncoder().encode("print('LED')  # 讀目前的狀態，再改成相反\n".repeat(110));
+    expect(data.length).toBeGreaterThan(5000);
+    await session.repl.enter();
+    await session.repl.writeFile("/main.py", data);
+    // Open, 3 pieces, close, verify and rename. With 256-byte pieces it took 26.
+    expect(session.board.execs).toBe(7);
+  });
+
+  for (const rawPaste of ["off", "unknown"]) {
+    it(`falls back to plain raw REPL when raw-paste mode is ${rawPaste}`, async () => {
+      const { board, repl } = connect({ rawPaste });
+      const code = "# 溫濕度 it's \\ fine\n".repeat(200);
+      await repl.enter();
+      await repl.writeFile("/main.py", new TextEncoder().encode(code));
+      expect(board.files["/main.py"]).toBe(code);
+      expect(repl.usedRawPaste).toBe(false);
+      // Asked once, then remembered for the rest of the session.
+      const asked = board.received.filter((byte: number, index: number, all: number[]) => byte === 0x05 && all[index + 1] === 0x41).length;
+      expect(asked).toBe(1);
+    });
+  }
 
   it("uploads an empty file", async () => {
     await session.repl.enter();

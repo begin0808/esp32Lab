@@ -105,6 +105,7 @@ const COMPLETION_TIMEOUT = 400;
 const REPL_MAX_ROWS = 8;
 // Enough to see how the chip started after the last few resets.
 const CONNECT_LOG_LINES = 60;
+const RESET_WAIT_MS = 1500;
 
 function el<T extends HTMLElement>(id: string): T {
   return document.getElementById(id) as T;
@@ -606,15 +607,20 @@ async function disconnect(): Promise<void> {
   setBusy(false);
 }
 
-async function restartBoard(): Promise<void> {
+/** `note` is shown first in the emptied monitor, so it stays above the program's output. */
+async function restartBoard(note?: string): Promise<void> {
   clearMonitor();
+  if (note) appendMonitor(`${t("[系統]")} ${note}
+`, "system");
   // A line left unfinished before the reset, such as the prompt, must not swallow the program's first value.
   dataLines.reset();
   atPrompt = false;
   const before = receivedChars;
   await link.hardReset();
-  // Boards without an auto-reset circuit print nothing, so fall back to a soft reset.
-  await new Promise((resolve) => setTimeout(resolve, 1500));
+  // The chip reports its start within a few hundred milliseconds, so the buttons come back as soon as it does.
+  // Boards without an auto-reset circuit print nothing, so after a while fall back to a soft reset.
+  const deadline = Date.now() + RESET_WAIT_MS;
+  while (receivedChars === before && Date.now() < deadline) await new Promise((resolve) => setTimeout(resolve, 50));
   if (receivedChars === before) await link.write(Uint8Array.of(0x03, 0x04));
 }
 
@@ -625,14 +631,17 @@ async function upload(): Promise<void> {
   setBusy(true);
   setStatus(t("正在上傳程式"), "busy");
   showProgress(t("正在上傳程式"), 0);
+  const started = performance.now();
+  const bytes = new TextEncoder().encode(code);
   try {
     await withRepl((repl) =>
-      repl.writeFile("/main.py", new TextEncoder().encode(code), (fraction) => {
+      repl.writeFile("/main.py", bytes, (fraction) => {
         showProgress(t("正在上傳程式"), fraction);
       }),
     );
+    const seconds = ((performance.now() - started) / 1000).toFixed(1);
     setStatus(t("程式執行中"), "ready");
-    await restartBoard();
+    await restartBoard(t("上傳完成：main.py，{size} KB，用了 {seconds} 秒", { size: Math.max(0.1, bytes.length / 1024).toFixed(1), seconds }));
   } catch (error) {
     setStatus(t("上傳失敗"), "error");
     systemMessage(t("上傳失敗：{message}", { message: failureMessage(error) }));

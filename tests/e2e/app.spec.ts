@@ -39,6 +39,27 @@ test("uploads code and shows the device IP", async ({ page }) => {
   expect(stored).toBe('print("IP 測試")\n');
   expect(await page.evaluate(() => (globalThis as any).board.resets)).toBe(1);
   await expect(page.locator("#status")).toContainText("程式執行中");
+  // The result stays above the program's output, and the paced mode never sent more than the board allowed.
+  await expect(page.locator("#monitor .system").first()).toHaveText(/^\[系統\] 上傳完成：main\.py，0\.1 KB，用了 \d+\.\d 秒\n?$/);
+  expect(await page.evaluate(() => (globalThis as any).board.overflow)).toBe(false);
+});
+
+test("uploads a large program quickly and gives the buttons back once the board restarts", async ({ page }) => {
+  await mockSerial(page);
+  await page.goto("/");
+  await page.locator("#connect").click();
+  await expect(page.locator("#upload")).toBeEnabled();
+  const code = "print('LED')  # 讀目前的狀態，再改成相反\n".repeat(110);
+  await page.locator("#editor .cm-content").fill(code);
+  const execsBefore = await page.evaluate(() => (globalThis as any).board.execs);
+  const started = Date.now();
+  await page.locator("#upload").click();
+  await expect(page.locator("#monitor .system").first()).toContainText("上傳完成：main.py，5.");
+  await expect(page.locator("#upload")).toBeEnabled();
+  // The board prints at once after a reset, so there is no fixed 1.5-second wait any more.
+  expect(Date.now() - started).toBeLessThan(1500);
+  expect(await page.evaluate(() => (globalThis as any).board.files["/main.py"])).toBe(code);
+  expect((await page.evaluate(() => (globalThis as any).board.execs)) - execsBefore).toBe(7);
 });
 
 test("asks to install firmware when MicroPython is missing", async ({ page }) => {

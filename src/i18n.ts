@@ -238,6 +238,8 @@ const en = {
   有填密碼時也要填帳號: "A password also needs a username",
   "請輸入 MQTT 密碼後按「連線」": 'Enter the MQTT password and press "Connect"',
   版本: "Version",
+  開發板傳回非預期的資料: "The board sent unexpected data",
+  "上傳完成：main.py，{size} KB，用了 {seconds} 秒": "Uploaded main.py: {size} KB in {seconds} s",
   監控窗顯示方式: "Monitor view",
   文字: "Text",
   圖表: "Chart",

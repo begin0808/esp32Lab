@@ -1,5 +1,6 @@
 import { chipFromName, type Chip } from "./chips";
 import { t } from "./i18n";
+import { sha256Hex } from "./repl";
 
 const MIN_FLASH_MB = 4;
 const FLASH_BAUD = 460800;
@@ -54,9 +55,7 @@ export async function retryConnect<T>(attempt: (count: number) => Promise<T>, tr
 }
 
 export async function verifySha256(data: Uint8Array, expected: string): Promise<boolean> {
-  const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", data as BufferSource));
-  const hex = Array.from(digest, (byte) => byte.toString(16).padStart(2, "0")).join("");
-  return hex === expected;
+  return (await sha256Hex(data)) === expected;
 }
 
 async function loadFirmware(chip: Chip): Promise<Uint8Array> {
