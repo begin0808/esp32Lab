@@ -32,7 +32,8 @@
   --code-text: #14211d;
   --code-gutter: #f1f4f2;
   --code-gutter-text: #4d5b56;
-  --code-active-line: #eef3ff;
+  /* Translucent so the selection drawn beneath the text still shows on the cursor's line. */
+  --code-active-line: rgba(37, 99, 235, 0.08);
 }
 
 /* A. Cutting mat: the green grid on every maker bench, with yellow tape marking what matters. */

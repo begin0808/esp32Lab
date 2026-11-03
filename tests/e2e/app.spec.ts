@@ -139,6 +139,20 @@ test("changes the code font size and remembers it", async ({ page }) => {
   await expect(page.locator("#font-up")).toBeDisabled();
 });
 
+test("shows the selection on the cursor's line too", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#editor .cm-content").fill("a = 1\nb = 2\n");
+  await page.locator("#editor .cm-content").press("ControlOrMeta+a");
+  await expect(page.locator("#editor .cm-selectionBackground").first()).toBeVisible();
+
+  // The selection is drawn beneath the text, so an opaque line highlight would hide it.
+  const alpha = await page.locator("#editor .cm-activeLine").first().evaluate((line) => {
+    const parts = getComputedStyle(line).backgroundColor.match(/[\d.]+/g) ?? [];
+    return parts.length === 4 ? Number(parts[3]) : 1;
+  });
+  expect(alpha).toBeLessThan(0.5);
+});
+
 test("keeps the editor's menus and buttons on one row in a narrower editor", async ({ page }) => {
   // About 700 px of editor, as on a 1200-pixel-wide window or a wider one with the divider moved left.
   await page.setViewportSize({ width: 1200, height: 768 });
