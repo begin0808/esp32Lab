@@ -55,6 +55,7 @@
         <a href="#languages">MicroPython 與 Arduino</a>
         <a href="#repl">REPL 即時指令</a>
         <a href="#plot">圖表與 CSV</a>
+        <a href="#files">板上檔案</a>
         <a href="#boards">支援的開發板</a>
         <a href="#parts">電子元件與感測器</a>
         <a href="#wiring">接線注意事項</a>
@@ -235,6 +236,41 @@ while True:
         <p class="tip">網站最多保留最近 10 萬筆資料，超過時會丟掉最舊的資料，圖表上方會提示。資料只存在這個分頁，<strong>重新整理網頁就會清除</strong>，長時間記錄請記得匯出。要長期保存，可以參考<a href="#google-sheets">把感測器資料存到 Google 試算表</a>。</p>
       </section>
 
+      <section id="files">
+        <h2>管理板子上的檔案</h2>
+        <p>連接開發板後，按編輯器上方的「板上檔案」，就能看到板子裡有哪些檔案，也可以下載、上傳和刪除，不用另外安裝 Thonny 或 mpremote。</p>
+        <p class="tip"><strong>打開「板上檔案」時，板子上正在執行的程式會停止。</strong>關掉視窗後程式還是停著，按監控窗的「重新啟動」就會再執行 <code>main.py</code>。</p>
+        <h3>可以做什麼</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">操作</th><th scope="col">功能</th></tr></thead>
+            <tbody>
+              <tr><td>點資料夾名稱</td><td>進入資料夾，例如 <code>lib</code>。上方的路徑可以點回上一層</td></tr>
+              <tr><td>開到編輯器</td><td>把 100 KB 以內的文字檔（例如 .py、.txt、.csv、.json）放進編輯器，會先詢問</td></tr>
+              <tr><td>下載</td><td>把檔案存到電腦</td></tr>
+              <tr><td>刪除</td><td>刪除前會先詢問。資料夾要先清空才能刪</td></tr>
+              <tr><td>從電腦上傳檔案…</td><td>上傳到目前所在的資料夾，可以一次選好幾個，也可以直接把檔案拖進視窗。同名檔案會先問要不要覆蓋</td></tr>
+              <tr><td>把編輯器內容存成…</td><td>輸入檔名，把編輯器裡的程式存成那個檔案，例如 <code>mylib.py</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>視窗右上角會顯示板子還剩多少空間。上傳和下載都會用 SHA-256 檢查檔案有沒有傳錯；上傳失敗時，板子上原來的檔案不會被改到。</p>
+        <h3>自己寫一個函式庫</h3>
+        <ol>
+          <li>在編輯器寫好函式：
+            <pre class="code-block" tabindex="0">def hello(name):
+    print("哈囉,", name)</pre>
+          </li>
+          <li>按「板上檔案」，再按「把編輯器內容存成…」，輸入 <code>mylib.py</code>。</li>
+          <li>關掉視窗，在編輯器寫主程式，按「上傳並執行」：
+            <pre class="code-block" tabindex="0">import mylib
+mylib.hello("ESP32")</pre>
+          </li>
+        </ol>
+        <p>網路上找到的元件函式庫，例如 OLED 的 <code>ssd1306.py</code>，也可以用「從電腦上傳檔案…」放到板子的根目錄或 <code>lib</code> 資料夾，再用 <code>import</code> 匯入。</p>
+        <p class="tip">把 <code>lib/ssd1306.py</code> 這類檔案開到編輯器修改後，<strong>要用「把編輯器內容存成…」存回去</strong>。直接按「上傳並執行」會把它存成 <code>main.py</code>，取代原本的主程式。</p>
+      </section>
+
       <section id="boards">
         <h2>支援的開發板</h2>
         <p>網站內建 MicroPython v1.29.0 的 <strong>ESP32、ESP32-S2、S3 和 C3</strong> 韌體，安裝時會自動偵測晶片並選擇對應版本。ESP32-S、ESP-WROOM-32 模組裡的晶片是 ESP32，和 ESP32-S2、S3 是不同的晶片。快閃記憶體至少要 4 MB。其他晶片或容量不足時，網站會在清除資料前停止安裝。</p>
@@ -334,7 +370,7 @@ while True:
         <h3>請 Gemini 寫程式的訣竅</h3>
         <ul>
           <li><strong>寫清楚型號和腳位：</strong>例如「MAX7219 8×8 點矩陣，DIN 接 GPIO 23，CLK 接 GPIO 18，CS 接 GPIO 5」。</li>
-          <li><strong>只用一個檔案：</strong>這個網站只上傳 <code>main.py</code>。如果執行時出現 <code>ImportError</code>，代表程式用了韌體沒有的模組，請 Gemini「把這個元件的控制程式和主程式寫在同一份 main.py」。</li>
+          <li><strong>缺少模組時：</strong>如果執行時出現 <code>ImportError</code>，代表程式用了韌體沒有的模組。可以請 Gemini「把這個元件的控制程式和主程式寫在同一份 main.py」，或用<a href="#files">板上檔案</a>把那個模組的檔案上傳到板子。</li>
           <li><strong>指定語言：</strong>說明要 MicroPython v1.29.0，不要 Arduino C++。網站的「複製 Gemini 提示詞」已經包含這些要求。</li>
         </ul>
       </section>
@@ -464,7 +500,7 @@ while True:
         <ol>
           <li><strong>想留下程式：</strong>先刪除程式裡的 Wi-Fi 名稱、密碼、MQTT 帳號密碼、Bot Token 和 Apps Script 網址，再按「下載 main.py」。下載的檔案不會自動隱藏這些資料。</li>
           <li><strong>清除瀏覽器：</strong>刪除編輯器裡的全部內容。編輯器會自動儲存，所以舊內容會一起被取代。</li>
-          <li><strong>清除開發板：</strong>上傳不含密碼的程式，會覆蓋板子上的 <code>main.py</code>；要清除板子上所有檔案，請重新安裝韌體。</li>
+          <li><strong>清除開發板：</strong>上傳不含密碼的程式，會覆蓋板子上的 <code>main.py</code>；其他含有密碼的檔案可以在<a href="#files">板上檔案</a>刪除。要清除板子上所有檔案，請重新安裝韌體。</li>
         </ol>
         <p>電腦教室的還原卡通常會在重新開機後清除瀏覽器資料，但重新開機前，下一位使用者還是看得到。開發板不受還原卡影響，資料會一直留在板子上。</p>
       </section>

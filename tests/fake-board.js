@@ -4,6 +4,11 @@
   const OK = "OK";
   const END = "\x04\x04>";
 
+  /** The path the site puts on a line of its own as P="...". */
+  function pathIn(code) {
+    return JSON.parse(code.match(/^P=(".*")$/m)[1]);
+  }
+
   class FakeBoard {
     constructor({
       hasMicroPython = true,
@@ -20,7 +25,13 @@
       this.machine = machine;
       this.usb = usb;
       this.softResets = 0;
+      // Text files by path. A file written with bytes that are not UTF-8 also keeps its bytes in `bytes`.
       this.files = {};
+      this.bytes = {};
+      /** Folders other than the root. */
+      this.dirs = new Set();
+      /** Bytes left on the flash, or null for plenty. */
+      this.freeBytes = null;
       this.mode = "friendly";
       this.command = [];
       this.line = "";
@@ -181,6 +192,31 @@
       } else if (code.startsWith("w(a(b'")) {
         const binary = atob(code.slice(6, -3));
         for (let i = 0; i < binary.length; i++) this.tempData.push(binary.charCodeAt(i));
+        if (this.freeBytes !== null && this.tempData.length > this.freeBytes) {
+          this.fail("OSError: [Errno 28] ENOSPC");
+          return;
+        }
+        this.emit(END);
+      } else if (code.includes("ilistdir")) {
+        this.list(pathIn(code));
+      } else if (code.includes("b2a_base64")) {
+        this.dump(pathIn(code));
+      } else if (code.includes("os.rmdir")) {
+        const path = pathIn(code);
+        const full = Object.keys(this.files).some((file) => file.startsWith(`${path}/`)) || [...this.dirs].some((dir) => dir.startsWith(`${path}/`));
+        if (!full) this.dirs.delete(path);
+        this.emit(`${full ? "full" : "ok"}\r\n` + END);
+      } else if (code.includes("os.remove(") && !code.includes("os.rename") && !code.includes(".upload.tmp")) {
+        const path = JSON.parse(code.match(/os\.remove\(("[^"]*")\)/)[1]);
+        if (!(path in this.files)) {
+          this.fail("OSError: [Errno 2] ENOENT");
+          return;
+        }
+        delete this.files[path];
+        delete this.bytes[path];
+        this.emit(END);
+      } else if (code.includes(".upload.tmp") && code.includes("os.remove(") && !code.includes("os.rename")) {
+        this.tempData = null;
         this.emit(END);
       } else if (code.includes("sha256")) {
         const data = new Uint8Array(this.tempData);
@@ -189,14 +225,64 @@
           this.emit(`${data.length}|${hex}\r\n` + END);
         });
       } else if (code.includes("os.rename")) {
-        const path = code.match(/os\.remove\("([^"]+)"\)/)[1];
-        this.files[path] = new TextDecoder().decode(new Uint8Array(this.tempData));
+        const path = JSON.parse(code.match(/os\.remove\(("[^"]*")\)/)[1]);
+        const data = new Uint8Array(this.tempData);
+        this.tempData = null;
+        try {
+          this.files[path] = new TextDecoder("utf-8", { fatal: true }).decode(data);
+          delete this.bytes[path];
+        } catch {
+          this.files[path] = new TextDecoder().decode(data);
+          this.bytes[path] = data;
+        }
         this.emit(END);
       } else if (code.includes("__fail__")) {
         this.emit("\x04Traceback (most recent call last):\r\nOSError: 28\r\n\x04>");
       } else {
         this.emit(END);
       }
+    }
+
+    /** Ends a command with a Python exception, as raw REPL reports one. */
+    fail(message) {
+      this.emit(`\x04Traceback (most recent call last):\r\n  File "<stdin>", line 1, in <module>\r\n${message}\r\n\x04>`);
+    }
+
+    fileBytes(path) {
+      return this.bytes[path] ?? new TextEncoder().encode(this.files[path]);
+    }
+
+    list(dir) {
+      if (dir !== "/" && !this.dirs.has(dir)) {
+        this.fail("OSError: [Errno 2] ENOENT");
+        return;
+      }
+      const prefix = dir === "/" ? "/" : `${dir}/`;
+      const inside = (path) => path.startsWith(prefix) && !path.slice(prefix.length).includes("/");
+      let output = "";
+      for (const path of this.dirs) if (inside(path)) output += `d|0|${path.slice(prefix.length)}\r\n`;
+      for (const path of Object.keys(this.files)) if (inside(path)) output += `f|${this.fileBytes(path).length}|${path.slice(prefix.length)}\r\n`;
+      if (this.tempData && dir === "/") output += `f|${this.tempData.length}|.upload.tmp\r\n`;
+      output += `#|${this.freeBytes ?? 1835008}|2097152\r\n`;
+      this.emit(output + END);
+    }
+
+    dump(path) {
+      if (!(path in this.files)) {
+        this.fail("OSError: [Errno 2] ENOENT");
+        return;
+      }
+      const data = this.fileBytes(path);
+      let output = "";
+      for (let offset = 0; offset < data.length; offset += 1536) {
+        let binary = "";
+        for (const byte of data.subarray(offset, offset + 1536)) binary += String.fromCharCode(byte);
+        output += `${btoa(binary)}\r\n`;
+      }
+      crypto.subtle.digest("SHA-256", data).then((digest) => {
+        const hex = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+        this.emit(`${output}#${hex}\r\n` + END);
+      });
     }
 
     reset() {

@@ -25,6 +25,10 @@ Press "Stop", then type MicroPython commands in the box below the monitor to see
 
 The monitor can switch to "Chart", which draws output such as `print("temp:", t)` (name and number) or lines of plain numbers as a line chart, showing the last 10 seconds, 30 seconds, 1 minute, 5 minutes or 10 minutes. The recorded data can be exported as CSV, which Excel opens with Chinese names intact. The chart is drawn with the browser's own Canvas and needs no extra package; the code is in `src/plot.ts` (reading and storing values) and `src/plotter.ts` (drawing).
 
+## Board files
+
+"Board files" above the editor lists the board's files and free space, moves between folders, opens text files in the editor, downloads and deletes files, uploads files from the computer (they can be dragged into the window), and saves the editor's code under another name, such as your own `mylib.py`. The site holds raw REPL for as long as the window is open, so the program on the board stops. Downloads are checked with SHA-256 too. The code is in `src/files.ts` (paths and parsing) and `src/filemanager.ts` (the window).
+
 ## Voice control
 
 Phone and computer browsers only allow the microphone on HTTPS pages, so voice commands do not go directly to the board's `http://` page. Instead, `voice.html` relays them through an MQTT broker:

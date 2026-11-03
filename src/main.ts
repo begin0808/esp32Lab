@@ -4,6 +4,7 @@ import { python } from "@codemirror/lang-python";
 import { tags } from "@lezer/highlight";
 import { CommandHistory, enterAction, nextIndent, parseCompletion } from "./command";
 import { adaptExamplePins, chipFromMachine, CHIPS, FIRMWARE_VERSION, isChipId, type ChipId } from "./chips";
+import { FileManager } from "./filemanager";
 import { installFirmware, isConnectFailure } from "./flasher";
 import { lang, setupLanguagePicker, t, translatePage } from "./i18n";
 import { DataLog, LineBuffer, parseDataLine } from "./plot";
@@ -130,6 +131,7 @@ const ui = {
   copyPrompt: el<HTMLButtonElement>("copy-prompt"),
   openFile: el<HTMLButtonElement>("open-file"),
   saveFile: el<HTMLButtonElement>("save-file"),
+  boardFiles: el<HTMLButtonElement>("board-files"),
   fileInput: el<HTMLInputElement>("file-input"),
   monitor: el("monitor"),
   ipCard: el("ip-card"),
@@ -188,6 +190,29 @@ const plotter = new Plotter(dataLog, {
   exportButton: el<HTMLButtonElement>("plot-export"),
 });
 const unnamedSeries = (position: number) => t("數值{position}", { position });
+const fileManager = new FileManager(
+  {
+    dialog: el<HTMLDialogElement>("files-dialog"),
+    space: el("files-space"),
+    path: el("files-path"),
+    list: el("files-list"),
+    status: el("files-status"),
+    upload: el<HTMLButtonElement>("files-upload"),
+    saveEditor: el<HTMLButtonElement>("files-save-editor"),
+    close: el<HTMLButtonElement>("files-close"),
+    input: el<HTMLInputElement>("files-input"),
+  },
+  {
+    getCode: () => getCode(),
+    openInEditor: (text, path) => {
+      setCode(text);
+      if (path !== "/main.py") {
+        systemMessage(t("已把 {path} 開到編輯器。注意：「上傳並執行」會存成 main.py；要存回原來的檔案，請到「板上檔案」按「把編輯器內容存成…」。", { path }));
+      }
+    },
+    describeError: (error) => failureMessage(error),
+  },
+);
 
 function readSaved(): string | null {
   try {
@@ -341,6 +366,7 @@ function refreshButtons(): void {
   ui.install.textContent = hasFirmware ? t("重新安裝韌體") : t("安裝韌體");
   ui.install.classList.toggle("primary", !!link.selectedPort && !hasFirmware);
   ui.upload.disabled = busy || !open || !hasFirmware;
+  ui.boardFiles.disabled = busy || !open || !hasFirmware;
   ui.stop.disabled = busy || !open;
   ui.reset.disabled = busy || !open;
   ui.replInput.disabled = busy || !open;
@@ -656,6 +682,27 @@ async function stopProgram(): Promise<void> {
   setStatus(t("程式已停止"), "ready");
 }
 
+/** Keeps the REPL open while the dialog is, then leaves the board stopped at its prompt. */
+async function openBoardFiles(): Promise<void> {
+  setBusy(true);
+  setStatus(t("正在管理板上檔案"), "busy");
+  fileManager.show();
+  try {
+    await withRepl((repl) => fileManager.use(repl));
+  } catch (error) {
+    fileManager.fail(t("無法讀取板上檔案：{message}", { message: failureMessage(error) }));
+    await fileManager.closed();
+  } finally {
+    if (link.isOpen) {
+      setStatus(t("程式已停止"), "ready");
+      systemMessage(t("程式已停止。按「重新啟動」可以再執行 main.py。"));
+      // The prompt went by while the dialog was using the board.
+      await link.write(Uint8Array.of(0x0d)).catch(() => {});
+    }
+    setBusy(false);
+  }
+}
+
 async function install(): Promise<void> {
   const port = link.selectedPort;
   if (!port) return;
@@ -742,6 +789,7 @@ function guarded(action: () => Promise<void>): () => void {
 link.onLost = () => {
   hasFirmware = false;
   atPrompt = false;
+  fileManager.close();
   setStatus(t("開發板連線中斷，請檢查 USB 線後重新連接"), "error");
   systemMessage(t("開發板連線中斷"));
   refreshButtons();
@@ -749,6 +797,7 @@ link.onLost = () => {
 
 ui.connect.addEventListener("click", guarded(() => (link.isOpen ? disconnect() : connect())));
 ui.upload.addEventListener("click", guarded(upload));
+ui.boardFiles.addEventListener("click", guarded(openBoardFiles));
 ui.stop.addEventListener("click", guarded(stopProgram));
 ui.reset.addEventListener("click", guarded(restartBoard));
 ui.clear.addEventListener("click", clearView);

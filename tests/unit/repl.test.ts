@@ -115,5 +115,73 @@ describe("RawRepl", () => {
     await session.repl.enter();
     await expect(session.repl.writeFile("/main.py", new TextEncoder().encode("new"))).rejects.toThrow("驗證失敗");
     expect(session.board.files["/main.py"]).toBe("old");
+    // The temporary file does not linger.
+    expect(session.board.tempData).toBeNull();
+  });
+});
+
+describe("board files", () => {
+  let session: ReturnType<typeof connect>;
+
+  beforeEach(async () => {
+    session = connect();
+    session.board.files["/main.py"] = "print(1)\n";
+    session.board.files["/boot.py"] = "# boot\n";
+    session.board.dirs.add("/lib");
+    session.board.files["/lib/ssd1306.py"] = "# 顯示器\n";
+    await session.repl.enter();
+  });
+
+  it("lists a folder with sizes and the space left", async () => {
+    expect(await session.repl.listDir("/")).toEqual({
+      entries: [
+        { name: "lib", isDir: true, size: 0 },
+        { name: "boot.py", isDir: false, size: 7 },
+        { name: "main.py", isDir: false, size: 9 },
+      ],
+      free: 1835008,
+      total: 2097152,
+    });
+    expect((await session.repl.listDir("/lib")).entries).toEqual([{ name: "ssd1306.py", isDir: false, size: 12 }]);
+  });
+
+  it("reports a folder that is not there", async () => {
+    await expect(session.repl.listDir("/nope")).rejects.toThrow("ENOENT");
+  });
+
+  it("reads back any bytes, across several pieces, exactly as written", async () => {
+    const data = Uint8Array.from({ length: 5000 }, (_, i) => (i * 7) % 256);
+    await session.repl.writeFile("/lib/blob.bin", data);
+    expect(session.board.bytes["/lib/blob.bin"]).toEqual(data);
+    expect(await session.repl.readFile("/lib/blob.bin", data.length)).toEqual(data);
+    expect(new TextDecoder().decode(await session.repl.readFile("/lib/ssd1306.py", 12))).toBe("# 顯示器\n");
+    expect((await session.repl.readFile("/main.py", 9)).length).toBe(9);
+  });
+
+  it("refuses a file that changed on the way", async () => {
+    const originalRun = session.board.run.bind(session.board);
+    session.board.run = (code: string) => {
+      if (code.includes("b2a_base64")) session.board.emit("YWJj\r\n#0000\r\n\x04\x04>");
+      else originalRun(code);
+    };
+    await expect(session.repl.readFile("/main.py", 9)).rejects.toThrow("驗證失敗");
+  });
+
+  it("deletes files, and folders only once they are empty", async () => {
+    await session.repl.remove("/main.py", false);
+    expect(session.board.files["/main.py"]).toBeUndefined();
+    expect(await session.repl.remove("/lib", true)).toBe(false);
+    expect(session.board.dirs.has("/lib")).toBe(true);
+    await session.repl.remove("/lib/ssd1306.py", false);
+    expect(await session.repl.remove("/lib", true)).toBe(true);
+    expect(session.board.dirs.has("/lib")).toBe(false);
+  });
+
+  it("removes the half-written file when the flash fills up, keeping the old one", async () => {
+    session.board.freeBytes = 3000;
+    await expect(session.repl.writeFile("/main.py", new Uint8Array(5000))).rejects.toThrow("ENOSPC");
+    expect(session.board.files["/main.py"]).toBe("print(1)\n");
+    expect(session.board.tempData).toBeNull();
+    expect((await session.repl.listDir("/")).entries.map((entry) => entry.name)).not.toContain(".upload.tmp");
   });
 });

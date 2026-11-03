@@ -1,3 +1,4 @@
+import { parseFileDump, parseListing, type BoardListing } from "./files";
 import { t } from "./i18n";
 
 const CTRL_A = 0x01;
@@ -17,6 +18,10 @@ const WRITE_GAP_MS = 10;
 // which the board compiles comfortably even without PSRAM.
 const FILE_CHUNK = 2048;
 const TMP_PATH = "/.upload.tmp";
+// A multiple of 3, so each printed piece is whole base64 without padding in the middle of the file.
+const READ_CHUNK = 1536;
+// At 115200 baud the board sends about 11 KB a second, and base64 makes a file a third larger.
+const READ_BYTES_PER_MS = 4;
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -195,8 +200,94 @@ export class RawRepl {
     return { release, machine, flashBytes: flashBytes > 0 ? flashBytes : null };
   }
 
+  /** Lists one folder and how much room is left. */
+  async listDir(path: string): Promise<BoardListing> {
+    const output = await this.exec(
+      [
+        "import os",
+        `P=${pythonString(path)}`,
+        "for e in os.ilistdir(P):",
+        " n=e[0]",
+        " if e[1]==0x4000:",
+        "  print('d|0|'+n)",
+        " else:",
+        "  s=e[3] if len(e)>3 and e[3]>=0 else os.stat(P.rstrip('/')+'/'+n)[6]",
+        "  print('f|'+str(s)+'|'+n)",
+        "try:",
+        " v=os.statvfs(P)",
+        " print('#|'+str(v[0]*v[3])+'|'+str(v[0]*v[2]))",
+        "except Exception:",
+        " pass",
+      ].join("\n"),
+      10000,
+    );
+    return parseListing(output);
+  }
+
+  /** Reads a whole file and checks it against the board's own SHA-256. `size` only sets how long to wait. */
+  async readFile(path: string, size: number): Promise<Uint8Array> {
+    const output = await this.exec(
+      [
+        "import binascii,hashlib",
+        `P=${pythonString(path)}`,
+        "f=open(P,'rb')",
+        "h=hashlib.sha256()",
+        `b=bytearray(${READ_CHUNK})`,
+        "while 1:",
+        " k=f.readinto(b)",
+        " if not k:",
+        "  break",
+        " m=memoryview(b)[:k]",
+        " h.update(m)",
+        " print(binascii.b2a_base64(m).decode().strip())",
+        "f.close()",
+        "print('#'+binascii.hexlify(h.digest()).decode())",
+      ].join("\n"),
+      10000 + size / READ_BYTES_PER_MS,
+    );
+    const { data, sha256 } = parseFileDump(output);
+    if (!sha256 || sha256 !== (await sha256Hex(data))) throw new Error(t("檔案驗證失敗，請再試一次"));
+    return data;
+  }
+
+  /** Deletes a file, or a folder only when it is empty. Returns false for a folder that still holds something. */
+  async remove(path: string, isDir: boolean): Promise<boolean> {
+    if (!isDir) {
+      await this.exec(`import os\nos.remove(${pythonString(path)})`);
+      return true;
+    }
+    const output = await this.exec(
+      ["import os", `P=${pythonString(path)}`, "if os.listdir(P):", " print('full')", "else:", " os.rmdir(P)", " print('ok')"].join("\n"),
+    );
+    return output.trim() === "ok";
+  }
+
   /** Writes to a temporary file first, so a failed upload leaves the old program intact. */
   async writeFile(path: string, data: Uint8Array, onProgress?: (fraction: number) => void): Promise<void> {
+    try {
+      await this.writeTempFile(data, onProgress);
+    } catch (error) {
+      // A half-written temporary file would keep a full flash full. After a timeout the board may not answer at all.
+      if (!(error instanceof ReplTimeoutError)) {
+        await this.exec(
+          ["import os", "try:", " f.close()", "except Exception:", " pass", "try:", ` os.remove(${pythonString(TMP_PATH)})`, "except OSError:", " pass"].join("\n"),
+        ).catch(() => {});
+      }
+      throw error;
+    }
+    await this.exec(
+      [
+        "import os",
+        "try:",
+        ` os.remove(${pythonString(path)})`,
+        "except OSError:",
+        " pass",
+        `os.rename(${pythonString(TMP_PATH)},${pythonString(path)})`,
+      ].join("\n"),
+    );
+  }
+
+  private async writeTempFile(data: Uint8Array, onProgress?: (fraction: number) => void): Promise<void> {
     await this.exec(`import binascii\nf=open(${pythonString(TMP_PATH)},'wb')\nw=f.write\na=binascii.a2b_base64`);
     for (let offset = 0; offset < data.length; offset += FILE_CHUNK) {
       const chunk = data.subarray(offset, offset + FILE_CHUNK);
@@ -231,17 +322,6 @@ export class RawRepl {
     if (stored.trim() !== `${data.length}|${expected}`) {
       throw new Error(t("檔案驗證失敗，請重新上傳"));
     }
-
-    await this.exec(
-      [
-        "import os",
-        "try:",
-        ` os.remove(${pythonString(path)})`,
-        "except OSError:",
-        " pass",
-        `os.rename(${pythonString(TMP_PATH)},${pythonString(path)})`,
-      ].join("\n"),
-    );
   }
 
   private async readBytes(count: number, timeoutMs: number): Promise<Uint8Array> {

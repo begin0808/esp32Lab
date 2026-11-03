@@ -840,6 +840,165 @@ test.describe("serial monitor", () => {
   });
 });
 
+test.describe("board files", () => {
+  async function connectBoard(page: Page, options: object = {}) {
+    await mockSerial(page, options);
+    await page.goto("/");
+    await expect(page.locator("#board-files")).toBeDisabled();
+    await page.locator("#connect").click();
+    await expect(page.locator("#board-files")).toBeEnabled();
+    await page.evaluate(() => {
+      const board = (globalThis as any).board;
+      board.files["/main.py"] = 'print("hi")\n';
+      board.files["/boot.py"] = "# boot\n";
+      board.dirs.add("/lib");
+      board.files["/lib/ssd1306.py"] = "# OLED 顯示器\nWIDTH = 128\n";
+    });
+  }
+
+  const dialog = (page: Page) => page.locator("#files-dialog");
+  const row = (page: Page, name: string) => page.locator(".files-row").filter({ has: page.locator(".files-name", { hasText: new RegExp(`^${name.replace(".", "\\.")}$`) }) });
+
+  async function openFiles(page: Page) {
+    await page.locator("#board-files").click();
+    await expect(dialog(page)).toBeVisible();
+    await expect(page.locator("#files-status")).toHaveText("");
+  }
+
+  test("stops the program, lists the files, browses folders and leaves the board at its prompt", async ({ page }) => {
+    await connectBoard(page);
+    await openFiles(page);
+    expect(await page.evaluate(() => (globalThis as any).board.mode)).toBe("raw");
+    await expect(page.locator(".files-name")).toHaveText(["lib", "boot.py", "main.py"]);
+    await expect(row(page, "main.py").locator(".files-size")).toHaveText("12 B");
+    await expect(page.locator("#files-space")).toHaveText("剩餘 1.8 MB，共 2.0 MB");
+    await expect(page.locator("#files-path")).toHaveText("/");
+
+    await page.locator(".files-name", { hasText: "lib" }).click();
+    await expect(page.locator("#files-path")).toHaveText("/›lib");
+    await expect(page.locator(".files-name")).toHaveText(["上一層", "ssd1306.py"]);
+    await page.locator("#files-path button", { hasText: "/" }).click();
+    await expect(page.locator(".files-name")).toHaveText(["lib", "boot.py", "main.py"]);
+
+    await page.locator("#files-close").click();
+    await expect(dialog(page)).toBeHidden();
+    await expect(page.locator("#monitor .system").last()).toContainText("程式已停止。按「重新啟動」可以再執行 main.py。");
+    await expect(page.locator("#status")).toHaveText("程式已停止");
+    await expect(page.locator("#upload")).toBeEnabled();
+    expect(await page.evaluate(() => (globalThis as any).board.mode)).toBe("friendly");
+    await expect(page.locator("#monitor")).toContainText(">>> ");
+  });
+
+  test("opens a file in the editor and warns that uploading saves it as main.py", async ({ page }) => {
+    await connectBoard(page);
+    await openFiles(page);
+    await page.locator(".files-name", { hasText: "lib" }).click();
+    page.once("dialog", (prompt) => prompt.dismiss());
+    await row(page, "ssd1306.py").getByRole("button", { name: "開到編輯器" }).click();
+    await expect(dialog(page)).toBeVisible();
+
+    page.once("dialog", (prompt) => prompt.accept());
+    await row(page, "ssd1306.py").getByRole("button", { name: "開到編輯器" }).click();
+    await expect(dialog(page)).toBeHidden();
+    await expect(page.locator("#editor .cm-content")).toHaveText("# OLED 顯示器WIDTH = 128");
+    await expect(page.locator("#monitor .system").filter({ hasText: "已把 /lib/ssd1306.py 開到編輯器" })).toHaveCount(1);
+  });
+
+  test("downloads a file exactly as stored", async ({ page }) => {
+    await connectBoard(page);
+    await openFiles(page);
+    await page.locator(".files-name", { hasText: "lib" }).click();
+    const [download] = await Promise.all([page.waitForEvent("download"), row(page, "ssd1306.py").getByRole("button", { name: "下載" }).click()]);
+    expect(download.suggestedFilename()).toBe("ssd1306.py");
+    expect(readFileSync((await download.path())!, "utf8")).toBe("# OLED 顯示器\nWIDTH = 128\n");
+    await expect(page.locator("#files-status")).toHaveText("已下載 ssd1306.py");
+  });
+
+  test("uploads files from the computer into the open folder, asking before replacing one", async ({ page }) => {
+    await connectBoard(page);
+    await openFiles(page);
+    await page.locator(".files-name", { hasText: "lib" }).click();
+    const bytes = Buffer.from([0, 255, 128, 1, 2, 3]);
+    page.once("dialog", (question) => {
+      expect(question.message()).toContain("ssd1306.py 已經存在");
+      void question.accept();
+    });
+    await page.locator("#files-input").setInputFiles([
+      { name: "ssd1306.py", mimeType: "text/x-python", buffer: Buffer.from("# 新版\n") },
+      { name: "icon.bin", mimeType: "application/octet-stream", buffer: bytes },
+    ]);
+    await expect(page.locator("#files-status")).toHaveText("已上傳 2 個檔案到 /lib");
+    await expect(page.locator(".files-name")).toHaveText(["上一層", "icon.bin", "ssd1306.py"]);
+    const stored = await page.evaluate(() => {
+      const board = (globalThis as any).board;
+      return { text: board.files["/lib/ssd1306.py"], bytes: Array.from(board.bytes["/lib/icon.bin"]) };
+    });
+    expect(stored).toEqual({ text: "# 新版\n", bytes: [...bytes] });
+  });
+
+  test("saves the editor's code under a new name, suggesting the file it came from", async ({ page }) => {
+    await connectBoard(page);
+    await page.locator("#editor .cm-content").fill("def hello():\n    print('嗨')\n");
+    await openFiles(page);
+    page.once("dialog", (prompt) => {
+      expect(prompt.defaultValue()).toBe("mylib.py");
+      void prompt.accept("lib/x.py");
+    });
+    await page.locator("#files-save-editor").click();
+    await expect(page.locator("#files-status")).toContainText("檔名不能有 /");
+
+    page.once("dialog", (prompt) => void prompt.accept("greet.py"));
+    await page.locator("#files-save-editor").click();
+    await expect(page.locator("#files-status")).toHaveText("已存成 /greet.py");
+    await expect(page.locator(".files-name")).toContainText(["greet.py"]);
+    expect(await page.evaluate(() => (globalThis as any).board.files["/greet.py"])).toBe("def hello():\n    print('嗨')\n");
+  });
+
+  test("deletes only after asking, and explains a folder that is not empty", async ({ page }) => {
+    await connectBoard(page);
+    await openFiles(page);
+    page.once("dialog", (question) => {
+      expect(question.message()).toContain("boot.py 是開機時最先執行的檔案");
+      void question.dismiss();
+    });
+    await row(page, "boot.py").getByRole("button", { name: "刪除" }).click();
+    await expect(page.locator(".files-name")).toHaveText(["lib", "boot.py", "main.py"]);
+
+    page.once("dialog", (question) => void question.accept());
+    await row(page, "lib").getByRole("button", { name: "刪除" }).click();
+    await expect(page.locator("#files-status")).toHaveText("資料夾 lib 裡還有檔案，請先刪掉裡面的檔案。");
+
+    page.once("dialog", (question) => void question.accept());
+    await row(page, "main.py").getByRole("button", { name: "刪除" }).click();
+    await expect(page.locator("#files-status")).toHaveText("已刪除 main.py");
+    await expect(page.locator(".files-name")).toHaveText(["lib", "boot.py"]);
+    expect(await page.evaluate(() => "/main.py" in (globalThis as any).board.files)).toBe(false);
+  });
+
+  test("says plainly when the board is full", async ({ page }) => {
+    await connectBoard(page);
+    await page.evaluate(() => ((globalThis as any).board.freeBytes = 4000));
+    await openFiles(page);
+    await expect(page.locator("#files-space")).toHaveText("剩餘 3.9 KB，共 2.0 MB");
+    // Too big for the space the board reported, so it is refused before sending.
+    await page.locator("#files-input").setInputFiles({ name: "big.bin", mimeType: "application/octet-stream", buffer: Buffer.alloc(9000) });
+    await expect(page.locator("#files-status")).toHaveText("板子的空間不夠了，請先刪掉一些用不到的檔案。");
+    // The board fills up partway, as when the reported space was optimistic.
+    await page.evaluate(() => ((globalThis as any).board.freeBytes = 2000));
+    await page.locator("#files-input").setInputFiles({ name: "mid.bin", mimeType: "application/octet-stream", buffer: Buffer.alloc(3000) });
+    await expect(page.locator("#files-status")).toHaveText("板子的空間不夠了，請先刪掉一些用不到的檔案。");
+    expect(await page.evaluate(() => (globalThis as any).board.tempData)).toBeNull();
+  });
+
+  test("closes when the board is unplugged", async ({ page }) => {
+    await connectBoard(page);
+    await openFiles(page);
+    await page.evaluate(() => (globalThis as any).board.unplug());
+    await expect(dialog(page)).toBeHidden();
+    await expect(page.locator("#status")).toContainText("連線中斷");
+  });
+});
+
 test.describe("chart", () => {
   async function connectBoard(page: Page) {
     await mockSerial(page);

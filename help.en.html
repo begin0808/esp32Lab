@@ -45,6 +45,7 @@
         <a href="#languages">MicroPython and Arduino</a>
         <a href="#repl">The REPL</a>
         <a href="#plot">Charts and CSV</a>
+        <a href="#files">Board files</a>
         <a href="#boards">Supported boards</a>
         <a href="#parts">Parts and sensors</a>
         <a href="#wiring">Wiring notes</a>
@@ -225,6 +226,41 @@ while True:
         <p class="tip">The site keeps up to the latest 100,000 rows. Beyond that the oldest are dropped, and a note appears above the chart. Data lives only in this tab and <strong>is cleared when the page is reloaded</strong>, so export long recordings. To keep data for longer, see <a href="#google-sheets">Saving sensor data to Google Sheets</a>.</p>
       </section>
 
+      <section id="files">
+        <h2>Managing the files on the board</h2>
+        <p>Once a board is connected, press "Board files" above the editor to see the files on the board, and to download, upload and delete them, without installing Thonny or mpremote.</p>
+        <p class="tip"><strong>Opening "Board files" stops the program running on the board.</strong> It stays stopped after you close the window; press "Restart" in the serial monitor to run <code>main.py</code> again.</p>
+        <h3>What you can do</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Action</th><th scope="col">What it does</th></tr></thead>
+            <tbody>
+              <tr><td>Click a folder name</td><td>Opens the folder, such as <code>lib</code>. Click the path above the list to go back up</td></tr>
+              <tr><td>Open in editor</td><td>Puts a text file of up to 100 KB (such as .py, .txt, .csv or .json) in the editor, after asking</td></tr>
+              <tr><td>Download</td><td>Saves the file to your computer</td></tr>
+              <tr><td>Delete</td><td>Asks first. A folder must be empty before it can be deleted</td></tr>
+              <tr><td>Upload from computer…</td><td>Uploads into the open folder. You can choose several files at once, or drag them into the window. It asks before replacing a file with the same name</td></tr>
+              <tr><td>Save editor as…</td><td>Saves the code in the editor under the name you type, such as <code>mylib.py</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>The top right of the window shows how much space the board has left. Uploads and downloads are checked with SHA-256, so a file that arrives damaged is caught; if an upload fails, the file already on the board is left as it was.</p>
+        <h3>Writing your own library</h3>
+        <ol>
+          <li>Write a function in the editor:
+            <pre class="code-block" tabindex="0">def hello(name):
+    print("Hello,", name)</pre>
+          </li>
+          <li>Press "Board files", then "Save editor as…", and type <code>mylib.py</code>.</li>
+          <li>Close the window, write the main program in the editor and press "Upload and run":
+            <pre class="code-block" tabindex="0">import mylib
+mylib.hello("ESP32")</pre>
+          </li>
+        </ol>
+        <p>A library for a part that you find online, such as <code>ssd1306.py</code> for an OLED, can also go on the board with "Upload from computer…", in the top folder or in <code>lib</code>, and then be imported with <code>import</code>.</p>
+        <p class="tip">After opening a file such as <code>lib/ssd1306.py</code> in the editor and changing it, <strong>save it back with "Save editor as…"</strong>. "Upload and run" would save it as <code>main.py</code>, replacing your main program.</p>
+      </section>
+
       <section id="boards">
         <h2>Supported boards</h2>
         <p>The site includes MicroPython v1.29.0 firmware for the <strong>ESP32, ESP32-S2, S3 and C3</strong>, and picks the right one by detecting the chip during installation. The chip inside ESP32-S and ESP-WROOM-32 modules is an ESP32, which is different from the ESP32-S2 and S3. The flash must be at least 4 MB. With any other chip or too little flash, the site stops before erasing anything.</p>
@@ -324,7 +360,7 @@ while True:
         <h3>Tips for asking Gemini</h3>
         <ul>
           <li><strong>State the model and pins:</strong> for example, "MAX7219 8×8 LED matrix, DIN on GPIO 23, CLK on GPIO 18, CS on GPIO 5".</li>
-          <li><strong>Use a single file:</strong> this site uploads only <code>main.py</code>. An <code>ImportError</code> means the program uses a module the firmware lacks, so ask Gemini to "put this part's driver in the same main.py as the main program".</li>
+          <li><strong>When a module is missing:</strong> an <code>ImportError</code> means the program uses a module the firmware lacks. Ask Gemini to "put this part's driver in the same main.py as the main program", or upload the module's file to the board with <a href="#files">Board files</a>.</li>
           <li><strong>Name the language:</strong> ask for MicroPython v1.29.0, not Arduino C++. The site's "Copy Gemini prompt" already includes these requirements.</li>
         </ul>
       </section>
@@ -454,7 +490,7 @@ while True:
         <ol>
           <li><strong>To keep your program:</strong> first delete the Wi-Fi name and password, MQTT login, bot token and Apps Script URL from it, then press "Download main.py". The downloaded file does not hide these automatically.</li>
           <li><strong>To clear the browser:</strong> delete everything in the editor. The editor saves automatically, so this replaces the old contents too.</li>
-          <li><strong>To clear the board:</strong> upload a program with no passwords, which overwrites <code>main.py</code>. To erase every file on the board, reinstall the firmware.</li>
+          <li><strong>To clear the board:</strong> upload a program with no passwords, which overwrites <code>main.py</code>. Other files holding passwords can be deleted in <a href="#files">Board files</a>. To erase every file on the board, reinstall the firmware.</li>
         </ol>
         <p>Restore cards in computer labs usually clear browser data on restart, but the next user can still see it until then. Restore cards do not affect the board, so its data stays until you remove it.</p>
       </section>

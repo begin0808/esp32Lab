@@ -115,6 +115,7 @@
             <button id="copy-prompt" class="btn small">複製 Gemini 提示詞</button>
             <button id="open-file" class="btn small">開啟檔案</button>
             <button id="save-file" class="btn small">下載 main.py</button>
+            <button id="board-files" class="btn small" disabled title="連接開發板後，可以查看、下載、上傳和刪除板子上的檔案">板上檔案</button>
             <input id="file-input" type="file" accept=".py,.txt" hidden />
           </div>
         </div>
@@ -195,6 +196,23 @@
           <button class="btn danger" value="confirm">清除並安裝</button>
         </div>
       </form>
+    </dialog>
+
+    <dialog id="files-dialog" class="dialog files-dialog" aria-labelledby="files-title">
+      <div class="files-head">
+        <h2 id="files-title">板上檔案</h2>
+        <span id="files-space" class="files-space"></span>
+      </div>
+      <p class="files-note">打開這個視窗時，板子上正在執行的程式會停止。也可以把電腦裡的檔案拖進這個視窗上傳。</p>
+      <nav id="files-path" class="files-path" aria-label="目前的資料夾"></nav>
+      <ul id="files-list" class="files-list" aria-label="檔案清單"></ul>
+      <p id="files-status" class="files-status" role="status"></p>
+      <div class="dialog-actions files-actions">
+        <button id="files-upload" class="btn small" type="button">從電腦上傳檔案…</button>
+        <button id="files-save-editor" class="btn small" type="button">把編輯器內容存成…</button>
+        <button id="files-close" class="btn" type="button">關閉</button>
+      </div>
+      <input id="files-input" type="file" multiple hidden />
     </dialog>
 
     <footer class="footer">
