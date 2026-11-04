@@ -713,6 +713,88 @@ test("voice page returns to the help page's own opener, not the editor, only whe
   await expect(help.locator("#connect")).toBeVisible();
 });
 
+test.describe("learning path", () => {
+  test("loads an example into the editor that opened the help page, keeping that editor", async ({ page, context }) => {
+    await page.goto("/");
+    await page.locator("#editor .cm-content").fill('print("舊的程式")\n');
+    await page.evaluate(() => ((globalThis as any).sameEditor = true));
+    await openSettings(page);
+    const [help] = await Promise.all([context.waitForEvent("page"), page.locator("#help-link").click()]);
+    await help.waitForLoadState();
+    let asked = "";
+    help.on("dialog", (dialog) => {
+      asked = dialog.message();
+      dialog.accept();
+    });
+    await Promise.all([help.waitForEvent("close"), help.locator("#path-button_led .example-link").click()]);
+    expect(asked).toContain("2. 按鈕開關 LED");
+    expect(context.pages()).toEqual([page]);
+    expect(await page.evaluate(() => (globalThis as any).sameEditor)).toBe(true);
+    await expect(page.locator("#editor .cm-content")).toContainText("BUTTON_PIN = 19");
+    await expect(page.locator("#monitor")).toContainText("已從學習路徑載入「2. 按鈕開關 LED」");
+    // The help link now reopens the help page at the step just loaded.
+    await expect(page.locator("#help-link")).toHaveAttribute("href", "./help.html#path-button_led");
+  });
+
+  test("keeps the editor's program and the help page when the student says no", async ({ page, context }) => {
+    await page.goto("/");
+    await page.locator("#editor .cm-content").fill('print("舊的程式")\n');
+    await openSettings(page);
+    const [help] = await Promise.all([context.waitForEvent("page"), page.locator("#help-link").click()]);
+    await help.waitForLoadState();
+    help.on("dialog", (dialog) => dialog.dismiss());
+    await help.locator("#path-blink .example-link").click();
+    await expect(help.locator("#path")).toBeVisible();
+    expect(help.isClosed()).toBe(false);
+    await expect(page.locator("#editor .cm-content")).toContainText("舊的程式");
+  });
+
+  test("a help page opened on its own opens the editor with the example", async ({ page }) => {
+    await page.goto("/help.html");
+    await page.locator("#path-timer_blink .example-link").click();
+    await expect(page.locator("#editor .cm-content")).toContainText("Timer(0)");
+    await expect(page.locator("#monitor")).toContainText("已從學習路徑載入「23. 計時器讓 LED 自己閃（Timer）」");
+    // Reloading must not load the example again.
+    expect(new URL(page.url()).search).toBe("");
+  });
+
+  test("asks before an example in the address replaces a saved program", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("#editor .cm-content").fill('print("舊的程式")\n');
+    page.once("dialog", (dialog) => dialog.dismiss());
+    await page.goto("/index.html?example=deep_sleep");
+    await expect(page.locator("#editor .cm-content")).toContainText("舊的程式");
+    expect(new URL(page.url()).search).toBe("");
+
+    page.once("dialog", (dialog) => dialog.accept());
+    await page.goto("/index.html?example=deep_sleep");
+    await expect(page.locator("#editor .cm-content")).toContainText("machine.deepsleep(");
+  });
+
+  test("adapts the example's pins to the chosen chip", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("#chip").selectOption("esp32c3");
+    page.once("dialog", (dialog) => dialog.accept());
+    await page.goto("/index.html?example=button_led");
+    await expect(page.locator("#editor .cm-content")).not.toContainText("BUTTON_PIN = 19");
+  });
+
+  test("the English help page loads the English example", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("esp32-mp-lang", "en"));
+    await page.goto("/help.en.html");
+    await page.locator("#path-blink .example-link").click();
+    await expect(page.locator("#editor .cm-content")).toContainText('print("LED:", "on" if led.value() else "off")');
+  });
+
+  test("highlights the step the editor came back to", async ({ page }) => {
+    await page.goto("/help.html#path-ds18b20");
+    await expect(page.locator("#path-ds18b20")).toBeInViewport();
+    const background = await page.locator("#path-ds18b20").evaluate((step) => getComputedStyle(step).backgroundColor);
+    const plain = await page.locator("#path-blink").evaluate((step) => getComputedStyle(step).backgroundColor);
+    expect(background).not.toBe(plain);
+  });
+});
+
 test("voice page links to the help page", async ({ page }) => {
   await page.goto("/voice.html");
   await expect(page.locator("#help-link")).toHaveAttribute("href", "./help.html");

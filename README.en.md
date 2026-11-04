@@ -51,6 +51,10 @@ The default broker is the public `broker.emqx.io`. Its messages have no encrypti
 
 `help.en.html` (English) and `help.html` (Chinese) list the supported boards and parts, along with safety notes, and follow the chosen style. After testing new hardware, update the status labels and the date on both pages.
 
+## Learning path
+
+The help page's "Learning path" arranges the 26 examples in beginner, intermediate and advanced levels. Each step names what it teaches and has a "Try changing it" task, and each level has a suggested time and a parts list. Example names link to `index.html?example=<file name>`. A help page opened from the editor asks first, then sends the example back to that editor tab, so the board connection is kept. A help page opened on its own opens the editor, which asks instead. The list of examples and their numbers is in `src/catalog.ts`. A new example must also go in the learning path on both help pages, and `npm test` fails if it is missing.
+
 ## English and Chinese
 
 - Interface text: pages and code are written in Chinese, and the English is in the dictionary in [src/i18n.ts](src/i18n.ts), keyed by the Chinese text. Text in code uses `t("中文")`, and `npm run build` fails if the dictionary lacks that key. Text in HTML is replaced automatically, and `npm run test:e2e` fails if any is missed.

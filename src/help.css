@@ -158,6 +158,33 @@ kbd {
   line-height: 1.55;
 }
 
+.doc .path-steps {
+  padding-left: 0;
+  list-style: none;
+}
+
+.doc .path-steps li {
+  margin-bottom: 10px;
+  padding: 6px 12px;
+  border-left: 3px solid var(--border);
+  border-radius: 0 6px 6px 0;
+}
+
+/* Coming back from the editor lands on the step just loaded. */
+.doc .path-steps li:target {
+  border-left-color: var(--link);
+  background: var(--success-bg);
+}
+
+.example-link {
+  font-weight: 700;
+}
+
+.path-try {
+  display: block;
+  margin-top: 2px;
+}
+
 .tip {
   padding: 10px 14px;
   border-radius: 6px;

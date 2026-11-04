@@ -3,10 +3,11 @@ import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { python } from "@codemirror/lang-python";
 import { tags } from "@lezer/highlight";
 import { CommandHistory, enterAction, nextIndent, parseCompletion } from "./command";
+import { example, EXAMPLE_GROUPS, EXAMPLES, findExample, numberedName, type Example } from "./catalog";
 import { adaptExamplePins, chipFromMachine, CHIPS, FIRMWARE_VERSION, isChipId, type ChipId } from "./chips";
 import { FileManager } from "./filemanager";
 import { installFirmware, isConnectFailure } from "./flasher";
-import { lang, setupLanguagePicker, t, translatePage } from "./i18n";
+import { setupLanguagePicker, t, translatePage } from "./i18n";
 import { DataLog, LineBuffer, parseDataLine } from "./plot";
 import { Plotter } from "./plotter";
 import { RawRunWatcher } from "./rawrun";
@@ -30,72 +31,6 @@ import {
 } from "./text";
 
 translatePage();
-
-const exampleFiles = import.meta.glob<string>("./examples/**/*.py", { query: "?raw", import: "default", eager: true });
-
-function example(file: string): string {
-  return exampleFiles[`./examples/${lang === "en" ? "en/" : ""}${file}.py`];
-}
-
-const EXAMPLE_GROUPS = [
-  {
-    label: t("基礎輸出與輸入"),
-    examples: [
-      { name: t("LED 閃爍"), code: example("blink") },
-      { name: t("按鈕開關 LED"), code: example("button_led") },
-      { name: t("呼吸燈（PWM）"), code: example("breathing_led") },
-      { name: t("可變電阻調亮度"), code: example("knob_led") },
-      { name: t("無源蜂鳴器播放小星星"), code: example("buzzer_song") },
-      { name: t("SG90 伺服馬達來回轉動"), code: example("servo_sweep") },
-    ],
-  },
-  {
-    label: t("感測器"),
-    examples: [
-      { name: t("光敏電阻自動夜燈"), code: example("light_sensor") },
-      { name: t("人體紅外線警報（HC-SR501）"), code: example("pir_alarm") },
-      { name: t("超音波測距（HC-SR04）"), code: example("ultrasonic") },
-      { name: t("DHT11 溫濕度（監控窗）"), code: example("dht11_serial") },
-      { name: t("DS18B20 溫度計"), code: example("ds18b20") },
-    ],
-  },
-  {
-    label: t("顯示與燈光"),
-    examples: [
-      { name: t("WS2812 全彩 LED 彩虹"), code: example("ws2812_rainbow") },
-      { name: t("SSD1306 OLED 顯示器"), code: example("oled_ssd1306") },
-      { name: t("I2C LCD 1602 顯示器"), code: example("lcd1602_i2c") },
-      { name: t("MAX7219 點矩陣"), code: example("max7219_matrix") },
-    ],
-  },
-  {
-    label: t("Wi-Fi 與語音"),
-    examples: [
-      { name: t("手機控制 LED（同一個 Wi-Fi）"), code: example("web_led") },
-      { name: t("語音控制 LED（MQTT）"), code: example("mqtt_led") },
-      { name: t("DHT11 溫濕度警報"), code: example("dht11_alarm") },
-      { name: t("Telegram 機器人控制 LED"), code: example("telegram_led") },
-      { name: t("DHT11 資料存到 Google 試算表"), code: example("sheets_dht11") },
-    ],
-  },
-  {
-    label: t("進階技巧"),
-    examples: [
-      { name: t("I2C 掃描（找出裝置位址）"), code: example("i2c_scan") },
-      { name: t("按鈕中斷（IRQ）"), code: example("button_irq") },
-      { name: t("計時器讓 LED 自己閃（Timer）"), code: example("timer_blink") },
-      { name: t("深度睡眠定時醒來"), code: example("deep_sleep") },
-      { name: t("ESP-NOW 多塊板子互傳"), code: example("espnow_led") },
-      { name: t("asyncio 同時做三件事"), code: example("asyncio_tasks") },
-    ],
-  },
-];
-const EXAMPLES = EXAMPLE_GROUPS.flatMap((group) => group.examples);
-
-/** The same number means the same topic on both editions, so teachers can refer to an example by number. */
-function numberedName(item: (typeof EXAMPLES)[number]): string {
-  return `${EXAMPLES.indexOf(item) + 1}. ${item.name}`;
-}
 
 const STORAGE_KEY = "esp32-mp-code";
 const CHIP_KEY = "esp32-mp-chip";
@@ -173,6 +108,7 @@ const ui = {
   workspace: el("workspace"),
   splitter: el("splitter"),
   language: el<HTMLSelectElement>("language-picker"),
+  helpLink: el<HTMLAnchorElement>("help-link"),
   viewText: el<HTMLButtonElement>("view-text"),
   viewPlot: el<HTMLButtonElement>("view-plot"),
 };
@@ -263,8 +199,10 @@ const codeHighlight = HighlightStyle.define([
   { tag: tags.number, color: "var(--code-number)" },
 ]);
 
+// Read before the editor starts, because the editor saves the starting example straight away.
+const savedAtStart = readSaved();
 const editor = new EditorView({
-  doc: readSaved() ?? example("blink"),
+  doc: savedAtStart ?? example("blink"),
   extensions: [
     basicSetup,
     python(),
@@ -1051,12 +989,44 @@ ui.examples.append(
 );
 ui.examples.addEventListener("change", () => {
   const chosen = EXAMPLES[Number(ui.examples.value)];
-  if (ui.examples.value !== "" && chosen && confirm(t("要用「{name}」取代目前的程式嗎？", { name: numberedName(chosen) }))) {
-    const code = fillExample(chosen.code, randomChannel(), new URL("voice.html", location.href).href);
-    setCode(adaptExamplePins(code, selectedChip()));
-  }
+  if (ui.examples.value !== "" && chosen && confirm(t("要用「{name}」取代目前的程式嗎？", { name: numberedName(chosen) }))) loadExample(chosen);
   ui.examples.value = "";
 });
+
+function loadExample(chosen: Example): void {
+  const code = fillExample(chosen.code, randomChannel(), new URL("voice.html", location.href).href);
+  setCode(adaptExamplePins(code, selectedChip()));
+}
+
+function loadFromLearningPath(chosen: Example): void {
+  loadExample(chosen);
+  // The help link then reopens the help page at this step, so the student can carry on from there.
+  ui.helpLink.href = `./help.html#path-${chosen.id}`;
+  systemMessage(t("已從學習路徑載入「{name}」。打開「設定與說明」→「使用說明」，會回到學習路徑的這一步。", { name: numberedName(chosen) }));
+}
+
+// The help page opened from this tab sends the example here, after the student agreed to replace the code,
+// so the board connection in this tab is kept.
+window.addEventListener("message", (event) => {
+  if (event.origin !== location.origin || event.data?.type !== "load-example") return;
+  const chosen = findExample(String(event.data.id));
+  if (chosen) loadFromLearningPath(chosen);
+});
+
+/** A help page opened on its own links to index.html?example=…, so this editor asks before replacing the code. */
+function loadExampleFromAddress(): void {
+  const address = new URL(location.href);
+  const id = address.searchParams.get("example");
+  if (id === null) return;
+  // Reloading the page must not offer the example again.
+  address.searchParams.delete("example");
+  history.replaceState(history.state, "", address.href);
+  const chosen = findExample(id);
+  if (!chosen) return;
+  // A first visit has no program of the student's own to lose.
+  if (savedAtStart?.trim() && !confirm(t("要用「{name}」取代目前的程式嗎？", { name: numberedName(chosen) }))) return;
+  loadFromLearningPath(chosen);
+}
 
 ui.chip.append(...Object.values(CHIPS).map((chip) => new Option(chip.label, chip.id)));
 ui.chip.value = readChip();
@@ -1170,3 +1140,4 @@ ui.splitter.setAttribute("aria-valuemax", String(EDITOR_WIDTH_MAX));
 ui.unsupported.hidden = SerialLink.isSupported();
 onCodeChanged();
 refreshButtons();
+loadExampleFromAddress();

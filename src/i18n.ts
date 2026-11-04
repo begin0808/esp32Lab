@@ -131,6 +131,7 @@ const en = {
   "asyncio 同時做三件事": "asyncio: three things at once",
   "選擇範例…": "Choose an example…",
   "要用「{name}」取代目前的程式嗎？": 'Replace the current program with "{name}"?',
+  "已從學習路徑載入「{name}」。打開「設定與說明」→「使用說明」，會回到學習路徑的這一步。": 'Loaded "{name}" from the learning path. Open "Settings and help" → "Help" to return to this step of the path.',
 
   // Editor messages
   "[系統]": "[System]",

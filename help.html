@@ -52,6 +52,7 @@
     <main class="doc">
       <nav class="toc" aria-label="本頁目錄">
         <a href="#start">開始使用</a>
+        <a href="#path">學習路徑</a>
         <a href="#run">執行（不存檔）</a>
         <a href="#gemini">Gemini 提示詞</a>
         <a href="#languages">MicroPython 與 Arduino</a>
@@ -119,6 +120,78 @@
           </table>
         </div>
         <p class="tip"><strong>進階技巧範例（21–26）：</strong>22、23、25、26 都沿用範例 2 的接線，接好一次就能全部試。中斷和計時器的範例按「停止」時會關掉中斷和計時器，不然程式停了 LED 還會繼續動。ESP-NOW 要兩塊以上的板子，每塊都上傳同一份程式。深度睡眠請用「上傳並執行」，板子醒來後有 5 秒可以按「停止」；USB 直接接晶片的板子（S2、S3、C3）睡著時會斷線，醒來後要重新連接。</p>
+      </section>
+
+      <section id="path">
+        <h2>學習路徑</h2>
+        <p>26 個範例分成初階、中階、進階三級，照順序做就能一步一步學會。<strong>點範例名稱會把它載入編輯器</strong>，載入前會先問你要不要取代目前的程式。每一步都有「動手改改看」，沒有標準答案，改壞了重新載入範例就好。看不懂程式時，可以用 <a href="#gemini">Gemini 提示詞</a>的「解說程式」請 Gemini 說明。</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">等級</th><th scope="col">範例</th><th scope="col">建議時數</th><th scope="col">學完能做到</th></tr></thead>
+            <tbody>
+              <tr><td><a href="#path-beginner">初階</a></td><td>1–5</td><td>約 4 節</td><td>上傳和執行程式、看懂監控窗和錯誤提示，控制 LED 和蜂鳴器</td></tr>
+              <tr><td><a href="#path-intermediate">中階</a></td><td>6–15、21</td><td>約 8 節</td><td>讀取各種感測器、用圖表觀察數值，把結果顯示在螢幕和燈光上</td></tr>
+              <tr><td><a href="#path-advanced">進階</a></td><td>16–20、22–26</td><td>約 10 節</td><td>讓程式同時做好幾件事，連上手機和雲端服務，做出省電或多塊板子合作的作品</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="tip"><strong>給老師：</strong>建議時數以一節 50 分鐘計算，包含接線和動手改改看，不包含學生自己的專題。第一節課還要安裝驅動程式和韌體，可以先在課前幫板子裝好韌體。中階的感測器很多，器材不夠時可以分組，每組做不同的感測器再互相分享。</p>
+
+        <h3 id="path-beginner">初階：讓 LED 和蜂鳴器動起來</h3>
+        <ul>
+          <li><strong>學完能做到：</strong>連接開發板、上傳和執行程式，看懂監控窗的輸出和錯誤提示；用數位輸出入、PWM 和類比讀值控制 LED 和蜂鳴器。</li>
+          <li><strong>建議時數：</strong>約 4 節。</li>
+          <li><strong>材料：</strong>ESP32 開發板和能傳資料的 USB 線、麵包板、杜邦線、LED、220Ω 電阻、按鈕、10kΩ 可變電阻、無源蜂鳴器。</li>
+          <li><strong>用到的網站功能：</strong><a href="#start">上傳並執行</a>、<a href="#run">執行（不存檔）</a>、監控窗和錯誤提示、<a href="#repl">REPL 即時指令</a>。</li>
+        </ul>
+        <ul class="path-steps">
+          <li id="path-blink"><a class="example-link" href="./index.html?example=blink">1. LED 閃爍</a>：用 <code>Pin.OUT</code> 控制腳位、<code>while True</code> 一直重複、<code>time.sleep</code> 暫停。順便比較「執行（不存檔）」和「上傳並執行」的差別。<span class="path-try"><strong>動手改改看：</strong>把間隔改成 0.2 秒；再試著做出「亮 0.2 秒、暗 1 秒」的節奏。</span></li>
+          <li id="path-button_led"><a class="example-link" href="./index.html?example=button_led">2. 按鈕開關 LED</a>：用 <code>Pin.IN</code> 和 <code>Pin.PULL_UP</code> 讀按鈕，比較前後兩次的狀態，找出「剛按下去」的那一刻。<span class="path-try"><strong>動手改改看：</strong>改成「按住才亮，放開就暗」。</span></li>
+          <li id="path-breathing_led"><a class="example-link" href="./index.html?example=breathing_led">3. 呼吸燈（PWM）</a>：用 PWM 的 <code>duty_u16</code> 調整亮度，用 <code>for</code> 和 <code>range</code> 一步一步改變數值。<span class="path-try"><strong>動手改改看：</strong>讓呼吸慢一倍；再改成最亮只到 50%。</span></li>
+          <li id="path-knob_led"><a class="example-link" href="./index.html?example=knob_led">4. 可變電阻調亮度</a>：用 <code>ADC</code> 讀類比電壓，得到 0 到 65535 的數字，再交給 PWM。<span class="path-try"><strong>動手改改看：</strong>反過來，旋鈕轉越多，LED 越暗。</span></li>
+          <li id="path-buzzer_song"><a class="example-link" href="./index.html?example=buzzer_song">5. 無源蜂鳴器播放小星星</a>：頻率決定音高，用字典存音名、用串列存旋律。<span class="path-try"><strong>動手改改看：</strong>把 <code>BEAT_MS</code> 改小讓歌變快；再把 <code>SONG</code> 換成「兩隻老虎」（C D E C、C D E C、E F G、E F G）。</span></li>
+        </ul>
+
+        <h3 id="path-intermediate">中階：感測器和顯示器</h3>
+        <ul>
+          <li><strong>學完能做到：</strong>讀取光線、人體、距離、溫濕度等感測器，用圖表觀察數值；把結果顯示在 OLED、LCD 和燈光上；接線有問題時會用 I2C 掃描檢查。</li>
+          <li><strong>建議時數：</strong>約 8 節。</li>
+          <li><strong>材料：</strong>SG90 伺服馬達和外部 5V 電源、光敏電阻和 10kΩ 電阻、HC-SR501、有源蜂鳴器模組、HC-SR04 和分壓用的 1kΩ、2kΩ 電阻、DHT11、DS18B20（裸元件要加 4.7kΩ 電阻）、SSD1306 OLED 或 I2C LCD 1602、WS2812 燈條、MAX7219 點矩陣。</li>
+          <li><strong>用到的網站功能：</strong><a href="#plot">圖表與 CSV</a>、<a href="#files">板上檔案</a>、<a href="#gemini">Gemini 提示詞</a>的「寫新程式」、<a href="#wiring">接線注意事項</a>。</li>
+        </ul>
+        <ul class="path-steps">
+          <li id="path-servo_sweep"><a class="example-link" href="./index.html?example=servo_sweep">6. SG90 伺服馬達來回轉動</a>：用 50 Hz 脈衝的寬度控制角度，自己寫函式 <code>set_angle</code>。馬達要用外部 5V 供電。<span class="path-try"><strong>動手改改看：</strong>改成只在 45 度到 135 度之間擺動。</span></li>
+          <li id="path-light_sensor"><a class="example-link" href="./index.html?example=light_sensor">7. 光敏電阻自動夜燈</a>：讀感測器，再用門檻決定要不要開燈。<span class="path-try"><strong>動手改改看：</strong>打開圖表看亮度變化，找出適合你教室的 <code>DARK_LEVEL</code>。</span></li>
+          <li id="path-pir_alarm"><a class="example-link" href="./index.html?example=pir_alarm">8. 人體紅外線警報（HC-SR501）</a>：狀態改變時才印出，監控窗才不會洗版。<span class="path-try"><strong>動手改改看：</strong>偵測到人時，讓蜂鳴器「嗶、嗶」地響，不要一直響。</span></li>
+          <li id="path-ultrasonic"><a class="example-link" href="./index.html?example=ultrasonic">9. 超音波測距（HC-SR04）</a>：量回音的時間來換算距離；5V 的訊號要先分壓才能接 ESP32。<span class="path-try"><strong>動手改改看：</strong>距離小於 10 公分時印出「太近了！」，再加上 LED 或蜂鳴器提醒。</span></li>
+          <li id="path-dht11_serial"><a class="example-link" href="./index.html?example=dht11_serial">10. DHT11 溫濕度（監控窗）</a>：匯入感測器模組，用 <code>try</code> 和 <code>except</code> 處理讀取失敗。<span class="path-try"><strong>動手改改看：</strong>打開圖表，對感測器呵一口氣，看濕度怎麼變化；再匯出 CSV，用試算表畫圖。</span></li>
+          <li id="path-ds18b20"><a class="example-link" href="./index.html?example=ds18b20">11. DS18B20 溫度計</a>：單線（1-Wire）通訊，一條線可以串好幾顆感測器。<span class="path-try"><strong>動手改改看：</strong>把溫度換算成華氏，和攝氏一起印出來。</span></li>
+          <li id="path-i2c_scan"><a class="example-link" href="./index.html?example=i2c_scan">21. I2C 掃描（找出裝置位址）</a>：I2C 用位址區分裝置；接顯示器前，先確認板子找得到它。<span class="path-try"><strong>動手改改看：</strong>把 OLED 和 LCD 接在同一組 SDA、SCL 上，看看能不能同時掃到兩個位址。</span></li>
+          <li id="path-oled_ssd1306"><a class="example-link" href="./index.html?example=oled_ssd1306">13. SSD1306 OLED 顯示器</a>：先在記憶體裡寫字、畫線，呼叫 <code>show()</code> 後畫面才會更新。<span class="path-try"><strong>動手改改看：</strong>多顯示一行你的名字，再用 <code>oled.rect()</code> 畫一個外框。</span></li>
+          <li id="path-lcd1602_i2c"><a class="example-link" href="./index.html?example=lcd1602_i2c">14. I2C LCD 1602 顯示器</a>：用 <code>move_to(欄, 列)</code> 決定文字的位置。<span class="path-try"><strong>動手改改看：</strong>把秒數改成「分:秒」的格式，例如 <code>01:05</code>。</span></li>
+          <li id="path-ws2812_rainbow"><a class="example-link" href="./index.html?example=ws2812_rainbow">12. WS2812 全彩 LED 彩虹</a>：用（紅, 綠, 藍）三個數字表示顏色，呼叫 <code>write()</code> 後燈條才會更新。<span class="path-try"><strong>動手改改看：</strong>讓整條燈一起輪流顯示紅、綠、藍。</span></li>
+          <li id="path-max7219_matrix"><a class="example-link" href="./index.html?example=max7219_matrix">15. MAX7219 點矩陣</a>：用 0 和 1 組成的二進位數字畫 8×8 的圖案。<span class="path-try"><strong>動手改改看：</strong>自己設計一個圖案，例如箭頭，加進輪播。</span></li>
+        </ul>
+
+        <h3 id="path-advanced">進階：同時做好幾件事，連上網路</h3>
+        <ul>
+          <li><strong>學完能做到：</strong>用中斷、計時器和 asyncio 讓程式同時處理好幾件事；讓板子和手機、雲端服務互動；做出省電或多塊板子合作的作品。</li>
+          <li><strong>建議時數：</strong>約 10 節。</li>
+          <li><strong>材料：</strong>範例 2 的按鈕和 LED、DHT11、2.4GHz 的 Wi-Fi、手機；Telegram 範例要 Telegram 帳號，Google 試算表範例要 Google 帳號；ESP-NOW 要兩塊以上的板子。</li>
+          <li><strong>用到的網站功能：</strong><a href="#gemini">Gemini 提示詞</a>的「解說程式」、<a href="#voice">手機與語音控制</a>、<a href="#google-sheets">Google 試算表</a>、<a href="#privacy">隱私與安全</a>（程式裡有 Wi-Fi 密碼時要注意）。</li>
+        </ul>
+        <ul class="path-steps">
+          <li id="path-button_irq"><a class="example-link" href="./index.html?example=button_irq">22. 按鈕中斷（IRQ）</a>：按鈕一按下就執行中斷函式，函式裡只做記號；用 <code>ticks_diff</code> 去除彈跳。<span class="path-try"><strong>動手改改看：</strong>把主程式的等待改成 5 秒，確認快速按好幾下也一下都沒漏。</span></li>
+          <li id="path-timer_blink"><a class="example-link" href="./index.html?example=timer_blink">23. 計時器讓 LED 自己閃（Timer）</a>：計時器定時呼叫函式，主程式同時做別的事；用 <code>finally</code> 收尾。<span class="path-try"><strong>動手改改看：</strong>再加一個計時器，每 3 秒在監控窗印一次訊息。</span></li>
+          <li id="path-asyncio_tasks"><a class="example-link" href="./index.html?example=asyncio_tasks">26. asyncio 同時做三件事</a>：用 <code>async def</code> 和 <code>await</code> 讓好幾個工作輪流執行。<span class="path-try"><strong>動手改改看：</strong>加第四個工作，每 5 秒用 <code>gc.mem_free()</code> 印出剩下多少記憶體。</span></li>
+          <li id="path-web_led"><a class="example-link" href="./index.html?example=web_led">16. 手機控制 LED（同一個 Wi-Fi）</a>：連上 Wi-Fi，讓板子當網頁伺服器，用 asyncio 同時處理網頁和閃爍。<span class="path-try"><strong>動手改改看：</strong>在網頁上多加一個「快閃」按鈕。</span></li>
+          <li id="path-dht11_alarm"><a class="example-link" href="./index.html?example=dht11_alarm">18. DHT11 溫濕度警報</a>：手機網頁每 2 秒向板子要一次 JSON 資料。<span class="path-try"><strong>動手改改看：</strong>把警報門檻從 50% 改成適合你教室的數字。</span></li>
+          <li id="path-mqtt_led"><a class="example-link" href="./index.html?example=mqtt_led">17. 語音控制 LED（MQTT）</a>：透過網路上的 MQTT 伺服器，在不同的 Wi-Fi 之間收發訊息。<span class="path-try"><strong>動手改改看：</strong>加上一顆按鈕，按下時切換 LED，並回報狀態，讓語音控制頁跟著更新。</span></li>
+          <li id="path-telegram_led"><a class="example-link" href="./index.html?example=telegram_led">19. Telegram 機器人控制 LED</a>：用 HTTPS 呼叫網路上的 API，按鈕用中斷做記號，網路工作留給主程式。<span class="path-try"><strong>動手改改看：</strong>加一個 <code>/blink</code> 指令，讓 LED 閃 5 下。</span></li>
+          <li id="path-sheets_dht11"><a class="example-link" href="./index.html?example=sheets_dht11">20. DHT11 資料存到 Google 試算表</a>：把資料放在網址參數裡，送給 Apps Script 寫進試算表。<span class="path-try"><strong>動手改改看：</strong>先把 <code>SEND_SECONDS</code> 改成 10 秒測試，再用收集到的資料在試算表畫一張折線圖。</span></li>
+          <li id="path-deep_sleep"><a class="example-link" href="./index.html?example=deep_sleep">24. 深度睡眠定時醒來</a>：睡著時幾乎不耗電，RTC 記憶體在睡眠時會保留資料，醒來就像重新開機。<span class="path-try"><strong>動手改改看：</strong>醒來時讀一次 DHT11 再去睡，做成省電的溫度記錄器。</span></li>
+          <li id="path-espnow_led"><a class="example-link" href="./index.html?example=espnow_led">25. ESP-NOW 多塊板子互傳</a>：板子之間直接傳訊息，不用經過 Wi-Fi 基地台。<span class="path-try"><strong>動手改改看：</strong>改成傳送「按了第幾次」，收到的板子在監控窗印出來。</span></li>
+        </ul>
       </section>
 
       <section id="run">
