@@ -23,7 +23,7 @@
         <img class="brand-logo" src="/icons/logo.svg" alt="" width="40" height="40" />
         <div>
           <h1>ESP32 Lab <span class="edition">MicroPython Edition</span> Help <span class="version" title="Version">v%VITE_APP_VERSION%</span></h1>
-          <p class="updated">Last updated: November 3, 2026</p>
+          <p class="updated">Last updated: November 7, 2026</p>
         </div>
       </div>
       <div class="help-actions">
@@ -318,6 +318,25 @@ mylib.hello("ESP32")</pre>
             </tbody>
           </table>
         </div>
+        <h3 id="chips">How the ESP32 chips differ</h3>
+        <p>Boards sold as ESP32 can carry several different chips. For classes, the classic ESP32 is the best choice, because it has the most teaching material and online help. The other chips number their pins differently, so see the pin table under "Wiring notes".</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Chip</th><th scope="col">Cores</th><th scope="col">Memory (RAM)</th><th scope="col">Bluetooth</th><th scope="col">Best for</th><th scope="col">This site</th></tr></thead>
+            <tbody>
+              <tr><td>ESP32</td><td>Two, 240 MHz</td><td>520 KB</td><td>Classic Bluetooth and BLE</td><td>The most common, with the most teaching material and many pins</td><td><span class="badge tested">Tested</span></td></tr>
+              <tr><td>ESP32-S3</td><td>Two, 240 MHz</td><td>512 KB, plus optional PSRAM</td><td>BLE 5</td><td>The most pins and camera support, for more advanced projects</td><td><span class="badge expected">Not yet tested</span></td></tr>
+              <tr><td>ESP32-C3</td><td>One, 160 MHz (RISC-V)</td><td>400 KB</td><td>BLE 5</td><td>Cheap and small, with fewer pins</td><td><span class="badge expected">Not yet tested</span></td></tr>
+              <tr><td>ESP32-S2</td><td>One, 240 MHz</td><td>320 KB</td><td>None</td><td>Replaced by the S3 and now rare, so there is no need to look for one</td><td><span class="badge expected">Not yet tested</span></td></tr>
+              <tr><td>ESP32-C2 (ESP8684)</td><td>One, 120 MHz (RISC-V)</td><td>272 KB</td><td>BLE 5</td><td>The cheapest, meant to replace the ESP8266, with the least memory</td><td><span class="badge no">Not supported</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <ul>
+          <li><strong>S3 model names:</strong> N16R8, for example, means 16 MB of flash and 8 MB of octal PSRAM. Octal PSRAM uses GPIO 35–37, so do not connect parts to those pins. If the board has two USB-C ports, try the one marked COM or UART first.</li>
+          <li><strong>Boards with CAM in the name:</strong> this site's firmware has no camera support, so they work only as plain boards.</li>
+          <li><strong>C3, S2 and S3 boards:</strong> some have no USB-to-serial chip and use the chip's own USB instead, so no driver is needed.</li>
+        </ul>
         <h3>Can I use an Arduino UNO?</h3>
         <p><strong>No.</strong> This site only has MicroPython firmware for the ESP32 family, and the classic UNO R3 has too little memory to run MicroPython. ESP32 Lab also has an Arduino edition, but "Arduino" there means the Arduino framework you write code with (<code>setup()</code>, <code>digitalWrite()</code> and so on), not the Arduino board, so it does not support the UNO either.</p>
         <h3>Boards supported by the two editions</h3>
