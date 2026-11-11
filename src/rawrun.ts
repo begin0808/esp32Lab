@@ -7,20 +7,24 @@ const BOOT_REPORT = /\nrst:0x[0-9a-f]/;
  * then the error text, another Ctrl-D and the raw prompt ">". The markers are dropped so the monitor shows
  * the same text as for a program run from main.py, and `finished` turns true once, when the prompt arrives.
  * If the board restarts instead (deep sleep, machine.reset() or a crash), `restarted` turns true once:
- * the end markers will never come, and the board is now running its own main.py.
+ * the end markers will never come, and the board is now running its own main.py. That happens when the
+ * boot report's line is complete, so a note shown between `text` and `after` never splits it.
  */
 export class RawRunWatcher {
   private ends = 0;
   private done = false;
+  private booting = false;
   private tail = "";
 
-  push(text: string): { text: string; finished: boolean; restarted: boolean } {
+  push(text: string): { text: string; finished: boolean; restarted: boolean; after?: string } {
     if (this.done) return { text, finished: false, restarted: false };
+    if (this.booting) return this.endOfBootLine(text, 0);
     // The report may arrive split across two pieces of output.
     const recent = this.tail + text;
-    if (BOOT_REPORT.test(recent)) {
-      this.done = true;
-      return { text, finished: false, restarted: true };
+    const report = BOOT_REPORT.exec(recent);
+    if (report) {
+      this.booting = true;
+      return this.endOfBootLine(text, Math.max(0, report.index + report[0].length - this.tail.length));
     }
     this.tail = recent.slice(-16);
     let shown = "";
@@ -38,5 +42,13 @@ export class RawRunWatcher {
       shown += char;
     }
     return { text: shown, finished: false, restarted: false };
+  }
+
+  /** Once the boot report has started, waits for the end of its line, searching `text` from `from`. */
+  private endOfBootLine(text: string, from: number): { text: string; finished: boolean; restarted: boolean; after?: string } {
+    const end = text.indexOf("\n", from);
+    if (end === -1) return { text, finished: false, restarted: false };
+    this.done = true;
+    return { text: text.slice(0, end + 1), finished: false, restarted: true, after: text.slice(end + 1) };
   }
 }

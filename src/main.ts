@@ -524,9 +524,13 @@ function onBoardOutput(data: Uint8Array): void {
   const followed = rawRun.push(decoded);
   if (followed.restarted) {
     // Deep sleep, machine.reset() or a crash: the board now runs its own main.py, which is ordinary output.
+    // The note goes below the boot report's line, which says why the board restarted.
     rawRun = null;
+    showBoardText(followed.text);
     systemMessage(t("開發板重新開機了，「執行（不存檔）」的程式已經不在記憶體裡，現在執行的是板子上的 main.py。"));
     setStatus(t("程式執行中"), "ready");
+    showBoardText(followed.after ?? "");
+    return;
   }
   showBoardText(followed.text);
   // After the program's last words, so the note that follows stays below them.

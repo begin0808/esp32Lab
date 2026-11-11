@@ -963,6 +963,9 @@ test.describe("run without saving", () => {
     await expect(page.locator("#monitor")).toContainText("睡覺了");
     await expect(page.locator("#monitor .system").filter({ hasText: "開發板重新開機了" })).toHaveCount(1);
     await expect(page.locator("#monitor")).toContainText("old program");
+    // The note comes after the whole boot report line, never inside it.
+    const shown = (await page.locator("#monitor").textContent()) ?? "";
+    expect(shown).toContain("(SPI_FAST_FLASH_BOOT)\r\n\n[系統] 開發板重新開機了");
     await expect(page.locator("#status")).toHaveText("程式執行中");
     await expect(page.locator("#monitor .system").filter({ hasText: "變數還留著" })).toHaveCount(0);
 
