@@ -164,7 +164,10 @@ test.describe("Gemini prompt menu", () => {
     await expect(page.locator("#gemini-button")).toBeFocused();
 
     await page.keyboard.press("Enter");
+    // The second Enter must reach the first item, not the button, or it only closes the menu again.
+    await expect(page.locator("#copy-prompt")).toBeFocused();
     await page.keyboard.press("Enter");
+    await expect(page.locator("#gemini-label")).toHaveText("已複製");
     expect(await page.evaluate(() => navigator.clipboard.readText())).toContain("請用 MicroPython 幫我寫 ESP32 程式");
   });
 });
