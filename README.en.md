@@ -4,7 +4,7 @@
 
 Live site: <https://begin0808.github.io/esp32Lab/>
 
-An ESP32 teaching site with nothing to install. Paste MicroPython code in Chrome or Edge on a computer and upload it straight to the board over USB. Everything runs in the browser, with no backend server.
+An ESP32 teaching site with nothing to install. Paste MicroPython code in Chrome or Edge on a computer, or Chrome on a Chromebook, and upload it straight to the board over USB. Everything runs in the browser, with no backend server.
 
 The site shows English or Traditional Chinese depending on your browser. You can change the language under "Settings and help".
 

@@ -439,12 +439,14 @@ mylib.hello("ESP32")</pre>
             <thead><tr><th scope="col">Device and browser</th><th scope="col">Editor (USB upload)</th><th scope="col">Voice control page</th></tr></thead>
             <tbody>
               <tr><td>Chrome and Edge on a computer</td><td>Works</td><td>Tested in Chrome; voice not yet tested in Edge</td></tr>
+              <tr><td>Chrome on a Chromebook</td><td><span class="badge tested">Tested</span> A school Chromebook with an ESP32-S board connected, installed firmware and uploaded programs normally</td><td>Not yet tested</td></tr>
               <tr><td>Chrome on an Android phone</td><td>Use a computer instead</td><td>The page opens; speech recognition not yet tested</td></tr>
               <tr><td>Safari on an iPhone</td><td>Does not work</td><td>Not yet tested; use text commands if voice does not work</td></tr>
               <tr><td>Firefox and Safari on a computer</td><td>Does not work (no Web Serial)</td><td>Not yet tested</td></tr>
             </tbody>
           </table>
         </div>
+        <p>If a Chromebook has only USB-C ports, a USB-C to USB-A adapter with the board's usual USB cable works, or you can use a USB-C to Micro USB data cable. On a school-managed Chromebook, if no serial port appears after pressing "Connect board", the management policy may have turned the feature off; ask the school's IT staff to allow it in the Google Admin console.</p>
       </section>
 
       <section id="parts">

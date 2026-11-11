@@ -449,12 +449,14 @@ mylib.hello("ESP32")</pre>
             <thead><tr><th scope="col">裝置與瀏覽器</th><th scope="col">編輯器（USB 上傳）</th><th scope="col">語音控制頁</th></tr></thead>
             <tbody>
               <tr><td>電腦版 Chrome、Edge</td><td>可以使用</td><td>Chrome 已實測，Edge 的語音尚未實測</td></tr>
+              <tr><td>Chromebook 的 Chrome</td><td><span class="badge tested">已實測</span> 學校的 Chromebook 接 ESP32-S 開發板，連接、安裝韌體、上傳程式都正常</td><td>尚未實測</td></tr>
               <tr><td>Android 手機 Chrome</td><td>請改用電腦</td><td>頁面可開啟，語音辨識尚未實測</td></tr>
               <tr><td>iPhone Safari</td><td>不能使用</td><td>尚未實測，語音不能用時請改用文字指令</td></tr>
               <tr><td>電腦版 Firefox、Safari</td><td>不能使用（沒有 Web Serial）</td><td>尚未實測</td></tr>
             </tbody>
           </table>
         </div>
+        <p>Chromebook 只有 Type-C 孔時，用 Type-C 轉 USB-A 轉接頭接原本的 USB 線就可以，也可以改用 USB-C 轉 Micro USB 傳輸線。學校統一管理的 Chromebook 如果按「連接開發板」後沒有出現序列埠，可能是管理政策關閉了這個功能，請資訊組在 Google 管理控制台開放。</p>
       </section>
 
       <section id="parts">

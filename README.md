@@ -4,7 +4,7 @@
 
 線上使用：<https://begin0808.github.io/esp32Lab/>
 
-免安裝的 ESP32 教學網站：在電腦版 Chrome 或 Edge 貼上 MicroPython 程式，透過 USB 直接上傳到開發板。全部在瀏覽器內執行，不需要後端主機。
+免安裝的 ESP32 教學網站：在電腦版 Chrome、Edge 或 Chromebook 貼上 MicroPython 程式，透過 USB 直接上傳到開發板。全部在瀏覽器內執行，不需要後端主機。
 
 ## 上課流程
 
