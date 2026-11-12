@@ -153,14 +153,14 @@ class DashTests(unittest.TestCase):
 
     def test_publishes_the_layout_and_marks_the_board_online(self):
         board = self.board()
-        board.gauge("溫度", min=0, max=50, unit="°C")
+        board.gauge("溫度", min=0, max=50, unit="°C", color="red")
         board.switch("LED")
         board.start()
         layout = json.loads(FakeClient.retained[BASE + "layout"])
         self.assertEqual(layout["v"], 1)
         self.assertEqual(
             layout["w"],
-            [{"id": "0g", "t": "gauge", "l": "溫度", "min": 0, "max": 50, "u": "°C"}, {"id": "1w", "t": "switch", "l": "LED"}],
+            [{"id": "0g", "t": "gauge", "l": "溫度", "min": 0, "max": 50, "u": "°C", "c": "red"}, {"id": "1w", "t": "switch", "l": "LED"}],
         )
         self.assertEqual(FakeClient.retained[BASE + "state"], "online")
         self.assertEqual(self.client().will, ((BASE + "state").encode(), b"offline", True))

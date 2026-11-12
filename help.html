@@ -118,7 +118,7 @@
               <tr><td>ESP-NOW 多塊板子互傳</td><td>按任一塊板子的按鈕，所有板子的 LED 一起切換</td><td>每塊板子都同範例 2</td><td>不需要，板子之間直接傳</td></tr>
               <tr><td>asyncio 同時做三件事</td><td>LED 閃爍、監看按鈕、每 2 秒報告執行時間同時進行</td><td>同範例 2：按鈕 GPIO 19、LED GPIO 18</td><td>不需要</td></tr>
               <tr><td>儀表板入門：開關 LED、看按鈕</td><td>手機儀表板的開關控制 LED，指示燈顯示按鈕有沒有按下，數字顯示按了幾下</td><td>同範例 2：按鈕 GPIO 19、LED GPIO 18</td><td>板子和手機都要能上網</td></tr>
-              <tr><td>DHT11 溫濕度儀表板</td><td>手機上看溫度儀表、濕度數字、溫度變化圖和狀態文字</td><td>DATA GPIO 4</td><td>板子和手機都要能上網</td></tr>
+              <tr><td>DHT11 溫濕度儀表板</td><td>手機上看溫度和濕度儀表、標有時間的濕度變化圖，溫度超過 30°C 時狀態文字會提醒</td><td>DATA GPIO 4</td><td>板子和手機都要能上網</td></tr>
               <tr><td>滑桿調 LED 亮度、看可變電阻</td><td>手機滑桿調 LED 亮度，儀表顯示旋鈕位置，「全亮」按鈕讓滑桿跳到 100%</td><td>旋鈕 GPIO 34、LED GPIO 18</td><td>板子和手機都要能上網</td></tr>
             </tbody>
           </table>
@@ -192,7 +192,7 @@
           <li id="path-dht11_alarm"><a class="example-link" href="./index.html?example=dht11_alarm">18. DHT11 溫濕度警報</a>：手機網頁每 2 秒向板子要一次 JSON 資料。<span class="path-try"><strong>動手改改看：</strong>把警報門檻從 50% 改成適合你教室的數字。</span></li>
           <li id="path-mqtt_led"><a class="example-link" href="./index.html?example=mqtt_led">17. 語音控制 LED（MQTT）</a>：透過網路上的 MQTT 伺服器，在不同的 Wi-Fi 之間收發訊息。<span class="path-try"><strong>動手改改看：</strong>加上一顆按鈕，按下時切換 LED，並回報狀態，讓語音控制頁跟著更新。</span></li>
           <li id="path-dash_intro"><a class="example-link" href="./index.html?example=dash_intro">27. 儀表板入門：開關 LED、看按鈕</a>：用 <code>dash</code> 建立手機上的元件，<code>.set()</code> 把值送到手機，<code>.value</code> 讀手機上的開關。<span class="path-try"><strong>動手改改看：</strong>加一個 <code>board.text("訊息")</code>，按下按鈕時顯示「有人按了！」。</span></li>
-          <li id="path-dash_dht11"><a class="example-link" href="./index.html?example=dash_dht11">28. DHT11 溫濕度儀表板</a>：同一個數值可以同時給儀表和折線圖；用時間差每 2 秒讀一次感測器，<code>board.check()</code> 照樣一直執行。<span class="path-try"><strong>動手改改看：</strong>加一個 <code>board.led("太熱", color="red")</code>，溫度超過 <code>HOT</code> 時亮紅燈。</span></li>
+          <li id="path-dash_dht11"><a class="example-link" href="./index.html?example=dash_dht11">28. DHT11 溫濕度儀表板</a>：同一個數值可以同時給儀表和折線圖，儀表可以用 <code>color=</code> 選顏色；用時間差每 3 秒讀一次感測器，<code>board.check()</code> 照樣一直執行。對感測器哈氣，濕度變化最明顯。<span class="path-try"><strong>動手改改看：</strong>加一個 <code>board.led("太熱", color="red")</code>，溫度超過 <code>HOT</code> 時亮紅燈。</span></li>
           <li id="path-dash_knob"><a class="example-link" href="./index.html?example=dash_knob">29. 滑桿調 LED 亮度、看可變電阻</a>：手機的滑桿和按鈕控制板子，板子也能用 <code>.set()</code> 改滑桿的位置。<span class="path-try"><strong>動手改改看：</strong>加一個「關燈」按鈕，按下時把滑桿設成 0。</span></li>
           <li id="path-telegram_led"><a class="example-link" href="./index.html?example=telegram_led">19. Telegram 機器人控制 LED</a>：用 HTTPS 呼叫網路上的 API，按鈕用中斷做記號，網路工作留給主程式。<span class="path-try"><strong>動手改改看：</strong>加一個 <code>/blink</code> 指令，讓 LED 閃 5 下。</span></li>
           <li id="path-sheets_dht11"><a class="example-link" href="./index.html?example=sheets_dht11">20. DHT11 資料存到 Google 試算表</a>：把資料放在網址參數裡，送給 Apps Script 寫進試算表。<span class="path-try"><strong>動手改改看：</strong>先把 <code>SEND_SECONDS</code> 改成 10 秒測試，再用收集到的資料在試算表畫一張折線圖。</span></li>
@@ -619,8 +619,8 @@ mylib.hello("ESP32")</pre>
             <thead><tr><th scope="col">元件</th><th scope="col">程式寫法</th><th scope="col">手機上的樣子</th><th scope="col">怎麼用</th></tr></thead>
             <tbody>
               <tr><td>數值</td><td><code>board.value("濕度", unit="%")</code></td><td>大字數字加單位</td><td><code>.set(數字或文字)</code></td></tr>
-              <tr><td>儀表</td><td><code>board.gauge("溫度", min=0, max=50, unit="°C")</code></td><td>半圓形儀表</td><td><code>.set(數字)</code></td></tr>
-              <tr><td>折線圖</td><td><code>board.chart("溫度變化", unit="°C")</code></td><td>最近 60 個值的折線</td><td><code>.set(數字)</code>，每次是一個點</td></tr>
+              <tr><td>儀表</td><td><code>board.gauge("溫度", min=0, max=50, unit="°C", color="red")</code></td><td>半圓形儀表，顏色有 green、red、yellow、blue</td><td><code>.set(數字)</code></td></tr>
+              <tr><td>折線圖</td><td><code>board.chart("濕度變化", unit="%")</code></td><td>最近 60 個值的折線，下方標出手機收到的時間</td><td><code>.set(數字)</code>，每次是一個點</td></tr>
               <tr><td>指示燈</td><td><code>board.led("警報", color="red")</code></td><td>亮或暗的圓燈，顏色有 green、red、yellow、blue</td><td><code>.set(True)</code> 亮、<code>.set(False)</code> 暗</td></tr>
               <tr><td>文字</td><td><code>board.text("狀態")</code></td><td>一行文字</td><td><code>.set("文字")</code></td></tr>
               <tr><td>開關</td><td><code>board.switch("LED")</code></td><td>開關</td><td><code>.value</code> 是 True 或 False，板子也能用 <code>.set()</code> 改</td></tr>

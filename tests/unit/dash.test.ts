@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { dashFile, dashTopic, findDashboardUrl, formatNumber, gaugeFraction, parseLayout, parseNumber, usesDash } from "../../src/dash";
+import { dashFile, dashTopic, findDashboardUrl, formatClock, formatNumber, gaugeFraction, parseLayout, parseNumber, usesDash } from "../../src/dash";
 
 const HAS_CJK = /[　-〿㐀-鿿＀-￯]/;
 
@@ -111,6 +111,11 @@ describe("numbers on the dashboard", () => {
     expect(gaugeFraction(25, 0, 50)).toBe(0.5);
     expect(gaugeFraction(-10, 0, 50)).toBe(0);
     expect(gaugeFraction(80, 0, 50)).toBe(1);
+  });
+
+  it("writes chart times as hours, minutes and seconds", () => {
+    expect(formatClock(new Date(2026, 10, 12, 10, 8, 2))).toBe("10:08:02");
+    expect(formatClock(new Date(2026, 10, 12, 9, 5, 0))).toBe("09:05:00");
   });
 
   it("shows at most two decimals", () => {

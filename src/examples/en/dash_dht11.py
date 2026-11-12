@@ -1,7 +1,7 @@
-# Example 28 | DHT11 dashboard: see a temperature gauge, the humidity and a temperature chart on a phone
+# Example 28 | DHT11 dashboard: temperature and humidity gauges and a humidity chart on a phone, with a warning when it is too hot
 # Wiring: DHT11 VCC to 3V3, GND to GND, DATA to GPIO 4
 # How to use: after uploading, scan the QR code next to the monitor with a phone to open the dashboard. Wi-Fi must reach the internet
-# Try it: breathe on the sensor and watch the humidity and the chart change
+# Try it: breathe on the sensor; the humidity rises clearly, and the humidity chart goes up with it
 import time
 import dash
 import dht
@@ -12,7 +12,8 @@ SSID = "YOUR_WIFI_SSID"
 PASSWORD = "YOUR_WIFI_PASSWORD"
 
 DHT_PIN = 4
-HOT = 30  # Above this temperature, the phone shows a warning
+HOT = 30  # Above 30°C, the status on the phone shows a warning
+READ_MS = 3000  # Read every 3 s; the DHT11 cannot be read too often
 
 # MQTT topic name: give each board its own. Enter the same name on the phone dashboard
 TOPIC_NAME = "{{CHANNEL}}"
@@ -20,26 +21,30 @@ TOPIC_NAME = "{{CHANNEL}}"
 sensor = dht.DHT11(Pin(DHT_PIN))
 
 board = dash.Dashboard(TOPIC_NAME, SSID, PASSWORD)
-temp_gauge = board.gauge("Temperature", min=0, max=50, unit="°C")  # A half-circle gauge
-humidity = board.value("Humidity", unit="%")  # A big number
-history = board.chart("Temperature over time", unit="°C")  # A line chart of the last 60 values
-note = board.text("Status")  # One line of text
+temp_gauge = board.gauge("Temperature", min=0, max=50, unit="°C", color="red")  # A red half-circle gauge
+humidity_gauge = board.gauge("Humidity", min=0, max=100, unit="%", color="blue")  # A blue half-circle gauge
+history = board.chart("Humidity over time", unit="%")  # A line chart of the last 60 values, with times below
+note = board.text("Status (warns above {}°C)".format(HOT))  # One line of text; the title gives the condition
 board.start()
 
-last_read = time.ticks_ms() - 2000
+last_read = time.ticks_ms() - READ_MS
 while True:
     board.check()
-    # The DHT11 cannot be read too often, so read it every 2 s; board.check() keeps running in between
-    if time.ticks_diff(time.ticks_ms(), last_read) >= 2000:
+    # Read the sensor every 3 s by checking the time; board.check() keeps running in between, so the phone still gets answers
+    if time.ticks_diff(time.ticks_ms(), last_read) >= READ_MS:
         last_read = time.ticks_ms()
         try:
             sensor.measure()
             temp = sensor.temperature()
+            humidity = sensor.humidity()
             temp_gauge.set(temp)
-            history.set(temp)
-            humidity.set(sensor.humidity())
-            note.set("Too hot, open a window" if temp > HOT else "Temperature normal")
-            print("temp:", temp, "°C  humidity:", sensor.humidity(), "%")
+            humidity_gauge.set(humidity)
+            history.set(humidity)
+            if temp > HOT:
+                note.set("Too hot: {}°C, above {}°C, open a window".format(temp, HOT))
+            else:
+                note.set("Temperature normal: {}°C, not above {}°C".format(temp, HOT))
+            print("temp:", temp, "°C  humidity:", humidity, "%")
         except OSError:  # A wiring problem ends up here
             note.set("Reading failed, check the wiring")
             print("Reading failed, check the wiring")

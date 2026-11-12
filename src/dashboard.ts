@@ -1,4 +1,4 @@
-import { dashTopic, formatNumber, gaugeFraction, parseLayout, parseNumber, type Widget } from "./dash";
+import { dashTopic, formatClock, formatNumber, gaugeFraction, parseLayout, parseNumber, type Widget } from "./dash";
 import { setupLanguagePicker, t, translatePage } from "./i18n";
 import { el, setStatus, setupMqttPage } from "./mqttpage";
 import { setupHomeLinks } from "./nav";
@@ -28,7 +28,8 @@ let layoutText = "";
 let replyTimer: ReturnType<typeof setTimeout> | undefined;
 /** The newest value of each widget, kept even before the layout arrives, because the broker sends them in any order. */
 const values = new Map<string, string>();
-const history = new Map<string, number[]>();
+/** Chart values with the time each one arrived, because the board sends no times of its own. */
+const history = new Map<string, { value: number; time: number }[]>();
 let views = new Map<string, View>();
 
 function svg<K extends keyof SVGElementTagNameMap>(name: K, attributes: Record<string, string | number>): SVGElementTagNameMap[K] {
@@ -67,7 +68,7 @@ function gaugeView(card: HTMLElement, widget: Widget): View {
   const arc = "M 10 60 A 50 50 0 0 1 110 60";
   const drawing = svg("svg", { viewBox: "0 0 120 66", class: "gauge", "aria-hidden": "true" });
   drawing.append(svg("path", { d: arc, class: "gauge-track", pathLength: 100 }));
-  const fill = svg("path", { d: arc, class: "gauge-fill", pathLength: 100, "stroke-dasharray": "0 100" });
+  const fill = svg("path", { d: arc, class: "gauge-fill", pathLength: 100, "stroke-dasharray": "0 100", "data-color": widget.color });
   drawing.append(fill);
   card.append(drawing);
   const number = numberView(card, widget);
@@ -92,16 +93,22 @@ function chartView(card: HTMLElement, widget: Widget): View {
   // The newest value is marked, so even a single value shows on the chart.
   const dot = svg("path", { class: "chart-dot", d: "" });
   drawing.append(line, dot);
+  // The oldest, middle and newest times, so students can tell how fast the values change.
+  const times = part("p", "chart-times");
   const range = part("p", "chart-range");
-  card.append(drawing, range);
+  card.append(drawing, times, range);
   const draw = () => {
-    const points = history.get(widget.id) ?? [];
+    const entries = history.get(widget.id) ?? [];
+    const points = entries.map((entry) => entry.value);
     if (points.length === 0) {
       line.setAttribute("points", "");
       dot.setAttribute("d", "");
+      times.replaceChildren();
       range.textContent = "";
       return;
     }
+    const shown = points.length >= 3 ? [entries[0], entries[Math.floor((entries.length - 1) / 2)], entries.at(-1)!] : [entries[0], entries.at(-1)!].slice(2 - points.length);
+    times.replaceChildren(...shown.map((entry) => part("span", "", formatClock(new Date(entry.time)))));
     const low = Math.min(...points);
     const high = Math.max(...points);
     const span = high - low || 1;
@@ -263,7 +270,7 @@ function onValue(id: string, payload: string): void {
     const value = parseNumber(payload);
     if (value !== null) {
       const points = history.get(id) ?? [];
-      points.push(value);
+      points.push({ value, time: Date.now() });
       if (points.length > CHART_POINTS) points.shift();
       history.set(id, points);
     }

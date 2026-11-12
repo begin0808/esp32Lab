@@ -107,3 +107,8 @@ export function gaugeFraction(value: number, min: number, max: number): number {
 export function formatNumber(value: number): string {
   return String(Math.round(value * 100) / 100);
 }
+
+/** A time such as 10:08:02, the same on every phone whatever its language. */
+export function formatClock(date: Date): string {
+  return [date.getHours(), date.getMinutes(), date.getSeconds()].map((part) => String(part).padStart(2, "0")).join(":");
+}

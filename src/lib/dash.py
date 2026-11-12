@@ -111,8 +111,8 @@ class Dashboard:
     def value(self, label, unit=""):
         return self.add("value", label, {"u": unit})
 
-    def gauge(self, label, min=0, max=100, unit=""):
-        return self.add("gauge", label, {"min": min, "max": max, "u": unit})
+    def gauge(self, label, min=0, max=100, unit="", color="green"):
+        return self.add("gauge", label, {"min": min, "max": max, "u": unit, "c": color})
 
     def chart(self, label, unit=""):
         return self.add("chart", label, {"u": unit})

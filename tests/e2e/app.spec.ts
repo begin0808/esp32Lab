@@ -2084,7 +2084,7 @@ test.describe("phone dashboard", () => {
     v: 1,
     w: [
       { id: "0v", t: "value", l: "濕度", u: "%" },
-      { id: "1g", t: "gauge", l: "溫度", min: 0, max: 50, u: "°C" },
+      { id: "1g", t: "gauge", l: "溫度", min: 0, max: 50, u: "°C", c: "red" },
       { id: "2c", t: "chart", l: "溫度變化", u: "°C" },
       { id: "3l", t: "led", l: "警報", c: "red" },
       { id: "4t", t: "text", l: "<b>狀態</b>" },
@@ -2116,6 +2116,7 @@ test.describe("phone dashboard", () => {
     await expect(page.locator(".widget-value .widget-number")).toHaveText("61%");
     await expect(page.locator(".widget-gauge .number")).toHaveText("25");
     await expect(page.locator(".gauge-fill")).toHaveAttribute("stroke-dasharray", "50 100");
+    await expect(page.locator(".gauge-fill")).toHaveAttribute("data-color", "red");
     await expect(page.locator(".lamp")).toHaveAttribute("data-on", "true");
     await expect(page.locator(".lamp")).toHaveAttribute("data-color", "red");
     // A label is shown as text, so markup from the broker never runs.
@@ -2143,6 +2144,9 @@ test.describe("phone dashboard", () => {
     await expect(page.locator(".widget-chart .number")).toHaveText("26");
     await expect(page.locator(".chart-range")).toHaveText("最低 24.5，最高 26");
     expect((await page.locator(".chart-line").getAttribute("points"))!.split(" ")).toHaveLength(2);
+    // Each value is marked with the time the phone got it.
+    await expect(page.locator(".chart-times span")).toHaveCount(2);
+    await expect(page.locator(".chart-times span").last()).toHaveText(/^\d\d:\d\d:\d\d$/);
 
     broker.send(`${DASH}state`, "offline");
     await expect(page.locator("#board-status")).toContainText("離線");
