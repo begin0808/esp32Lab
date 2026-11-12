@@ -19,6 +19,7 @@ import { setupStylePicker } from "./theme";
 import { renderSVG } from "uqr";
 import {
   arduinoConvertPrompt,
+  dashboardPrompt,
   describeLines,
   explainPrompt,
   findDeviceIp,
@@ -85,6 +86,7 @@ const ui = {
   geminiLabel: el("gemini-label"),
   geminiMenu: el("gemini-menu"),
   copyPrompt: el<HTMLButtonElement>("copy-prompt"),
+  copyDashPrompt: el<HTMLButtonElement>("copy-dash-prompt"),
   copyExplain: el<HTMLButtonElement>("copy-explain"),
   explainTitle: el("explain-title"),
   explainNote: el("explain-note"),
@@ -1107,7 +1109,9 @@ ui.geminiMenu.addEventListener("toggle", (event) => {
 ui.geminiMenu.addEventListener("keydown", (event) => {
   if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
   event.preventDefault();
-  (document.activeElement === ui.copyPrompt ? ui.copyExplain : ui.copyPrompt).focus();
+  const items = [ui.copyPrompt, ui.copyDashPrompt, ui.copyExplain];
+  const step = event.key === "ArrowDown" ? 1 : items.length - 1;
+  items[(items.indexOf(document.activeElement as HTMLButtonElement) + step) % items.length].focus();
 });
 
 function copyFromMenu(text: string): void {
@@ -1117,6 +1121,7 @@ function copyFromMenu(text: string): void {
 }
 
 ui.copyPrompt.addEventListener("click", () => copyFromMenu(geminiPrompt(selectedChip().promptLines)));
+ui.copyDashPrompt.addEventListener("click", () => copyFromMenu(dashboardPrompt(selectedChip().promptLines)));
 ui.copyExplain.addEventListener("click", () => copyFromMenu(explainPrompt(getCode(), selectedChip().promptLines, selectedRange())));
 ui.copyConvert.addEventListener("click", () => void copyText(arduinoConvertPrompt(getCode()), ui.copyConvert));
 ui.copyIp.addEventListener("click", () => void copyText(ui.ipLink.href, ui.copyIp));

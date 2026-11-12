@@ -323,6 +323,123 @@ class DashTests(unittest.TestCase):
         self.assertIsNone(board.client)
         self.assertEqual(FakeClient.instances, [])
 
+    def test_color_follows_the_phone_and_the_board(self):
+        board = self.board()
+        shade = board.color("燈色")
+        board.start()
+        self.assertEqual(shade.value, (255, 255, 255))
+        self.assertEqual(self.sent("out/0h"), ["#ffffff"])
+        for text in (b"#ff8000", b"red", b"#zz0000"):
+            self.client().inbox.append(((BASE + "in/0h").encode(), text))
+            board.check()
+        self.assertEqual(shade.value, (255, 128, 0))
+        Clock.now += 600
+        shade.set((300, -5, 16))
+        board.check()
+        self.assertEqual(shade.value, (255, 0, 16))
+        self.assertEqual(FakeClient.retained[BASE + "in/0h"], "#ff0010")
+
+    def test_pad_stops_by_itself_when_the_phone_goes_quiet(self):
+        board = self.board()
+        drive = board.pad("方向")
+        board.start()
+        self.assertEqual(drive.value, "")
+        self.client().inbox.append(((BASE + "in/0p").encode(), b"up"))
+        board.check()
+        self.assertEqual(drive.value, "up")
+        # The phone repeats the direction while it is held.
+        Clock.now += 800
+        self.client().inbox.append(((BASE + "in/0p").encode(), b"up"))
+        board.check()
+        Clock.now += 800
+        board.check()
+        self.assertEqual(drive.value, "up")
+        Clock.now += 300
+        board.check()
+        self.assertEqual(drive.value, "")
+        self.client().inbox.append(((BASE + "in/0p").encode(), b"fly"))
+        board.check()
+        self.assertEqual(drive.value, "")
+        self.assertEqual(self.sent("out/0p"), [])
+        with self.assertRaises(ValueError):
+            drive.set("up")
+
+    def test_pad_stops_at_once_when_the_connection_drops(self):
+        board = self.board()
+        drive = board.pad("方向")
+        board.start()
+        self.client().inbox.append(((BASE + "in/0p").encode(), b"left"))
+        board.check()
+        self.client().broken = True
+        board.check()
+        self.assertEqual(drive.value, "")
+
+    def test_select_accepts_only_its_own_options(self):
+        board = self.board()
+        mode = board.select("模式", ["關", "亮", "閃爍"])
+        board.start()
+        layout = json.loads(FakeClient.retained[BASE + "layout"])
+        self.assertEqual(layout["w"][0]["o"], ["關", "亮", "閃爍"])
+        self.assertEqual(mode.value, "關")
+        self.client().inbox.append(((BASE + "in/0s").encode(), "閃爍".encode()))
+        board.check()
+        self.assertEqual(mode.value, "閃爍")
+        self.client().inbox.append(((BASE + "in/0s").encode(), "爆炸".encode()))
+        board.check()
+        self.assertEqual(mode.value, "閃爍")
+        with self.assertRaises(ValueError):
+            mode.set("爆炸")
+        with self.assertRaises(ValueError):
+            board.select("空的", [])
+
+    def test_input_reports_new_text_once(self):
+        board = self.board()
+        message = board.input("訊息")
+        board.start()
+        self.assertFalse(message.changed())
+        self.client().inbox.append(((BASE + "in/0i").encode(), ("嗨" * 150).encode()))
+        board.check()
+        self.assertTrue(message.changed())
+        self.assertFalse(message.changed())
+        self.assertEqual(message.value, "嗨" * 100)
+
+    def test_input_keeps_the_last_text_after_a_restart(self):
+        FakeClient.retained[BASE + "in/0i"] = "早安"
+        board = self.board()
+        message = board.input("訊息")
+        board.start()
+        self.assertEqual(message.value, "早安")
+        self.assertTrue(message.changed())
+
+    def test_alerts_are_never_kept_and_repeat_the_same_text(self):
+        board = self.board()
+        bell = board.alert("門鈴")
+        board.start()
+        self.assertEqual(self.sent("out/0a"), [])
+        for _ in range(2):
+            Clock.now += 600
+            bell.send("有人按門鈴")
+            board.check()
+        self.assertEqual(self.sent("out/0a"), ["有人按門鈴", "有人按門鈴"])
+        self.assertNotIn(BASE + "out/0a", FakeClient.retained)
+
+    def test_a_default_set_before_start_gives_way_to_the_kept_value(self):
+        board = self.board()
+        level = board.slider("亮度")
+        level.set(20)
+        board.start()
+        self.assertEqual(level.value, 20)
+        self.assertEqual(FakeClient.retained[BASE + "in/0r"], "20")
+
+        FakeClient.instances = []
+        FakeClient.retained[BASE + "in/0r"] = "75"
+        board = self.board()
+        level = board.slider("亮度")
+        level.set(20)
+        board.start()
+        self.assertEqual(level.value, 75)
+        self.assertEqual(FakeClient.retained[BASE + "in/0r"], "75")
+
     def test_limits_the_number_of_widgets(self):
         board = self.board()
         for number in range(30):

@@ -1,6 +1,6 @@
 # dash.py｜ESP32 Lab 手機儀表板工具
 # 網站會在上傳用到 dash 的程式時，自動把這個檔案存到板子的 /lib。內容和網站上的版本不同時，會換回網站上的版本
-# 用法請看範例 27～29，或說明頁的「手機儀表板」
+# 用法請看範例 27～34，或說明頁的「手機儀表板」
 import binascii
 import json
 import machine
@@ -12,11 +12,20 @@ PAGE = "{{DASH_PAGE}}"  # 手機儀表板的網址，網站存檔時會填入
 SEND_GAP_MS = 500  # 同一個元件最快每 0.5 秒送一次，才不會塞爆公用伺服器
 RETRY_MS = 5000  # 斷線後 5 秒再重新連線
 PING_MS = 30000  # 每 30 秒通知伺服器一次，開發板還在線上
+PAD_HOLD_MS = 1000  # 方向鍵超過 1 秒沒收到手機的訊息就當作放開，手機斷線時車子才會停
 MAX_WIDGETS = 30
+MAX_TEXT = 100  # 手機傳來的文字最多保留 100 個字
+DIRECTIONS = ("up", "down", "left", "right", "")
 
 # 元件種類和它在 MQTT 主題裡的代號
-KINDS = {"value": "v", "gauge": "g", "chart": "c", "led": "l", "text": "t", "switch": "w", "button": "b", "slider": "r"}
-INPUTS = ("switch", "button", "slider")
+KINDS = {
+    "value": "v", "gauge": "g", "chart": "c", "led": "l", "text": "t", "alert": "a",
+    "switch": "w", "button": "b", "slider": "r", "color": "h", "pad": "p", "select": "s", "input": "i",
+}
+# 手機操作、伺服器要記住的元件，板子重新開機後才會回到最後的狀態
+KEPT = ("switch", "slider", "color", "select", "input")
+# 只會由手機操作、板子不能用 set() 改的元件
+PHONE_ONLY = ("button", "pad")
 
 
 class Widget:
@@ -30,29 +39,53 @@ class Widget:
             self.value = False
         elif kind == "slider":
             self.value = options["min"]
+        elif kind == "color":
+            self.value = (255, 255, 255)
+        elif kind == "select":
+            self.value = options["o"][0]
+        elif kind in ("pad", "input"):
+            self.value = ""
         else:
             self.value = None
         self.presses = 0
+        self.fresh = False  # 手機傳來新的文字，還沒被 changed() 讀過
+        self.heard_at = time.ticks_ms()  # 方向鍵最後一次收到手機訊息的時間
         self.due = False  # 有新的值還沒送到手機
         self.keep_due = False  # 板子自己改了開關或滑桿，還沒記到伺服器上
         self.sent_at = time.ticks_add(time.ticks_ms(), -SEND_GAP_MS)
         self.sent = None  # 上次送到手機的內容
 
     def set(self, value):  # 把值送到手機
-        if self.kind == "button":
-            raise ValueError("按鈕是從手機按的，不能用 set()")
+        if self.kind in PHONE_ONLY:
+            raise ValueError("「{}」是從手機操作的，不能用 set()".format(self.label))
         if self.kind == "slider":
             value = self.clamp(value)
+        elif self.kind == "color":
+            value = tuple(min(255, max(0, int(part))) for part in value)
+        elif self.kind == "select" and value not in self.options["o"]:
+            raise ValueError("選單「{}」沒有「{}」這個選項".format(self.label, value))
+        elif self.kind == "input":
+            value = str(value)[:MAX_TEXT]
         self.value = value
-        if self.kind != "chart" and self.payload() == self.sent:
-            return  # 和上次送出的一樣就不再送。折線圖例外，每次都是一個新的點
+        # 和上次送出的一樣就不再送。折線圖和提醒例外，每次都要送出
+        if self.kind not in ("chart", "alert") and self.payload() == self.sent:
+            return
         self.due = True
-        # 板子自己改了開關或滑桿，也要記在伺服器上，重新開機後才會一樣
-        self.keep_due = self.kind in INPUTS
+        # 板子自己改了開關、滑桿這類元件，也要記在伺服器上，重新開機後才會一樣
+        self.keep_due = self.kind in KEPT
+
+    def send(self, message):  # 提醒用：在手機上跳出提醒
+        self.set(str(message))
 
     def pressed(self):  # 按鈕從上次檢查到現在，有沒有被按過
         if self.presses:
             self.presses = 0
+            return True
+        return False
+
+    def changed(self):  # 文字輸入從上次檢查到現在，有沒有收到新的文字
+        if self.fresh:
+            self.fresh = False
             return True
         return False
 
@@ -64,6 +97,8 @@ class Widget:
     def payload(self):
         if self.kind in ("switch", "led"):
             return "1" if self.value else "0"
+        if self.kind == "color":
+            return "#{:02x}{:02x}{:02x}".format(*self.value)
         if self.value is None:
             return ""
         if isinstance(self.value, float):
@@ -78,8 +113,27 @@ class Widget:
                 self.value = self.clamp(float(text))
             except ValueError:
                 return
+        elif self.kind == "color":
+            if len(text) != 7 or text[0] != "#":
+                return
+            try:
+                self.value = (int(text[1:3], 16), int(text[3:5], 16), int(text[5:7], 16))
+            except ValueError:
+                return
+        elif self.kind == "select":
+            if text not in self.options["o"]:
+                return
+            self.value = text
+        elif self.kind == "input":
+            self.value = text[:MAX_TEXT]
+            self.fresh = True
         elif self.kind == "button":
             self.presses += 1
+            return
+        elif self.kind == "pad":
+            if text in DIRECTIONS:
+                self.value = text
+                self.heard_at = time.ticks_ms()
             return
         else:
             return
@@ -123,6 +177,9 @@ class Dashboard:
     def text(self, label):
         return self.add("text", label, {})
 
+    def alert(self, label):
+        return self.add("alert", label, {})
+
     # 手機 → 板子的元件
     def switch(self, label):
         return self.add("switch", label, {})
@@ -132,6 +189,21 @@ class Dashboard:
 
     def slider(self, label, min=0, max=100, unit=""):
         return self.add("slider", label, {"min": int(min), "max": int(max), "u": unit})
+
+    def color(self, label):
+        return self.add("color", label, {})
+
+    def pad(self, label):
+        return self.add("pad", label, {})
+
+    def select(self, label, options):
+        options = [str(option) for option in options]
+        if not options:
+            raise ValueError("選單「{}」至少要有一個選項".format(label))
+        return self.add("select", label, {"o": options})
+
+    def input(self, label):
+        return self.add("input", label, {})
 
     def add(self, kind, label, options):
         if len(self.widgets) >= MAX_WIDGETS:
@@ -149,6 +221,7 @@ class Dashboard:
             self.drop()
 
     def check(self):  # 迴圈裡每次都要呼叫：收手機的操作、送出新的值，斷線時自動重連
+        self.release_pads()
         if self.client is None:
             if time.ticks_diff(time.ticks_ms(), self.retry_at) < 0:
                 return
@@ -165,6 +238,12 @@ class Dashboard:
         except Exception as error:
             print("連線中斷，5 秒後重試：", error)
             self.drop()
+
+    def release_pads(self):  # 手機太久沒傳方向鍵的訊息，就當作已經放開
+        now = time.ticks_ms()
+        for widget in self.widgets:
+            if widget.kind == "pad" and widget.value and time.ticks_diff(now, widget.heard_at) > PAD_HOLD_MS:
+                widget.value = ""
 
     def connect_wifi(self):
         wlan = network.WLAN(network.STA_IF)
@@ -200,7 +279,8 @@ class Dashboard:
         self.publish("state", "online", True)
         self.layout_due = True
         for widget in self.widgets:
-            widget.due = widget.kind != "button"
+            # 按鈕、方向鍵沒有狀態要回報；提醒只在發生時送出
+            widget.due = widget.kind not in ("button", "pad", "alert")
             widget.sent_at = time.ticks_add(time.ticks_ms(), -SEND_GAP_MS)
         self.send_due()
         self.ping_at = time.ticks_ms()
@@ -215,6 +295,10 @@ class Dashboard:
                 pass
         self.client = None
         self.retry_at = time.ticks_add(time.ticks_ms(), RETRY_MS)
+        # 斷線時收不到手機的訊息，方向鍵馬上放開，車子才會停
+        for widget in self.widgets:
+            if widget.kind == "pad":
+                widget.value = ""
 
     def publish(self, name, text, retain):
         if self.client:
@@ -231,8 +315,8 @@ class Dashboard:
                 self.publish("in/" + widget.id, widget.payload(), True)
                 widget.keep_due = False
             if widget.due and time.ticks_diff(now, widget.sent_at) >= SEND_GAP_MS:
-                # retain 讓伺服器保留最新的值，手機晚一點才打開也看得到
-                self.publish("out/" + widget.id, widget.payload(), True)
+                # retain 讓伺服器保留最新的值，手機晚一點才打開也看得到；提醒不保留，舊的提醒才不會重複跳出
+                self.publish("out/" + widget.id, widget.payload(), widget.kind != "alert")
                 widget.due = False
                 widget.sent = widget.payload()
                 widget.sent_at = now

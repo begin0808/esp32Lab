@@ -5,7 +5,7 @@ import englishDash from "./lib/en/dash.py?raw";
 /** Where the site saves the dashboard helper on the board. MicroPython looks in /lib for imports. */
 export const DASH_PATH = "/lib/dash.py";
 
-export const WIDGET_KINDS = ["value", "gauge", "chart", "led", "text", "switch", "button", "slider"] as const;
+export const WIDGET_KINDS = ["value", "gauge", "chart", "led", "text", "alert", "switch", "button", "slider", "color", "pad", "select", "input"] as const;
 export type WidgetKind = (typeof WIDGET_KINDS)[number];
 
 export const LED_COLORS = ["green", "red", "yellow", "blue"] as const;
@@ -19,11 +19,18 @@ export interface Widget {
   min: number;
   max: number;
   color: LedColor;
+  /** The choices of a select widget. */
+  options: string[];
 }
 
 const MAX_WIDGETS = 30;
 const MAX_LABEL = 40;
 const MAX_UNIT = 10;
+const MAX_OPTIONS = 8;
+const MAX_OPTION = 20;
+/** Text the phone sends to the board, as the board keeps no more. */
+export const MAX_INPUT = 100;
+export const DIRECTIONS = ["up", "down", "left", "right"] as const;
 
 export function dashTopic(channel: string, name: string): string {
   return `esp32-mp-class/${channel}/dash/${name}`;
@@ -75,6 +82,9 @@ export function parseLayout(json: string): Widget[] | null {
     const id = entry.id;
     if (!WIDGET_KINDS.includes(kind) || typeof id !== "string" || !/^\d{1,2}[a-z]$/.test(id) || seen.has(id)) continue;
     seen.add(id);
+    const options = Array.isArray(entry.o) ? [...new Set(entry.o.map((option) => text(option, MAX_OPTION)).filter(Boolean))].slice(0, MAX_OPTIONS) : [];
+    // A select with nothing to choose could not be used.
+    if (kind === "select" && options.length === 0) continue;
     let min = finite(entry.min, 0);
     let max = finite(entry.max, 100);
     if (!(min < max)) [min, max] = [0, 100];
@@ -86,6 +96,7 @@ export function parseLayout(json: string): Widget[] | null {
       min,
       max,
       color: LED_COLORS.includes(entry.c as LedColor) ? (entry.c as LedColor) : "green",
+      options,
     });
   }
   return widgets;
@@ -106,6 +117,11 @@ export function gaugeFraction(value: number, min: number, max: number): number {
 /** Numbers from a sensor can be long, so they are shown with at most two decimals. */
 export function formatNumber(value: number): string {
   return String(Math.round(value * 100) / 100);
+}
+
+/** A colour as the board sends it, such as #ff8000, or null for anything else. */
+export function parseColor(payload: string): string | null {
+  return /^#[0-9a-f]{6}$/i.test(payload) ? payload.toLowerCase() : null;
 }
 
 /** A time such as 10:08:02, the same on every phone whatever its language. */

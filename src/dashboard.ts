@@ -1,4 +1,4 @@
-import { dashTopic, formatClock, formatNumber, gaugeFraction, parseLayout, parseNumber, type Widget } from "./dash";
+import { dashTopic, DIRECTIONS, formatClock, formatNumber, gaugeFraction, MAX_INPUT, parseColor, parseLayout, parseNumber, type Widget } from "./dash";
 import { setupLanguagePicker, t, translatePage } from "./i18n";
 import { el, setStatus, setupMqttPage } from "./mqttpage";
 import { setupHomeLinks } from "./nav";
@@ -240,6 +240,211 @@ function sliderView(card: HTMLElement, widget: Widget): View {
   };
 }
 
+function colorView(card: HTMLElement, widget: Widget): View {
+  const line = part("p", "color-line");
+  const input = part("input", "color-input");
+  input.type = "color";
+  input.value = "#ffffff";
+  input.setAttribute("aria-label", widget.label);
+  const code = part("span", "color-code", "#ffffff");
+  line.append(input, code);
+  card.append(line);
+  input.addEventListener("input", () => {
+    code.textContent = input.value;
+  });
+  // The picker sends once it closes, so trying colours does not flood the broker.
+  input.addEventListener("change", () => send(widget, input.value, true));
+  return {
+    update(payload) {
+      const color = parseColor(payload);
+      if (!color) return;
+      input.value = color;
+      code.textContent = color;
+    },
+    setEnabled(enabled) {
+      input.disabled = !enabled;
+    },
+  };
+}
+
+const PAD_REPEAT_MS = 400;
+const ARROWS: Record<(typeof DIRECTIONS)[number], string> = { up: "▲", down: "▼", left: "◀", right: "▶" };
+
+function padView(card: HTMLElement, widget: Widget): View {
+  const names = { up: t("上"), down: t("下"), left: t("左"), right: t("右") };
+  const grid = part("div", "pad");
+  const state = part("p", "pad-state", t("放開：停止"));
+  const buttons: HTMLButtonElement[] = [];
+  let held: string | null = null;
+  let repeat: ReturnType<typeof setInterval> | undefined;
+  // While a key is held the direction is sent again and again. The board stops by itself when the
+  // messages stop, so a phone that drops off or a finger that slides away can never leave a car running.
+  const start = (direction: string) => {
+    if (held === direction) return;
+    stop(false);
+    held = direction;
+    state.textContent = t("按住：{direction}", { direction: names[direction as keyof typeof names] });
+    send(widget, direction, false);
+    repeat = setInterval(() => send(widget, direction, false), PAD_REPEAT_MS);
+  };
+  const stop = (tell = true) => {
+    clearInterval(repeat);
+    if (held === null) return;
+    held = null;
+    state.textContent = t("放開：停止");
+    if (tell) send(widget, "", false);
+  };
+  for (const direction of DIRECTIONS) {
+    const button = part("button", `pad-key pad-${direction}`, ARROWS[direction]);
+    button.type = "button";
+    button.setAttribute("aria-label", names[direction]);
+    button.addEventListener("pointerdown", (event) => {
+      // Capturing keeps the key held while the finger slides a little; a browser that refuses still drives the car.
+      try {
+        button.setPointerCapture(event.pointerId);
+      } catch {
+        // Released by pointerup instead.
+      }
+      start(direction);
+    });
+    for (const name of ["pointerup", "pointercancel", "lostpointercapture"] as const) button.addEventListener(name, () => stop());
+    button.addEventListener("keydown", (event) => {
+      if ((event.key === "Enter" || event.key === " ") && !event.repeat) {
+        event.preventDefault();
+        start(direction);
+      }
+    });
+    button.addEventListener("keyup", (event) => {
+      if (event.key === "Enter" || event.key === " ") stop();
+    });
+    button.addEventListener("blur", () => stop());
+    // A long press must not open the phone's text menu.
+    button.addEventListener("contextmenu", (event) => event.preventDefault());
+    buttons.push(button);
+  }
+  grid.append(...buttons);
+  card.append(grid, state);
+  window.addEventListener("blur", () => stop());
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) stop();
+  });
+  return {
+    update() {},
+    setEnabled(enabled) {
+      if (!enabled) stop(false);
+      for (const button of buttons) button.disabled = !enabled;
+    },
+  };
+}
+
+function selectView(card: HTMLElement, widget: Widget): View {
+  const group = part("div", "choices");
+  group.setAttribute("role", "radiogroup");
+  group.setAttribute("aria-label", widget.label);
+  const buttons = widget.options.map((option) => {
+    const button = part("button", "choice", option);
+    button.type = "button";
+    button.setAttribute("role", "radio");
+    button.setAttribute("aria-checked", "false");
+    button.addEventListener("click", () => {
+      // The choice is marked once the board reports back, like a switch.
+      button.dataset.waiting = "true";
+      send(widget, option, true);
+    });
+    return button;
+  });
+  group.append(...buttons);
+  card.append(group);
+  return {
+    update(payload) {
+      for (const button of buttons) {
+        button.setAttribute("aria-checked", String(button.textContent === payload));
+        delete button.dataset.waiting;
+      }
+    },
+    setEnabled(enabled) {
+      for (const button of buttons) button.disabled = !enabled;
+    },
+  };
+}
+
+function inputView(card: HTMLElement, widget: Widget): View {
+  const form = part("form", "input-form");
+  const field = part("input", "text-input");
+  field.type = "text";
+  field.maxLength = MAX_INPUT;
+  field.placeholder = t("輸入文字");
+  field.setAttribute("aria-label", widget.label);
+  field.autocomplete = "off";
+  const button = part("button", "btn", t("送出"));
+  const got = part("p", "input-got");
+  form.append(field, button);
+  card.append(form, got);
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (!field.value) return;
+    send(widget, field.value, true);
+    field.value = "";
+  });
+  return {
+    update(payload) {
+      got.textContent = payload ? t("板子收到：{text}", { text: payload }) : "";
+    },
+    setEnabled(enabled) {
+      field.disabled = !enabled;
+      button.disabled = !enabled;
+    },
+  };
+}
+
+/** Browsers only let a page make sounds after it was tapped, so the alert card has a button to allow them. */
+let audio: AudioContext | null = null;
+
+function beep(): void {
+  if (!audio) return;
+  const now = audio.currentTime;
+  for (const [offset, pitch] of [[0, 880], [0.25, 660]]) {
+    const tone = audio.createOscillator();
+    const volume = audio.createGain();
+    tone.frequency.value = pitch;
+    volume.gain.setValueAtTime(0.25, now + offset);
+    volume.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.22);
+    tone.connect(volume).connect(audio.destination);
+    tone.start(now + offset);
+    tone.stop(now + offset + 0.23);
+  }
+}
+
+function alertView(card: HTMLElement): View {
+  const message = part("p", "alert-message", t("還沒有提醒"));
+  const time = part("p", "alert-time");
+  const sound = part("button", "btn small alert-sound", t("開啟提醒聲音"));
+  sound.type = "button";
+  sound.addEventListener("click", () => {
+    audio ??= new AudioContext();
+    void audio.resume();
+    sound.textContent = t("提醒聲音已開啟");
+    sound.disabled = true;
+    beep();
+  });
+  card.append(message, time, sound);
+  card.setAttribute("role", "alert");
+  let calm: ReturnType<typeof setTimeout> | undefined;
+  return {
+    update(payload) {
+      if (!payload) return;
+      message.textContent = payload;
+      time.textContent = formatClock(new Date());
+      card.dataset.ringing = "true";
+      clearTimeout(calm);
+      calm = setTimeout(() => delete card.dataset.ringing, 4000);
+      beep();
+      navigator.vibrate?.([200, 100, 200]);
+    },
+    setEnabled() {},
+  };
+}
+
 function buildView(widget: Widget): { card: HTMLElement; view: View } {
   const card = part("section", `widget widget-${widget.kind}`);
   if (widget.kind !== "button") card.append(part("h2", "widget-label", widget.label));
@@ -249,9 +454,14 @@ function buildView(widget: Widget): { card: HTMLElement; view: View } {
     chart: () => chartView(card, widget),
     led: () => ledView(card, widget),
     text: () => textView(card),
+    alert: () => alertView(card),
     switch: () => switchView(card, widget),
     button: () => buttonView(card, widget),
     slider: () => sliderView(card, widget),
+    color: () => colorView(card, widget),
+    pad: () => padView(card, widget),
+    select: () => selectView(card, widget),
+    input: () => inputView(card, widget),
   };
   return { card, view: builders[widget.kind]() };
 }
@@ -288,7 +498,7 @@ function setBoardOnline(online: boolean): void {
   for (const view of views.values()) view.setEnabled(online);
 }
 
-function onMessage(topic: string, payload: Uint8Array): void {
+function onMessage(topic: string, payload: Uint8Array, retained: boolean): void {
   const name = topic.slice(dashTopic(channel, "").length);
   const text = new TextDecoder().decode(payload);
   if (name === "layout") {
@@ -309,7 +519,13 @@ function onMessage(topic: string, payload: Uint8Array): void {
       setBoardOnline(false);
     }
   } else if (name.startsWith("out/")) {
-    onValue(name.slice(4), text);
+    const id = name.slice(4);
+    // An alert is an event: it is shown once when it happens, never kept, and never replayed from the broker.
+    if (id.endsWith("a")) {
+      if (!retained) views.get(id)?.update(text);
+      return;
+    }
+    onValue(id, text);
   }
 }
 

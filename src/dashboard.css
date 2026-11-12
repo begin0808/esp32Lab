@@ -259,6 +259,179 @@
   accent-color: var(--success);
 }
 
+/* Widgets that need the whole width: a car's keys, a row of choices, a text box and alerts. */
+.widget-pad,
+.widget-select,
+.widget-input,
+.widget-alert {
+  grid-column: 1 / -1;
+}
+
+.color-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+}
+
+.color-input {
+  flex: none;
+  width: 64px;
+  height: 44px;
+  padding: 2px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: var(--input-bg);
+  cursor: pointer;
+}
+
+.color-code {
+  font-family: var(--font-code);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.pad {
+  display: grid;
+  grid-template-areas: ". up ." "left . right" ". down .";
+  grid-template-columns: repeat(3, 72px);
+  grid-template-rows: repeat(3, 64px);
+  gap: 6px;
+  justify-content: center;
+}
+
+.pad-key {
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  background: var(--go-bg);
+  color: var(--go-text);
+  font-size: 26px;
+  cursor: pointer;
+  /* The keys are held down, so the page must not scroll, zoom or select text under the finger. */
+  touch-action: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.pad-key:active:not(:disabled) {
+  transform: translateY(2px);
+  filter: brightness(0.92);
+}
+
+.pad-up {
+  grid-area: up;
+}
+
+.pad-down {
+  grid-area: down;
+}
+
+.pad-left {
+  grid-area: left;
+}
+
+.pad-right {
+  grid-area: right;
+}
+
+.pad-state {
+  margin: 0;
+  text-align: center;
+  font-weight: 700;
+}
+
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.choice {
+  min-height: 44px;
+  padding: 6px 16px;
+  border: 2px solid var(--border);
+  border-radius: 999px;
+  background: var(--code-gutter);
+  color: var(--text);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.choice[aria-checked="true"] {
+  border-color: var(--success);
+  background: var(--success);
+  color: #fff;
+}
+
+.choice[data-waiting="true"] {
+  opacity: 0.6;
+}
+
+.input-form {
+  display: flex;
+  gap: 8px;
+}
+
+.input-got {
+  margin: 0;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.input-got:empty {
+  display: none;
+}
+
+.alert-message {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.alert-time {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.alert-sound {
+  align-self: flex-start;
+}
+
+.widget-alert[data-ringing="true"] {
+  border-color: var(--danger);
+  background: var(--danger-bg);
+  animation: ring 0.5s ease-in-out 3;
+}
+
+@keyframes ring {
+  50% {
+    box-shadow: 0 0 0 6px var(--danger-bg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .widget-alert[data-ringing="true"] {
+    animation: none;
+  }
+}
+
+.pad-key:disabled,
+.choice:disabled,
+.color-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pad-key:focus-visible,
+.choice:focus-visible,
+.color-input:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
 @media (max-width: 380px) {
   .widgets {
     grid-template-columns: minmax(0, 1fr);

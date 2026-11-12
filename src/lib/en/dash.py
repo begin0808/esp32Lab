@@ -1,7 +1,7 @@
 # dash.py | ESP32 Lab phone dashboard helper
 # When you upload a program that uses dash, the site saves this file to the board's /lib by itself.
 # If the file differs from the site's version, the site puts its own version back
-# See examples 27-29, or "Phone dashboard" on the help page
+# See examples 27-34, or "Phone dashboard" on the help page
 import binascii
 import json
 import machine
@@ -13,11 +13,20 @@ PAGE = "{{DASH_PAGE}}"  # The phone dashboard's address, filled in by the site w
 SEND_GAP_MS = 500  # Each widget sends at most every 0.5 s, so the public broker is not flooded
 RETRY_MS = 5000  # Reconnect 5 s after losing the connection
 PING_MS = 30000  # Tell the broker every 30 s that the board is still online
+PAD_HOLD_MS = 1000  # A direction pad with no word from the phone for 1 s counts as released, so a car stops if the phone drops off
 MAX_WIDGETS = 30
+MAX_TEXT = 100  # Keep at most 100 characters of text from the phone
+DIRECTIONS = ("up", "down", "left", "right", "")
 
 # Widget kinds and their letter in MQTT topics
-KINDS = {"value": "v", "gauge": "g", "chart": "c", "led": "l", "text": "t", "switch": "w", "button": "b", "slider": "r"}
-INPUTS = ("switch", "button", "slider")
+KINDS = {
+    "value": "v", "gauge": "g", "chart": "c", "led": "l", "text": "t", "alert": "a",
+    "switch": "w", "button": "b", "slider": "r", "color": "h", "pad": "p", "select": "s", "input": "i",
+}
+# Widgets set on the phone that the broker remembers, so the board gets their last state after a restart
+KEPT = ("switch", "slider", "color", "select", "input")
+# Widgets only the phone can use; the board has no set() for them
+PHONE_ONLY = ("button", "pad")
 
 
 class Widget:
@@ -31,29 +40,53 @@ class Widget:
             self.value = False
         elif kind == "slider":
             self.value = options["min"]
+        elif kind == "color":
+            self.value = (255, 255, 255)
+        elif kind == "select":
+            self.value = options["o"][0]
+        elif kind in ("pad", "input"):
+            self.value = ""
         else:
             self.value = None
         self.presses = 0
+        self.fresh = False  # New text from the phone that changed() has not reported yet
+        self.heard_at = time.ticks_ms()  # When the direction pad last heard from the phone
         self.due = False  # A new value has not reached the phone yet
         self.keep_due = False  # The board changed a switch or slider, and the broker does not know yet
         self.sent_at = time.ticks_add(time.ticks_ms(), -SEND_GAP_MS)
         self.sent = None  # What the phone got last time
 
     def set(self, value):  # Sends a value to the phone
-        if self.kind == "button":
-            raise ValueError("buttons are pressed on the phone, so they have no set()")
+        if self.kind in PHONE_ONLY:
+            raise ValueError("{} is used on the phone, so it has no set()".format(self.label))
         if self.kind == "slider":
             value = self.clamp(value)
+        elif self.kind == "color":
+            value = tuple(min(255, max(0, int(part))) for part in value)
+        elif self.kind == "select" and value not in self.options["o"]:
+            raise ValueError("the menu {} has no option {}".format(self.label, value))
+        elif self.kind == "input":
+            value = str(value)[:MAX_TEXT]
         self.value = value
-        if self.kind != "chart" and self.payload() == self.sent:
-            return  # Nothing new to send. Charts are different: every value is a new point
+        # Nothing new to send. Charts and alerts are different: every value goes out
+        if self.kind not in ("chart", "alert") and self.payload() == self.sent:
+            return
         self.due = True
-        # When the board changes a switch or slider, the broker keeps it too, so it stays the same after a restart
-        self.keep_due = self.kind in INPUTS
+        # When the board changes a switch, slider or the like, the broker keeps it too, so it stays the same after a restart
+        self.keep_due = self.kind in KEPT
+
+    def send(self, message):  # For alerts: pops up an alert on the phone
+        self.set(str(message))
 
     def pressed(self):  # Whether the button was pressed since the last check
         if self.presses:
             self.presses = 0
+            return True
+        return False
+
+    def changed(self):  # Whether new text arrived since the last check
+        if self.fresh:
+            self.fresh = False
             return True
         return False
 
@@ -65,6 +98,8 @@ class Widget:
     def payload(self):
         if self.kind in ("switch", "led"):
             return "1" if self.value else "0"
+        if self.kind == "color":
+            return "#{:02x}{:02x}{:02x}".format(*self.value)
         if self.value is None:
             return ""
         if isinstance(self.value, float):
@@ -79,8 +114,27 @@ class Widget:
                 self.value = self.clamp(float(text))
             except ValueError:
                 return
+        elif self.kind == "color":
+            if len(text) != 7 or text[0] != "#":
+                return
+            try:
+                self.value = (int(text[1:3], 16), int(text[3:5], 16), int(text[5:7], 16))
+            except ValueError:
+                return
+        elif self.kind == "select":
+            if text not in self.options["o"]:
+                return
+            self.value = text
+        elif self.kind == "input":
+            self.value = text[:MAX_TEXT]
+            self.fresh = True
         elif self.kind == "button":
             self.presses += 1
+            return
+        elif self.kind == "pad":
+            if text in DIRECTIONS:
+                self.value = text
+                self.heard_at = time.ticks_ms()
             return
         else:
             return
@@ -124,6 +178,9 @@ class Dashboard:
     def text(self, label):
         return self.add("text", label, {})
 
+    def alert(self, label):
+        return self.add("alert", label, {})
+
     # Widgets from the phone to the board
     def switch(self, label):
         return self.add("switch", label, {})
@@ -133,6 +190,21 @@ class Dashboard:
 
     def slider(self, label, min=0, max=100, unit=""):
         return self.add("slider", label, {"min": int(min), "max": int(max), "u": unit})
+
+    def color(self, label):
+        return self.add("color", label, {})
+
+    def pad(self, label):
+        return self.add("pad", label, {})
+
+    def select(self, label, options):
+        options = [str(option) for option in options]
+        if not options:
+            raise ValueError("the menu {} needs at least one option".format(label))
+        return self.add("select", label, {"o": options})
+
+    def input(self, label):
+        return self.add("input", label, {})
 
     def add(self, kind, label, options):
         if len(self.widgets) >= MAX_WIDGETS:
@@ -150,6 +222,7 @@ class Dashboard:
             self.drop()
 
     def check(self):  # Call this every time round the loop: it reads the phone, sends new values and reconnects
+        self.release_pads()
         if self.client is None:
             if time.ticks_diff(time.ticks_ms(), self.retry_at) < 0:
                 return
@@ -166,6 +239,12 @@ class Dashboard:
         except Exception as error:
             print("Connection lost, retrying in 5 s:", error)
             self.drop()
+
+    def release_pads(self):  # A direction pad the phone has not mentioned for too long counts as released
+        now = time.ticks_ms()
+        for widget in self.widgets:
+            if widget.kind == "pad" and widget.value and time.ticks_diff(now, widget.heard_at) > PAD_HOLD_MS:
+                widget.value = ""
 
     def connect_wifi(self):
         wlan = network.WLAN(network.STA_IF)
@@ -201,7 +280,8 @@ class Dashboard:
         self.publish("state", "online", True)
         self.layout_due = True
         for widget in self.widgets:
-            widget.due = widget.kind != "button"
+            # Buttons and direction pads have no state to report; alerts go out only when they happen
+            widget.due = widget.kind not in ("button", "pad", "alert")
             widget.sent_at = time.ticks_add(time.ticks_ms(), -SEND_GAP_MS)
         self.send_due()
         self.ping_at = time.ticks_ms()
@@ -216,6 +296,10 @@ class Dashboard:
                 pass
         self.client = None
         self.retry_at = time.ticks_add(time.ticks_ms(), RETRY_MS)
+        # Without a connection the phone cannot be heard, so direction pads are released at once and a car stops
+        for widget in self.widgets:
+            if widget.kind == "pad":
+                widget.value = ""
 
     def publish(self, name, text, retain):
         if self.client:
@@ -232,8 +316,8 @@ class Dashboard:
                 self.publish("in/" + widget.id, widget.payload(), True)
                 widget.keep_due = False
             if widget.due and time.ticks_diff(now, widget.sent_at) >= SEND_GAP_MS:
-                # retain makes the broker keep the newest value, so a phone opened later still sees it
-                self.publish("out/" + widget.id, widget.payload(), True)
+                # retain makes the broker keep the newest value, so a phone opened later still sees it; alerts are not kept, so old ones never pop up again
+                self.publish("out/" + widget.id, widget.payload(), widget.kind != "alert")
                 widget.due = False
                 widget.sent = widget.payload()
                 widget.sent_at = now

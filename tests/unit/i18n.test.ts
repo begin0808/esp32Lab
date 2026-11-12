@@ -63,7 +63,7 @@ describe("English examples", () => {
 
 describe("English text that reaches students and Gemini", () => {
   it("writes prompts in English", async () => {
-    const { geminiPrompt, arduinoConvertPrompt, fixErrorPrompt, explainPrompt } = await loadInEnglish<typeof import("../../src/text")>("../../src/text");
+    const { geminiPrompt, arduinoConvertPrompt, fixErrorPrompt, explainPrompt, dashboardPrompt } = await loadInEnglish<typeof import("../../src/text")>("../../src/text");
     const { CHIPS } = await import("../../src/chips");
     const code = 'PASSWORD = "secret"\nprint(x)\n';
     for (const prompt of [
@@ -73,6 +73,8 @@ describe("English text that reaches students and Gemini", () => {
       fixErrorPrompt("print(x)", "NameError"),
       explainPrompt(code, CHIPS.esp32.promptLines),
       explainPrompt(code, CHIPS.esp32.promptLines, { from: 2, to: 2 }),
+      dashboardPrompt(CHIPS.esp32.promptLines),
+      explainPrompt(`import dash\n${code}`, CHIPS.esp32.promptLines),
     ]) {
       expect(HAS_CJK.test(prompt), prompt).toBe(false);
     }

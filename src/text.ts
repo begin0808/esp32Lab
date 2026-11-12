@@ -1,3 +1,4 @@
+import { usesDash } from "./dash";
 import { lang } from "./i18n";
 
 const ARDUINO_PATTERNS = [/^\s*#include\s*[<"]/m, /\bvoid\s+(setup|loop)\s*\(/, /\bSerial\.(begin|print)/, /\bpinMode\s*\(/];
@@ -123,6 +124,122 @@ ${boardLines}
 （請在這裡描述你想做的功能）`;
 }
 
+/** Gemini has never seen dash.py, the site's own helper, so every prompt about a dashboard program carries its API. */
+export function dashGuide(): string {
+  if (lang === "en") {
+    return `The phone dashboard helper dash (the ESP32 Lab site saves dash.py to the board's /lib by itself) is used like this:
+import time
+import dash
+board = dash.Dashboard(TOPIC_NAME, SSID, PASSWORD)  # TOPIC_NAME may only use letters, digits, underscores and hyphens
+(create the widgets here)
+board.start()  # joins Wi-Fi and MQTT, and prints the dashboard's address
+while True:
+    board.check()  # must be called every time round the loop
+    ...
+    time.sleep_ms(20)
+
+Widgets from the board to the phone (send with .set()):
+- board.value("name", unit=""): a number or text
+- board.gauge("name", min=0, max=100, unit="", color="green"): a half-circle gauge; color is green, red, yellow or blue
+- board.chart("name", unit=""): a line chart; each .set() adds one point
+- board.led("name", color="green"): a lamp, .set(True) or .set(False)
+- board.text("name"): one line of text
+- board.alert("name"): pops up an alert with a sound on the phone, sent with .send("message")
+Widgets from the phone to the board:
+- board.switch("name"): .value is True or False
+- board.button("name"): .pressed() returns True once after each press
+- board.slider("name", min=0, max=100, unit=""): .value is a whole number
+- board.color("name"): .value is (red, green, blue), each 0-255
+- board.pad("name"): a direction pad; .value is "up", "down", "left" or "right" while held, and "" when released
+- board.select("name", ["option 1", "option 2"]): .value is the chosen text
+- board.input("name"): .value is the text from the phone; .changed() returns True once when new text arrives
+The board can also change a switch, slider, color, select or input with .set().
+
+Rules:
+- Never pause with time.sleep(1) or longer; the loop must keep running. Read sensors every so often with time.ticks_ms() and time.ticks_diff()
+- Do not write your own Wi-Fi or MQTT code; dash does that and reconnects by itself
+- A dashboard has at most 30 widgets. Each widget sends at most every 0.5 s, so there is no need to slow it down yourself
+- Do not write dash.py itself, and do not use other dashboard packages`;
+  }
+  return `手機儀表板工具 dash（ESP32 Lab 網站會自動把 dash.py 存到板子的 /lib）的寫法如下：
+import time
+import dash
+board = dash.Dashboard(TOPIC_NAME, SSID, PASSWORD)  # TOPIC_NAME 只能用英文、數字、底線和連字號
+（在這裡建立元件）
+board.start()  # 連上 Wi-Fi 和 MQTT，並印出手機儀表板的網址
+while True:
+    board.check()  # 迴圈裡每次都要呼叫
+    ...
+    time.sleep_ms(20)
+
+板子 → 手機的元件（用 .set() 送出）：
+- board.value("名稱", unit="")：數字或文字
+- board.gauge("名稱", min=0, max=100, unit="", color="green")：半圓形儀表，color 可用 green、red、yellow、blue
+- board.chart("名稱", unit="")：折線圖，每次 .set() 是一個點
+- board.led("名稱", color="green")：指示燈，.set(True) 或 .set(False)
+- board.text("名稱")：一行文字
+- board.alert("名稱")：手機跳出提醒並發出聲音，用 .send("訊息") 送出
+手機 → 板子的元件：
+- board.switch("名稱")：.value 是 True 或 False
+- board.button("名稱")：每按一次，.pressed() 回傳一次 True
+- board.slider("名稱", min=0, max=100, unit="")：.value 是整數
+- board.color("名稱")：.value 是 (紅, 綠, 藍)，各 0～255
+- board.pad("名稱")：方向鍵，按住時 .value 是 "up"、"down"、"left"、"right"，放開時是 ""
+- board.select("名稱", ["選項一", "選項二"])：.value 是選到的文字
+- board.input("名稱")：.value 是手機傳來的文字，有新文字時 .changed() 回傳一次 True
+開關、滑桿、色彩、選單、文字輸入也可以在板子上用 .set() 改。
+
+規則：
+- 不要用 time.sleep(1) 這類一秒以上的暫停，迴圈要一直跑；感測器用 time.ticks_ms() 和 time.ticks_diff() 每隔一段時間讀一次
+- 不要自己寫 Wi-Fi 或 MQTT 連線，dash 會處理，斷線也會自動重連
+- 一個儀表板最多 30 個元件；同一個元件最快每 0.5 秒送一次，不用自己限速
+- 不要寫 dash.py 本身，也不要用其他儀表板套件`;
+}
+
+export function dashboardPrompt(boardLines: string): string {
+  if (lang === "en") {
+    return `Please write an ESP32 program in MicroPython, not Arduino C++, that shows its readings and controls on a phone with the site's phone dashboard.
+
+Hardware and environment:
+${boardLines}
+- Wiring: (replace with your wiring, for example: LED on GPIO 18, DHT11 signal on GPIO 4)
+
+Program requirements:
+- Give me one complete main.py, not several files
+- Put SSID, PASSWORD and TOPIC_NAME at the top of the program
+- Write the comments in English
+
+${dashGuide()}
+
+What I want to see and control on the phone:
+(describe it here, for example: show the temperature on a gauge, and turn the fan on and off with a switch)`;
+  }
+  return `請用 MicroPython 幫我寫 ESP32 程式，不要用 Arduino C++，並用網站的手機儀表板在手機上顯示數值和控制開發板。
+
+硬體與環境：
+${boardLines}
+- 接線：（請改成你的接線，例如：外接 LED 接 GPIO 18、DHT11 訊號線接 GPIO 4）
+
+程式要求：
+- 只給我一份完整的 main.py，不要分成多個檔案
+- SSID、PASSWORD 和 TOPIC_NAME 寫在程式開頭
+- 註解用繁體中文
+
+${dashGuide()}
+
+我想在手機上看到和控制的：
+（請在這裡描述，例如：用儀表顯示溫度，用開關控制電風扇）`;
+}
+
+/** Explaining or fixing a dashboard program needs the same guide, or Gemini would guess what board.gauge() does. */
+function withDashGuide(prompt: string, code: string): string {
+  if (!usesDash(code)) return prompt;
+  return `${prompt}
+
+${lang === "en" ? "About dash in this program:" : "關於程式裡的 dash："}
+${dashGuide()}`;
+}
+
 const WIFI_PLACEHOLDER = "YOUR_WIFI_SETTING";
 
 /** Prompts leave the student's computer, so Wi-Fi details, accounts, bot tokens and script addresses must not go with them. */
@@ -160,6 +277,10 @@ ${hideWifiSettings(code)}`;
 }
 
 export function fixErrorPrompt(code: string, traceback: string): string {
+  return withDashGuide(basicFixErrorPrompt(code, traceback), code);
+}
+
+function basicFixErrorPrompt(code: string, traceback: string): string {
   if (lang === "en") {
     return `My ESP32 MicroPython (v1.29.0) program hit an error while running. Please find the cause and give me the complete corrected main.py.
 
@@ -214,6 +335,10 @@ export function numberLines(code: string): string {
 }
 
 export function explainPrompt(code: string, boardLines: string, range: LineRange | null = null): string {
+  return withDashGuide(basicExplainPrompt(code, boardLines, range), code);
+}
+
+function basicExplainPrompt(code: string, boardLines: string, range: LineRange | null): string {
   const shown = hideWifiSettings(code);
   const hidden = shown !== code;
   const numbered = numberLines(shown);

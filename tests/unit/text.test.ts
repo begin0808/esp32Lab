@@ -6,6 +6,7 @@ import {
   explainPrompt,
   brokerUrl,
   commandTopic,
+  dashboardPrompt,
   DEFAULT_BROKER,
   fillExample,
   findDeviceIp,
@@ -260,5 +261,29 @@ describe("explain prompt", () => {
     expect(prompt).not.toContain("secret");
     expect(prompt).toContain('2 | PASSWORD = "YOUR_WIFI_SETTING"');
     expect(prompt).toContain("先隱藏起來的");
+  });
+});
+
+describe("phone dashboard prompts", () => {
+  const board = "- 開發板：NodeMCU ESP-32S";
+  const dashCode = 'import dash\nSSID = "home"\nPASSWORD = "secret"\nboard = dash.Dashboard("t", SSID, PASSWORD)\n';
+
+  it("writes a new dashboard program with every widget and the rules", () => {
+    const prompt = dashboardPrompt(board);
+    for (const call of ["board.value(", "board.gauge(", "board.chart(", "board.led(", "board.text(", "board.alert(", "board.switch(", "board.button(", "board.slider(", "board.color(", "board.pad(", "board.select(", "board.input("]) {
+      expect(prompt, call).toContain(call);
+    }
+    expect(prompt).toContain("board.check()");
+    expect(prompt).toContain("不要用 time.sleep(1)");
+    expect(prompt).toContain("不要寫 dash.py 本身");
+    expect(prompt).toContain(board);
+  });
+
+  it("adds the guide to explaining and fixing a program that uses dash, and only then", () => {
+    expect(explainPrompt(dashCode, board)).toContain("關於程式裡的 dash：");
+    expect(fixErrorPrompt(dashCode, "NameError")).toContain("board.pad(");
+    expect(explainPrompt(dashCode, board)).not.toContain("secret");
+    expect(explainPrompt("print(1)\n", board)).not.toContain("dash");
+    expect(fixErrorPrompt("print(1)\n", "NameError")).not.toContain("dash");
   });
 });

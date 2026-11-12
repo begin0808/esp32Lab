@@ -131,6 +131,16 @@ test.describe("Gemini prompt menu", () => {
     await expect(page.locator("#gemini-label")).toHaveText("Gemini 提示詞");
   });
 
+  test("copies a prompt for a dashboard program with the dash guide", async ({ page }) => {
+    await page.locator("#gemini-button").click();
+    await page.locator("#copy-dash-prompt").click();
+    await expect(page.locator("#gemini-label")).toHaveText("已複製");
+    const prompt = await page.evaluate(() => navigator.clipboard.readText());
+    expect(prompt).toContain("用網站的手機儀表板");
+    expect(prompt).toContain("board.pad(");
+    expect(prompt).toContain("板載 LED：GPIO 2");
+  });
+
   test("explains only the selected lines, sending the whole program for context", async ({ page }) => {
     const editor = page.locator("#editor .cm-content");
     await editor.press("ControlOrMeta+Home");
@@ -158,6 +168,13 @@ test.describe("Gemini prompt menu", () => {
     await page.keyboard.press("Enter");
     await expect(page.locator("#copy-prompt")).toBeFocused();
     await page.keyboard.press("ArrowDown");
+    await expect(page.locator("#copy-dash-prompt")).toBeFocused();
+    await page.keyboard.press("ArrowDown");
+    await expect(page.locator("#copy-explain")).toBeFocused();
+    // The keys wrap around at both ends.
+    await page.keyboard.press("ArrowDown");
+    await expect(page.locator("#copy-prompt")).toBeFocused();
+    await page.keyboard.press("ArrowUp");
     await expect(page.locator("#copy-explain")).toBeFocused();
     await page.keyboard.press("Escape");
     await expect(page.locator("#gemini-menu")).toBeHidden();
@@ -831,7 +848,7 @@ for (const id of STYLE_IDS) {
 test("offers every example, grouped, and loads the wiring notes into the editor", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("#examples optgroup")).toHaveCount(6);
-  await expect(page.locator("#examples optgroup option")).toHaveCount(29);
+  await expect(page.locator("#examples optgroup option")).toHaveCount(34);
   page.on("dialog", (dialog) => dialog.accept());
   await page.locator("#examples").selectOption({ label: "13. SSD1306 OLED 顯示器" });
   await expect(page.locator("#editor .cm-content")).toContainText("class SSD1306");
@@ -1532,7 +1549,7 @@ test.describe("in an English browser", () => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     await page.goto("/");
     await expect(page.locator("#editor .cm-content")).toContainText("Blink an LED");
-    await expect(page.locator("#examples optgroup option")).toHaveCount(29);
+    await expect(page.locator("#examples optgroup option")).toHaveCount(34);
 
     page.on("dialog", (dialog) => dialog.accept());
     await page.locator("#examples").selectOption({ label: "17. Voice-controlled LED (MQTT)" });
@@ -1978,7 +1995,7 @@ test.describe("example numbers", () => {
         page.on("dialog", (dialog) => void dialog.accept());
         await page.goto("/");
         const options = await page.locator("#examples optgroup option").evaluateAll((items) => items.map((item) => (item as HTMLOptionElement).value));
-        expect(options).toHaveLength(29);
+        expect(options).toHaveLength(34);
         for (const [index, value] of options.entries()) {
           const label = await page.locator(`#examples option[value="${value}"]`).textContent();
           expect(label!.startsWith(`${index + 1}. `)).toBe(true);
@@ -2064,15 +2081,15 @@ async function fakeDashBroker(page: Page, retained: Record<string, string>) {
         const topic = body.subarray(2, 2 + size).toString();
         const payload = body.subarray(2 + size).toString();
         published.push({ topic, payload, retain: (flags & 1) === 1 });
-        const input = topic.match(/^(.*\/dash\/)in\/(\d+[wr])$/);
+        const input = topic.match(/^(.*\/dash\/)in\/(\d+[wrhsi])$/);
         if (input) socket.send(publishPacket(`${input[1]}out/${input[2]}`, payload, true));
       }
     });
   });
   return {
     published,
-    send: (topic: string, payload: string) => {
-      for (const socket of sockets) socket.send(publishPacket(topic, payload, true));
+    send: (topic: string, payload: string, retain = true) => {
+      for (const socket of sockets) socket.send(publishPacket(topic, payload, retain));
     },
   };
 }
@@ -2175,6 +2192,70 @@ test.describe("phone dashboard", () => {
 
     await page.reload();
     await expect(page.locator("#channel")).toHaveValue("room1");
+  });
+
+  test("handles the colour, direction pad, menu, text and alert widgets", async ({ page }) => {
+    const broker = await fakeDashBroker(page, {
+      [`${DASH}layout`]: JSON.stringify({
+        v: 1,
+        w: [
+          { id: "0h", t: "color", l: "燈色" },
+          { id: "1p", t: "pad", l: "方向" },
+          { id: "2s", t: "select", l: "模式", o: ["關", "亮", "閃爍"] },
+          { id: "3i", t: "input", l: "訊息" },
+          { id: "4a", t: "alert", l: "門鈴" },
+        ],
+      }),
+      [`${DASH}state`]: "online",
+      [`${DASH}out/0h`]: "#00ff00",
+      [`${DASH}out/2s`]: "亮",
+      // An alert the broker kept by mistake must not pop up again.
+      [`${DASH}out/4a`]: "舊的提醒",
+    });
+    await page.goto("/dashboard.html?ch=room1");
+    await expect(page.locator(".widget")).toHaveCount(5);
+    const sent = (topic: string) => broker.published.filter((message) => message.topic === `${DASH}${topic}`);
+
+    await expect(page.locator(".color-input")).toHaveValue("#00ff00");
+    await page.locator(".color-input").evaluate((input: HTMLInputElement) => {
+      input.value = "#ff0000";
+      input.dispatchEvent(new Event("input"));
+      input.dispatchEvent(new Event("change"));
+    });
+    await expect.poll(() => sent("in/0h")).toEqual([{ topic: `${DASH}in/0h`, payload: "#ff0000", retain: true }]);
+    await expect(page.locator(".color-code")).toHaveText("#ff0000");
+
+    await expect(page.getByRole("radio", { name: "亮" })).toHaveAttribute("aria-checked", "true");
+    await page.getByRole("radio", { name: "閃爍" }).click();
+    await expect(page.getByRole("radio", { name: "閃爍" })).toHaveAttribute("aria-checked", "true");
+    await expect(page.getByRole("radio", { name: "亮" })).toHaveAttribute("aria-checked", "false");
+    expect(sent("in/2s")).toEqual([{ topic: `${DASH}in/2s`, payload: "閃爍", retain: true }]);
+
+    await page.getByRole("textbox", { name: "訊息" }).fill("hello");
+    await page.getByRole("textbox", { name: "訊息" }).press("Enter");
+    await expect(page.locator(".input-got")).toHaveText("板子收到：hello");
+    await expect(page.getByRole("textbox", { name: "訊息" })).toHaveValue("");
+
+    await expect(page.locator(".alert-message")).toHaveText("還沒有提醒");
+    broker.send(`${DASH}out/4a`, "有人按門鈴！", false);
+    await expect(page.locator(".alert-message")).toHaveText("有人按門鈴！");
+    await expect(page.locator(".widget-alert")).toHaveAttribute("data-ringing", "true");
+    await expect(page.locator(".alert-time")).toHaveText(/^\d\d:\d\d:\d\d$/);
+
+    // Held keys repeat their direction, and letting go sends a stop. Nothing about the pad is kept by the broker.
+    const up = page.getByRole("button", { name: "上" });
+    await up.hover();
+    await page.mouse.down();
+    await expect(page.locator(".pad-state")).toHaveText("按住：上");
+    await expect.poll(() => sent("in/1p").length, { timeout: 3000 }).toBeGreaterThanOrEqual(3);
+    await page.mouse.up();
+    await expect(page.locator(".pad-state")).toHaveText("放開：停止");
+    await expect.poll(() => sent("in/1p").at(-1)?.payload).toBe("");
+    const held = sent("in/1p");
+    expect(held.slice(0, -1).every((message) => message.payload === "up" && !message.retain)).toBe(true);
+    await page.waitForTimeout(600);
+    expect(sent("in/1p")).toHaveLength(held.length);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
   });
 
   test("an example that uses dash gets its own topic name", async ({ page }) => {

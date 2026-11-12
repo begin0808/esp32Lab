@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { dashFile, dashTopic, findDashboardUrl, formatClock, formatNumber, gaugeFraction, parseLayout, parseNumber, usesDash } from "../../src/dash";
+import { dashFile, dashTopic, findDashboardUrl, formatClock, formatNumber, parseColor, gaugeFraction, parseLayout, parseNumber, usesDash } from "../../src/dash";
 
 const HAS_CJK = /[　-〿㐀-鿿＀-￯]/;
 
@@ -59,10 +59,10 @@ describe("parseLayout", () => {
       ],
     });
     expect(parseLayout(layout)).toEqual([
-      { id: "0g", kind: "gauge", label: "溫度", unit: "°C", min: 0, max: 50, color: "green" },
-      { id: "1l", kind: "led", label: "警報", unit: "", min: 0, max: 100, color: "red" },
-      { id: "2r", kind: "slider", label: "亮度", unit: "%", min: 0, max: 100, color: "green" },
-      { id: "3b", kind: "button", label: "響鈴", unit: "", min: 0, max: 100, color: "green" },
+      { id: "0g", kind: "gauge", label: "溫度", unit: "°C", min: 0, max: 50, color: "green", options: [] },
+      { id: "1l", kind: "led", label: "警報", unit: "", min: 0, max: 100, color: "red", options: [] },
+      { id: "2r", kind: "slider", label: "亮度", unit: "%", min: 0, max: 100, color: "green", options: [] },
+      { id: "3b", kind: "button", label: "響鈴", unit: "", min: 0, max: 100, color: "green", options: [] },
     ]);
   });
 
@@ -90,6 +90,23 @@ describe("parseLayout", () => {
     expect(widgets[2]).toMatchObject({ label: "3l", color: "green" });
   });
 
+  it("reads the new widgets, and keeps a select's options short and distinct", () => {
+    const widgets = parseLayout(
+      JSON.stringify({
+        w: [
+          { id: "0h", t: "color", l: "燈色" },
+          { id: "1p", t: "pad", l: "方向" },
+          { id: "2s", t: "select", l: "模式", o: ["關", "亮", "亮", "", 5, "x".repeat(30), "a", "b", "c", "d", "e", "f"] },
+          { id: "3s", t: "select", l: "沒有選項", o: [] },
+          { id: "4i", t: "input", l: "訊息" },
+          { id: "5a", t: "alert", l: "門鈴" },
+        ],
+      }),
+    )!;
+    expect(widgets.map((widget) => widget.kind)).toEqual(["color", "pad", "select", "input", "alert"]);
+    expect(widgets[2].options).toEqual(["關", "亮", "x".repeat(20), "a", "b", "c", "d", "e"]);
+  });
+
   it("keeps at most 30 widgets", () => {
     const w = Array.from({ length: 40 }, (_, index) => ({ id: `${index}v`, t: "value", l: String(index) }));
     expect(parseLayout(JSON.stringify({ w }))).toHaveLength(30);
@@ -111,6 +128,13 @@ describe("numbers on the dashboard", () => {
     expect(gaugeFraction(25, 0, 50)).toBe(0.5);
     expect(gaugeFraction(-10, 0, 50)).toBe(0);
     expect(gaugeFraction(80, 0, 50)).toBe(1);
+  });
+
+  it("reads only colours written as #rrggbb", () => {
+    expect(parseColor("#FF8000")).toBe("#ff8000");
+    expect(parseColor("red")).toBeNull();
+    expect(parseColor("#ff80")).toBeNull();
+    expect(parseColor("#ff8000;background:url(x)")).toBeNull();
   });
 
   it("writes chart times as hours, minutes and seconds", () => {

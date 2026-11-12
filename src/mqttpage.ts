@@ -26,7 +26,8 @@ export interface MqttPageOptions {
   onConnected(client: MqttClient, name: string): void;
   /** The broker is out of reach or refused the login. */
   onLost(): void;
-  onMessage(topic: string, payload: Uint8Array): void;
+  /** `retained` is true for a message the broker kept from before, rather than one sent just now. */
+  onMessage(topic: string, payload: Uint8Array, retained: boolean): void;
 }
 
 export interface MqttPage {
@@ -74,8 +75,8 @@ export function setupMqttPage(options: MqttPageOptions): MqttPage {
       setStatus(ui.linkStatus, t("已連線，主題：{name}", { name }), "ready");
       options.onConnected(current, name);
     });
-    current.on("message", (topic, payload) => {
-      if (client === current) options.onMessage(topic, payload);
+    current.on("message", (topic, payload, packet) => {
+      if (client === current) options.onMessage(topic, payload, packet.retain);
     });
     const onLost = () => {
       // A client replaced by a new connection must not overwrite the current status.
