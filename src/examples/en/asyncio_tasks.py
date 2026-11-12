@@ -1,4 +1,4 @@
-# Example 26 | asyncio, three things at once: blink an LED, watch a button, and report the running time every 2 seconds
+# Example 26 | asyncio (asynchronous input/output), three things at once: blink an LED, watch a button, and report the running time every 2 seconds
 # Wiring: as in example 2, button between GPIO 19 and GND; LED through a 220Ω resistor to GPIO 18, short leg to GND
 # The key: each job is an async function, and it waits with await asyncio.sleep, handing the time to the other jobs
 # With time.sleep instead, the whole board would stop and wait, and the other jobs with it
