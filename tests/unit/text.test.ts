@@ -270,7 +270,7 @@ describe("phone dashboard prompts", () => {
 
   it("writes a new dashboard program with every widget and the rules", () => {
     const prompt = dashboardPrompt(board);
-    for (const call of ["board.value(", "board.gauge(", "board.chart(", "board.led(", "board.text(", "board.alert(", "board.switch(", "board.button(", "board.slider(", "board.color(", "board.pad(", "board.select(", "board.input("]) {
+    for (const call of ["board.value(", "board.gauge(", "board.chart(", "board.led(", "board.text(", "board.alert(", "board.switch(", "board.button(", "board.slider(", "board.color(", "board.pad(", "board.select(", "board.input(", "board.log(", "board.number(", "board.joystick(", "board.tilt("]) {
       expect(prompt, call).toContain(call);
     }
     expect(prompt).toContain("board.check()");

@@ -1,7 +1,29 @@
-import { dashTopic, DIRECTIONS, formatClock, formatNumber, gaugeFraction, MAX_INPUT, parseColor, parseLayout, parseNumber, type Widget } from "./dash";
+import {
+  dashTopic,
+  DIRECTIONS,
+  fitNumber,
+  formatClock,
+  formatInfo,
+  formatNumber,
+  formatVector,
+  gaugeFraction,
+  logCsv,
+  MAX_COLUMNS,
+  MAX_INPUT,
+  parseColor,
+  parseInfo,
+  parseLayout,
+  parseNumber,
+  parseRows,
+  stickVector,
+  tiltVector,
+  type BoardInfo,
+  type Widget,
+} from "./dash";
 import { setupLanguagePicker, t, translatePage } from "./i18n";
 import { el, setStatus, setupMqttPage } from "./mqttpage";
 import { setupHomeLinks } from "./nav";
+import { csvFileName } from "./plot";
 import { setupStats } from "./stats";
 import { setupStylePicker } from "./theme";
 
@@ -9,10 +31,18 @@ translatePage();
 
 const BOARD_REPLY_TIMEOUT = 5000;
 const CHART_POINTS = 60;
+/** The phone keeps the newest 200 rows of each log. */
+const LOG_ROWS = 200;
+const NUMBER_WAIT_MS = 1500;
+const STICK_SEND_MS = 150;
+const STICK_REPEAT_MS = 400;
+const TILT_SEND_MS = 200;
+const TILT_CHECK_MS = 2000;
 const SVG = "http://www.w3.org/2000/svg";
 
 const ui = {
   boardStatus: el("board-status"),
+  boardInfo: el("board-info"),
   widgets: el("widgets"),
   empty: el("empty"),
 };
@@ -30,6 +60,9 @@ let replyTimer: ReturnType<typeof setTimeout> | undefined;
 const values = new Map<string, string>();
 /** Chart values with the time each one arrived, because the board sends no times of its own. */
 const history = new Map<string, { value: number; time: number }[]>();
+/** Log rows with the time each one arrived, kept apart from the layout so a new layout does not lose them. */
+const logs = new Map<string, { time: number; cells: string[] }[]>();
+let info: BoardInfo | null = null;
 let views = new Map<string, View>();
 
 function svg<K extends keyof SVGElementTagNameMap>(name: K, attributes: Record<string, string | number>): SVGElementTagNameMap[K] {
@@ -50,7 +83,7 @@ function send(widget: Widget, payload: string, retain: boolean): void {
 }
 
 function numberView(card: HTMLElement, widget: Widget): View {
-  const line = part("p", "widget-number");
+  const line = part("p", "value-line");
   const number = part("span", "number", "—");
   line.append(number, part("span", "unit", widget.unit));
   card.append(line);
@@ -397,6 +430,310 @@ function inputView(card: HTMLElement, widget: Widget): View {
   };
 }
 
+function numberSettingView(card: HTMLElement, widget: Widget): View {
+  const number = numberView(card, widget);
+  const form = part("form", "number-form");
+  // The value is fitted into range and onto a step below, instead of the browser refusing it with a bubble phones show badly.
+  form.noValidate = true;
+  const minus = part("button", "btn number-step", "−");
+  minus.type = "button";
+  minus.setAttribute("aria-label", t("減少"));
+  const field = part("input", "number-input");
+  field.type = "number";
+  field.inputMode = "decimal";
+  field.min = String(widget.min);
+  field.max = String(widget.max);
+  field.step = String(widget.step);
+  field.setAttribute("aria-label", widget.label);
+  const plus = part("button", "btn number-step", "+");
+  plus.type = "button";
+  plus.setAttribute("aria-label", t("增加"));
+  const apply = part("button", "btn", t("設定"));
+  form.append(minus, field, plus, apply);
+  const range = part("p", "number-range", t("範圍 {min}～{max}，每次 {step}", { min: formatNumber(widget.min), max: formatNumber(widget.max), step: formatNumber(widget.step) }));
+  card.append(form, range);
+  let current = widget.min;
+  // While the board has not answered a tap yet, its older echo must not undo the next tap.
+  let waitUntil = 0;
+  const submit = (value: number) => {
+    current = fitNumber(value, widget.min, widget.max, widget.step);
+    field.value = formatNumber(current);
+    waitUntil = Date.now() + NUMBER_WAIT_MS;
+    send(widget, formatNumber(current), true);
+  };
+  minus.addEventListener("click", () => submit(current - widget.step));
+  plus.addEventListener("click", () => submit(current + widget.step));
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const value = parseNumber(field.value);
+    if (value !== null) submit(value);
+  });
+  const controls = [minus, field, plus, apply];
+  return {
+    update(payload) {
+      number.update(payload);
+      const value = parseNumber(payload);
+      if (value === null || Date.now() < waitUntil) return;
+      current = value;
+      if (document.activeElement !== field) field.value = formatNumber(value);
+    },
+    setEnabled(enabled) {
+      for (const control of controls) control.disabled = !enabled;
+    },
+  };
+}
+
+function logView(card: HTMLElement, widget: Widget): View {
+  const tools = part("div", "log-tools");
+  const count = part("p", "log-count");
+  const download = part("button", "btn small", t("下載 CSV"));
+  download.type = "button";
+  const clear = part("button", "btn small", t("清除"));
+  clear.type = "button";
+  tools.append(count, download, clear);
+  const wrap = part("div", "log-wrap");
+  const table = part("table", "log-table");
+  const head = document.createElement("thead");
+  const headRow = document.createElement("tr");
+  for (const name of [t("時間"), ...widget.options]) headRow.append(part("th", "", name));
+  head.append(headRow);
+  const body = document.createElement("tbody");
+  table.append(head, body);
+  wrap.append(table);
+  const note = part("p", "log-note", t("紀錄只存在這個頁面，重新整理或關掉就會清空，請記得先下載。"));
+  card.append(tools, wrap, note);
+  const rows = () => logs.get(widget.id) ?? [];
+  const draw = () => {
+    const list = rows();
+    count.textContent = list.length ? t("共 {count} 筆", { count: list.length }) : t("還沒有紀錄");
+    download.disabled = clear.disabled = list.length === 0;
+    // The newest row is on top, where it shows without scrolling.
+    body.replaceChildren(
+      ...list
+        .slice()
+        .reverse()
+        .map((row) => {
+          const line = document.createElement("tr");
+          line.append(part("td", "", formatClock(new Date(row.time))), ...widget.options.map((_, index) => part("td", "", row.cells[index] ?? "")));
+          return line;
+        }),
+    );
+  };
+  download.addEventListener("click", () => {
+    const list = rows().map((row) => ({ time: row.time, cells: widget.options.map((_, index) => row.cells[index] ?? "") }));
+    const anchor = document.createElement("a");
+    anchor.href = URL.createObjectURL(new Blob([logCsv(widget.options, list)], { type: "text/csv;charset=utf-8" }));
+    anchor.download = csvFileName(new Date(), "esp32-log");
+    anchor.click();
+    URL.revokeObjectURL(anchor.href);
+  });
+  clear.addEventListener("click", () => {
+    if (!confirm(t("要清除這個紀錄表嗎？還沒下載的資料會不見。"))) return;
+    logs.delete(widget.id);
+    draw();
+  });
+  draw();
+  return { update: draw, setEnabled() {} };
+}
+
+/** The round area of a joystick or tilt, with a dot where it points and the numbers the board gets. */
+function stickArea(card: HTMLElement, className: string): { area: HTMLElement; show(vector: string): void } {
+  const area = part("div", `stick ${className}`);
+  const dot = part("span", "stick-dot");
+  area.append(dot);
+  const readout = part("p", "stick-readout");
+  card.append(area, readout);
+  const show = (vector: string) => {
+    const [x, y] = vector.split(",").map(Number);
+    // The dot moves half the area's width at full tilt, so it stays inside the circle.
+    dot.style.left = `${50 + x / 2}%`;
+    dot.style.top = `${50 - y / 2}%`;
+    readout.textContent = t("左右 {x}，前後 {y}", { x, y });
+  };
+  show("0,0");
+  return { area, show };
+}
+
+function joystickView(card: HTMLElement, widget: Widget): View {
+  const { area, show } = stickArea(card, "joystick");
+  area.tabIndex = 0;
+  area.setAttribute("role", "slider");
+  area.setAttribute("aria-label", t("{label}：拖動圓點，或按方向鍵", { label: widget.label }));
+  let held = false;
+  let enabled = false;
+  let latest = "0,0";
+  let sent = "";
+  let sentAt = 0;
+  let timer: ReturnType<typeof setInterval> | undefined;
+  const keys = new Set<string>();
+  // A changed position goes out at most every 0.15 s, and the same one again every 0.4 s, so the board
+  // knows the finger is still down. When the messages stop, the board centres the joystick by itself.
+  const tick = () => {
+    const now = Date.now();
+    if (latest !== sent || now - sentAt >= STICK_REPEAT_MS) {
+      send(widget, latest, false);
+      sent = latest;
+      sentAt = now;
+    }
+  };
+  const hold = () => {
+    if (held || !enabled) return;
+    held = true;
+    sent = "";
+    timer = setInterval(tick, STICK_SEND_MS);
+  };
+  const move = (vector: string) => {
+    latest = vector;
+    show(vector);
+    if (Date.now() - sentAt >= STICK_SEND_MS) tick();
+  };
+  const release = (tell = true) => {
+    clearInterval(timer);
+    keys.clear();
+    latest = "0,0";
+    show(latest);
+    if (!held) return;
+    held = false;
+    if (tell) send(widget, "", false);
+  };
+  const follow = (event: PointerEvent) => {
+    const box = area.getBoundingClientRect();
+    move(stickVector(event.clientX - (box.left + box.width / 2), event.clientY - (box.top + box.height / 2), box.width / 2));
+  };
+  area.addEventListener("pointerdown", (event) => {
+    if (!enabled) return;
+    try {
+      area.setPointerCapture(event.pointerId);
+    } catch {
+      // Released by pointerup instead.
+    }
+    hold();
+    follow(event);
+  });
+  area.addEventListener("pointermove", (event) => {
+    if (held && keys.size === 0) follow(event);
+  });
+  for (const name of ["pointerup", "pointercancel", "lostpointercapture"] as const) area.addEventListener(name, () => release());
+  const arrows: Record<string, [number, number]> = { ArrowUp: [0, 100], ArrowDown: [0, -100], ArrowLeft: [-100, 0], ArrowRight: [100, 0] };
+  const fromKeys = () => {
+    let x = 0;
+    let y = 0;
+    for (const key of keys) {
+      x += arrows[key][0];
+      y += arrows[key][1];
+    }
+    return formatVector(x, y);
+  };
+  area.addEventListener("keydown", (event) => {
+    if (!(event.key in arrows) || !enabled) return;
+    event.preventDefault();
+    if (event.repeat) return;
+    keys.add(event.key);
+    hold();
+    move(fromKeys());
+  });
+  area.addEventListener("keyup", (event) => {
+    if (!keys.delete(event.key)) return;
+    if (keys.size === 0) release();
+    else move(fromKeys());
+  });
+  area.addEventListener("blur", () => release());
+  area.addEventListener("contextmenu", (event) => event.preventDefault());
+  window.addEventListener("blur", () => release());
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) release();
+  });
+  return {
+    update() {},
+    setEnabled(value) {
+      enabled = value;
+      if (!value) release(false);
+      area.dataset.disabled = String(!value);
+    },
+  };
+}
+
+/** Safari asks for permission before a page may read the motion sensors; other browsers have no such step. */
+type OrientationWithPermission = typeof DeviceOrientationEvent & { requestPermission?: () => Promise<string> };
+
+function tiltView(card: HTMLElement, widget: Widget): View {
+  const toggle = part("button", "btn tilt-toggle", t("開始傾斜控制"));
+  toggle.type = "button";
+  toggle.setAttribute("aria-pressed", "false");
+  card.append(toggle);
+  const { show } = stickArea(card, "tilt");
+  const note = part("p", "tilt-note", t("手機平放是 0。往前傾是前進，往右傾是右轉，傾斜 45 度就是最大。"));
+  card.append(note);
+  let on = false;
+  let latest: string | null = null;
+  let timer: ReturnType<typeof setInterval> | undefined;
+  let check: ReturnType<typeof setTimeout> | undefined;
+  const read = (event: DeviceOrientationEvent) => {
+    if (event.beta === null || event.gamma === null) return;
+    latest = tiltVector(event.beta, event.gamma);
+    show(latest);
+  };
+  const stop = (tell = true, message = "") => {
+    clearInterval(timer);
+    clearTimeout(check);
+    window.removeEventListener("deviceorientation", read);
+    show("0,0");
+    toggle.textContent = t("開始傾斜控制");
+    toggle.setAttribute("aria-pressed", "false");
+    if (message) note.textContent = message;
+    if (!on) return;
+    on = false;
+    if (tell) send(widget, "", false);
+  };
+  const start = async () => {
+    if (!window.isSecureContext) {
+      note.textContent = t("要用 https 開頭的網址打開這一頁，手機才會提供傾斜感測器。");
+      return;
+    }
+    if (typeof DeviceOrientationEvent === "undefined") {
+      note.textContent = t("這個瀏覽器讀不到傾斜感測器，請改用手機的 Chrome 或 Safari。");
+      return;
+    }
+    const sensor = DeviceOrientationEvent as OrientationWithPermission;
+    if (sensor.requestPermission) {
+      try {
+        if ((await sensor.requestPermission()) !== "granted") throw new Error("denied");
+      } catch {
+        note.textContent = t("沒有允許讀取動作感測器。請關掉這一頁再打開，按「開始傾斜控制」時選「允許」。");
+        return;
+      }
+    }
+    on = true;
+    latest = null;
+    toggle.textContent = t("停止傾斜控制");
+    toggle.setAttribute("aria-pressed", "true");
+    note.textContent = t("手機平放是 0。往前傾是前進，往右傾是右轉，傾斜 45 度就是最大。");
+    window.addEventListener("deviceorientation", read);
+    // The position goes out every 0.2 s even when it stays the same, so the board knows tilt is still on.
+    timer = setInterval(() => {
+      if (latest) send(widget, latest, false);
+    }, TILT_SEND_MS);
+    check = setTimeout(() => {
+      if (latest === null) stop(true, t("沒有收到傾斜資料，這個裝置可能沒有傾斜感測器（電腦通常沒有）。"));
+    }, TILT_CHECK_MS);
+  };
+  toggle.addEventListener("click", () => {
+    if (on) stop();
+    else void start();
+  });
+  window.addEventListener("blur", () => stop());
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) stop();
+  });
+  return {
+    update() {},
+    setEnabled(enabled) {
+      if (!enabled) stop(false);
+      toggle.disabled = !enabled;
+    },
+  };
+}
+
 /** Browsers only let a page make sounds after it was tapped, so the alert card has a button to allow them. */
 let audio: AudioContext | null = null;
 
@@ -462,6 +799,10 @@ function buildView(widget: Widget): { card: HTMLElement; view: View } {
     pad: () => padView(card, widget),
     select: () => selectView(card, widget),
     input: () => inputView(card, widget),
+    number: () => numberSettingView(card, widget),
+    log: () => logView(card, widget),
+    tilt: () => tiltView(card, widget),
+    joystick: () => joystickView(card, widget),
   };
   return { card, view: builders[widget.kind]() };
 }
@@ -493,9 +834,16 @@ function onValue(id: string, payload: string): void {
   views.get(id)?.update(payload);
 }
 
+function showInfo(): void {
+  const text = info && boardOnline ? formatInfo(info) : "";
+  ui.boardInfo.textContent = text;
+  ui.boardInfo.hidden = !text;
+}
+
 function setBoardOnline(online: boolean): void {
   boardOnline = online;
   for (const view of views.values()) view.setEnabled(online);
+  showInfo();
 }
 
 function onMessage(topic: string, payload: Uint8Array, retained: boolean): void {
@@ -518,8 +866,23 @@ function onMessage(topic: string, payload: Uint8Array, retained: boolean): void 
       setStatus(ui.boardStatus, t("開發板：離線，請確認程式正在執行"), "error");
       setBoardOnline(false);
     }
+  } else if (name === "info") {
+    info = parseInfo(text);
+    showInfo();
   } else if (name.startsWith("out/")) {
     const id = name.slice(4);
+    // Log rows are events too: each arrives once, gets the phone's time, and is added below the others.
+    if (id.endsWith("o")) {
+      const rows = retained ? null : parseRows(text, MAX_COLUMNS);
+      if (!rows?.length) return;
+      const list = logs.get(id) ?? [];
+      const time = Date.now();
+      list.push(...rows.map((cells) => ({ time, cells })));
+      list.splice(0, Math.max(0, list.length - LOG_ROWS));
+      logs.set(id, list);
+      views.get(id)?.update(text);
+      return;
+    }
     // An alert is an event: it is shown once when it happens, never kept, and never replayed from the broker.
     if (id.endsWith("a")) {
       if (!retained) views.get(id)?.update(text);
@@ -538,12 +901,14 @@ const page = setupMqttPage({
     layoutText = "";
     values.clear();
     history.clear();
+    logs.clear();
+    info = null;
     showLayout([]);
     setBoardOnline(false);
     setStatus(ui.boardStatus, t("開發板：尚未回報"), "idle");
   },
   onConnected(client, name) {
-    client.subscribe([dashTopic(name, "layout"), dashTopic(name, "state"), dashTopic(name, "out/+")]);
+    client.subscribe([dashTopic(name, "layout"), dashTopic(name, "state"), dashTopic(name, "info"), dashTopic(name, "out/+")]);
     clearTimeout(replyTimer);
     replyTimer = setTimeout(() => {
       if (!layoutText) setStatus(ui.boardStatus, t("開發板：沒有回應，請確認主題名稱和程式是否正在執行"), "error");

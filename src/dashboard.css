@@ -40,20 +40,20 @@
   font-weight: 700;
 }
 
-.widget-number {
+.value-line {
   margin: 0;
   font-family: var(--font-display);
   font-variant-numeric: tabular-nums;
 }
 
-.widget-number .number {
+.value-line .number {
   font-size: 30px;
   font-weight: 700;
   line-height: 1.1;
   overflow-wrap: anywhere;
 }
 
-.widget-number .unit {
+.value-line .unit {
   margin-left: 4px;
   color: var(--muted);
   font-size: 15px;
@@ -430,6 +430,153 @@
 .color-input:focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 2px;
+}
+
+/* Wi-Fi signal, running time and free memory, under the board's status. */
+.board-info {
+  margin: -4px 0 0 22px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.board-info[hidden] {
+  display: none;
+}
+
+.widget-log,
+.widget-number,
+.widget-tilt,
+.widget-joystick {
+  grid-column: 1 / -1;
+}
+
+.number-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.number-step {
+  min-width: 48px;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.number-input {
+  width: 7em;
+  min-width: 0;
+  text-align: center;
+}
+
+.number-range,
+.log-count,
+.log-note,
+.tilt-note,
+.stick-readout {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.stick-readout {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.log-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.log-count {
+  flex: 1;
+}
+
+.log-wrap {
+  max-height: 320px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.log-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+  font-size: 14px;
+}
+
+.log-table th,
+.log-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.log-table th {
+  position: sticky;
+  top: 0;
+  background: var(--input-bg);
+}
+
+.log-table tbody tr:first-child {
+  font-weight: 700;
+}
+
+.stick {
+  position: relative;
+  align-self: center;
+  width: min(220px, 70vw);
+  aspect-ratio: 1;
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--code-gutter) 0 18%, transparent 19%), var(--input-bg);
+  /* The joystick is dragged, so the page must not scroll, zoom or select text under the finger. */
+  touch-action: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.joystick {
+  cursor: grab;
+}
+
+.stick[data-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.stick-dot {
+  position: absolute;
+  width: 30%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--go-bg);
+  border: 2px solid var(--go-text);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.tilt .stick-dot {
+  width: 18%;
+  transition: left 0.15s, top 0.15s;
+}
+
+.stick:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.tilt-toggle {
+  align-self: flex-start;
+}
+
+.tilt-toggle[aria-pressed="true"] {
+  border-color: var(--danger);
+  color: var(--danger);
 }
 
 @media (max-width: 380px) {

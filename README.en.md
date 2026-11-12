@@ -53,7 +53,7 @@ The default broker is the public `broker.emqx.io`. Its messages have no encrypti
 
 1. Choose the example "27. Dashboard basics", fill in your Wi-Fi details and upload it. For a program with `import dash`, the site first saves `src/lib/dash.py` to the board as `/lib/dash.py`, and skips this when the board already has the same file (compared by SHA-256).
 2. Once the board reaches the MQTT broker, it prints the dashboard's address, and the address and a QR code appear above the monitor for a phone to scan.
-3. The program creates widgets with calls such as `board.gauge()` and `board.switch()` (13 kinds in all), and the phone page lays them out from the `layout` the board sends.
+3. The program creates widgets with calls such as `board.gauge()` and `board.switch()` (17 kinds in all), and the phone page lays them out from the `layout` the board sends.
 4. To ask Gemini for a dashboard program, use "Gemini prompts" > "Write a phone dashboard program". The guide to dash is `dashGuide` in `src/text.ts`; Gemini has never seen `dash.py`, so the prompt must always include it.
 
 Everything is under `esp32-mp-class/<topic name>/dash/`: `layout` (the widgets), `state` (online or not), `out/<id>` (the board's values) and `in/<id>` (what was done on the phone). The phone page treats everything it receives as untrusted and shows it only as text. `dash.py` is tested on a computer by `tests/dash/test_dash.py`, with fake Wi-Fi, MQTT and a fake clock, as part of the unit tests.

@@ -145,6 +145,7 @@ Widgets from the board to the phone (send with .set()):
 - board.led("name", color="green"): a lamp, .set(True) or .set(False)
 - board.text("name"): one line of text
 - board.alert("name"): pops up an alert with a sound on the phone, sent with .send("message")
+- board.log("name", ["column 1", "column 2"]): a table on the phone; .add(value 1, value 2) adds a row (one value per column) and the phone adds the time. The phone can download it as CSV; rows only arrive while the phone page is open
 Widgets from the phone to the board:
 - board.switch("name"): .value is True or False
 - board.button("name"): .pressed() returns True once after each press
@@ -153,7 +154,12 @@ Widgets from the phone to the board:
 - board.pad("name"): a direction pad; .value is "up", "down", "left" or "right" while held, and "" when released
 - board.select("name", ["option 1", "option 2"]): .value is the chosen text
 - board.input("name"): .value is the text from the phone; .changed() returns True once when new text arrives
-The board can also change a switch, slider, color, select or input with .set().
+- board.number("name", value=None, min=0, max=100, step=1, unit=""): a number setting with - and + buttons; .value is the number (whole when min and step are whole); .changed() returns True once when the phone changes it. Good for limits that students adjust without changing the code
+- board.joystick("name"): .x (left -100 to right 100) and .y (back -100 to forward 100); both go back to 0 when released
+- board.tilt("name"): the phone's tilt, turned on with a button on the phone; .x and .y are -100 to 100 (flat is 0, 45 degrees is full), and .on says whether it is turned on
+The board can also change a switch, slider, color, select, input or number with .set().
+Direction pads, joysticks and tilt go back to rest by themselves when the phone stops sending for 1 s or drops off, so a car stops.
+The phone page shows the board's Wi-Fi signal, running time and free memory by itself; no code is needed for that.
 
 Rules:
 - Never pause with time.sleep(1) or longer; the loop must keep running. Read sensors every so often with time.ticks_ms() and time.ticks_diff()
@@ -179,6 +185,7 @@ while True:
 - board.led("名稱", color="green")：指示燈，.set(True) 或 .set(False)
 - board.text("名稱")：一行文字
 - board.alert("名稱")：手機跳出提醒並發出聲音，用 .send("訊息") 送出
+- board.log("名稱", ["欄位一", "欄位二"])：手機上的紀錄表，用 .add(值一, 值二) 新增一列（每欄一個值），時間由手機加上。手機可以下載 CSV；手機頁打開時才收得到
 手機 → 板子的元件：
 - board.switch("名稱")：.value 是 True 或 False
 - board.button("名稱")：每按一次，.pressed() 回傳一次 True
@@ -187,7 +194,12 @@ while True:
 - board.pad("名稱")：方向鍵，按住時 .value 是 "up"、"down"、"left"、"right"，放開時是 ""
 - board.select("名稱", ["選項一", "選項二"])：.value 是選到的文字
 - board.input("名稱")：.value 是手機傳來的文字，有新文字時 .changed() 回傳一次 True
-開關、滑桿、色彩、選單、文字輸入也可以在板子上用 .set() 改。
+- board.number("名稱", value=None, min=0, max=100, step=1, unit="")：有 − 和 ＋ 按鈕的數字設定，.value 是數字（min 和 step 都是整數時是整數），手機改了時 .changed() 回傳一次 True。適合讓學生不改程式就能調整門檻
+- board.joystick("名稱")：搖桿，.x 是左右（左 -100～右 100），.y 是前後（後 -100～前 100），放開時都回到 0
+- board.tilt("名稱")：手機傾斜，要在手機上按按鈕開啟；.x 和 .y 是 -100～100（平放是 0，傾斜 45 度是最大），.on 表示有沒有開啟
+開關、滑桿、色彩、選單、文字輸入、數字設定也可以在板子上用 .set() 改。
+方向鍵、搖桿和手機傾斜在手機超過 1 秒沒傳訊息或斷線時會自動回到靜止，車子會停下來。
+手機頁會自動顯示板子的 Wi-Fi 訊號、已執行時間和剩餘記憶體，不用寫程式。
 
 規則：
 - 不要用 time.sleep(1) 這類一秒以上的暫停，迴圈要一直跑；感測器用 time.ticks_ms() 和 time.ticks_diff() 每隔一段時間讀一次

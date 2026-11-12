@@ -1,10 +1,11 @@
 {
   "name": "esp32-micropython-web",
-  "version": "1.11.0",
+  "version": "1.12.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:phone": "vite --mode phone --host --port 5174",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",
@@ -24,6 +25,7 @@
   "devDependencies": {
     "@playwright/test": "^1.64.1",
     "@types/w3c-web-serial": "^1.0.9",
+    "@vitejs/plugin-basic-ssl": "^2.3.0",
     "typescript": "^7.0.2",
     "vite": "^8.3.5",
     "vitest": "^5.0.5"

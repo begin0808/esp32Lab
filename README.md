@@ -51,7 +51,7 @@
 
 1. 範例選「27. 儀表板入門」，填入 Wi-Fi 後上傳。用到 `import dash` 的程式，網站會先把 `src/lib/dash.py` 存到板子的 `/lib/dash.py`，板子上已經是同一份時就跳過（比對 SHA-256）。
 2. 開發板連上 MQTT 伺服器後會印出儀表板網址，監控窗上方會顯示網址和 QR code，手機一掃就開。
-3. 程式用 `board.gauge()`、`board.switch()` 這類寫法建立元件（共 13 種），手機頁會依開發板送出的 `layout` 自動排出來。
+3. 程式用 `board.gauge()`、`board.switch()` 這類寫法建立元件（共 17 種），手機頁會依開發板送出的 `layout` 自動排出來。
 4. 請 Gemini 寫儀表板程式時，用「Gemini 提示詞」→「寫手機儀表板程式」。dash 的寫法說明在 `src/text.ts` 的 `dashGuide`，Gemini 沒看過 `dash.py`，所以提示詞一定要附上它。
 
 全部資料在 `esp32-mp-class/<主題名稱>/dash/` 底下：`layout`（畫面）、`state`（在線狀態）、`out/<id>`（板子送的值）、`in/<id>`（手機的操作）。手機頁把收到的資料都當成不可信的內容處理，只用文字顯示。`dash.py` 在電腦上的測試是 `tests/dash/test_dash.py`，用假的 Wi-Fi、MQTT 和時鐘執行，單元測試會一起跑。

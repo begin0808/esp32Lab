@@ -80,6 +80,10 @@ export const EXAMPLE_GROUPS: { label: string; examples: Example[] }[] = [
       item("dash_mode", t("選單切換 LED 模式")),
       item("dash_oled", t("手機傳文字到 OLED")),
       item("dash_doorbell", t("按鈕門鈴通知手機")),
+      item("dash_threshold", t("手機調整濕度門檻")),
+      item("dash_log", t("溫濕度紀錄表")),
+      item("dash_level", t("手機水平儀")),
+      item("dash_joycar", t("手機搖桿遙控車")),
     ],
   },
 ];

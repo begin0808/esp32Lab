@@ -139,7 +139,7 @@ export class DataLog {
   }
 }
 
-function csvCell(text: string): string {
+export function csvCell(text: string): string {
   const safe = /^[=+\-@]/.test(text) ? `'${text}` : text;
   return /[",\r\n]/.test(safe) ? `"${safe.replaceAll('"', '""')}"` : safe;
 }
@@ -171,9 +171,9 @@ export function formatValue(value: number): string {
 }
 
 /** A file name holding the local date and time, such as esp32-data-20261103-142530.csv. */
-export function csvFileName(date: Date): string {
+export function csvFileName(date: Date, prefix = "esp32-data"): string {
   const pad = (value: number) => String(value).padStart(2, "0");
   const day = `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}`;
   const time = `${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}`;
-  return `esp32-data-${day}-${time}.csv`;
+  return `${prefix}-${day}-${time}.csv`;
 }

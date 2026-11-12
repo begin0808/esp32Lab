@@ -848,7 +848,7 @@ for (const id of STYLE_IDS) {
 test("offers every example, grouped, and loads the wiring notes into the editor", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("#examples optgroup")).toHaveCount(6);
-  await expect(page.locator("#examples optgroup option")).toHaveCount(34);
+  await expect(page.locator("#examples optgroup option")).toHaveCount(38);
   page.on("dialog", (dialog) => dialog.accept());
   await page.locator("#examples").selectOption({ label: "13. SSD1306 OLED 顯示器" });
   await expect(page.locator("#editor .cm-content")).toContainText("class SSD1306");
@@ -1549,7 +1549,7 @@ test.describe("in an English browser", () => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     await page.goto("/");
     await expect(page.locator("#editor .cm-content")).toContainText("Blink an LED");
-    await expect(page.locator("#examples optgroup option")).toHaveCount(34);
+    await expect(page.locator("#examples optgroup option")).toHaveCount(38);
 
     page.on("dialog", (dialog) => dialog.accept());
     await page.locator("#examples").selectOption({ label: "17. Voice-controlled LED (MQTT)" });
@@ -1995,7 +1995,7 @@ test.describe("example numbers", () => {
         page.on("dialog", (dialog) => void dialog.accept());
         await page.goto("/");
         const options = await page.locator("#examples optgroup option").evaluateAll((items) => items.map((item) => (item as HTMLOptionElement).value));
-        expect(options).toHaveLength(34);
+        expect(options).toHaveLength(38);
         for (const [index, value] of options.entries()) {
           const label = await page.locator(`#examples option[value="${value}"]`).textContent();
           expect(label!.startsWith(`${index + 1}. `)).toBe(true);
@@ -2081,7 +2081,7 @@ async function fakeDashBroker(page: Page, retained: Record<string, string>) {
         const topic = body.subarray(2, 2 + size).toString();
         const payload = body.subarray(2 + size).toString();
         published.push({ topic, payload, retain: (flags & 1) === 1 });
-        const input = topic.match(/^(.*\/dash\/)in\/(\d+[wrhsi])$/);
+        const input = topic.match(/^(.*\/dash\/)in\/(\d+[wrhsin])$/);
         if (input) socket.send(publishPacket(`${input[1]}out/${input[2]}`, payload, true));
       }
     });
@@ -2130,7 +2130,7 @@ test.describe("phone dashboard", () => {
     await expect(page.locator(".widget")).toHaveCount(8);
     await expect(page.locator("#topic-preview")).toContainText("esp32-mp-class/room1/dash/");
 
-    await expect(page.locator(".widget-value .widget-number")).toHaveText("61%");
+    await expect(page.locator(".widget-value .value-line")).toHaveText("61%");
     await expect(page.locator(".widget-gauge .number")).toHaveText("25");
     await expect(page.locator(".gauge-fill")).toHaveAttribute("stroke-dasharray", "50 100");
     await expect(page.locator(".gauge-fill")).toHaveAttribute("data-color", "red");
@@ -2256,6 +2256,89 @@ test.describe("phone dashboard", () => {
     await page.waitForTimeout(600);
     expect(sent("in/1p")).toHaveLength(held.length);
     expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+  });
+
+  test("handles the number, log, joystick and tilt widgets, and shows the board's info", async ({ page }) => {
+    const broker = await fakeDashBroker(page, {
+      [`${DASH}layout`]: JSON.stringify({
+        v: 1,
+        w: [
+          { id: "0n", t: "number", l: "門檻", min: 20, max: 40, step: 0.5, u: "°C" },
+          { id: "1o", t: "log", l: "紀錄", o: ["溫度", "濕度"] },
+          { id: "2j", t: "joystick", l: "搖桿" },
+          { id: "3m", t: "tilt", l: "傾斜" },
+        ],
+      }),
+      [`${DASH}state`]: "online",
+      [`${DASH}info`]: JSON.stringify({ r: -55, u: 3725, m: 87040 }),
+      [`${DASH}out/0n`]: "30",
+      // Rows the broker kept by mistake must not be added again.
+      [`${DASH}out/1o`]: "[[1, 2]]",
+    });
+    await page.goto("/dashboard.html?ch=room1");
+    await expect(page.locator(".widget")).toHaveCount(4);
+    const sent = (topic: string) => broker.published.filter((message) => message.topic === `${DASH}${topic}`);
+    await expect(page.locator("#board-info")).toHaveText("Wi-Fi 訊號 -55 dBm（強）・已執行 1 小時 2 分・剩餘記憶體 85 KB");
+
+    // A number setting steps from the board's value, stays in range, and is kept by the broker.
+    await expect(page.locator(".widget-number .number")).toHaveText("30");
+    await expect(page.locator(".number-range")).toHaveText("範圍 20～40，每次 0.5");
+    await page.getByRole("button", { name: "增加" }).click();
+    await expect(page.locator(".widget-number .number")).toHaveText("30.5");
+    await page.getByRole("spinbutton", { name: "門檻" }).fill("99");
+    await page.getByRole("spinbutton", { name: "門檻" }).press("Enter");
+    await expect(page.locator(".widget-number .number")).toHaveText("40");
+    expect(sent("in/0n")).toEqual([
+      { topic: `${DASH}in/0n`, payload: "30.5", retain: true },
+      { topic: `${DASH}in/0n`, payload: "40", retain: true },
+    ]);
+
+    // Log rows arrive as events, get the phone's time, and the newest is on top.
+    await expect(page.locator(".log-count")).toHaveText("還沒有紀錄");
+    await expect(page.getByRole("button", { name: "下載 CSV" })).toBeDisabled();
+    broker.send(`${DASH}out/1o`, "[[25.12, 60], [26, 61]]", false);
+    await expect(page.locator(".log-count")).toHaveText("共 2 筆");
+    await expect(page.locator(".log-table tbody tr")).toHaveCount(2);
+    await expect(page.locator(".log-table tbody tr").first().locator("td")).toHaveText([/^\d\d:\d\d:\d\d$/, "26", "61"]);
+    const downloading = page.waitForEvent("download");
+    await page.getByRole("button", { name: "下載 CSV" }).click();
+    const file = await downloading;
+    expect(file.suggestedFilename()).toMatch(/^esp32-log-\d{8}-\d{6}\.csv$/);
+    const csv = readFileSync(await file.path(), "utf8");
+    expect(csv.startsWith("\ufeff時間,溫度,濕度\r\n")).toBe(true);
+    expect(csv).toMatch(/\r\n\d{4}-\d\d-\d\d \d\d:\d\d:\d\d,25\.12,60\r\n\d{4}-.*,26,61\r\n$/);
+
+    // Dragging the joystick sends where it points, and letting go centres it.
+    const stick = page.locator(".joystick");
+    await stick.scrollIntoViewIfNeeded();
+    const box = (await stick.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width + 40, box.y + box.height / 2, { steps: 4 });
+    await expect(page.locator(".widget-joystick .stick-readout")).toHaveText("左右 100，前後 0");
+    await expect.poll(() => sent("in/2j").map((message) => message.payload)).toContain("100,0");
+    await page.mouse.up();
+    await expect.poll(() => sent("in/2j").at(-1)?.payload).toBe("");
+    await expect(page.locator(".widget-joystick .stick-readout")).toHaveText("左右 0，前後 0");
+    expect(sent("in/2j").every((message) => !message.retain)).toBe(true);
+
+    // Tilt is read from the phone's orientation once it is turned on.
+    const toggle = page.getByRole("button", { name: "開始傾斜控制" });
+    await toggle.click();
+    await expect(page.getByRole("button", { name: "停止傾斜控制" })).toHaveAttribute("aria-pressed", "true");
+    await page.evaluate(() => window.dispatchEvent(new DeviceOrientationEvent("deviceorientation", { beta: -45, gamma: 22.5 })));
+    await expect(page.locator(".widget-tilt .stick-readout")).toHaveText("左右 50，前後 100");
+    await expect.poll(() => sent("in/3m").map((message) => message.payload)).toContain("50,100");
+    await page.getByRole("button", { name: "停止傾斜控制" }).click();
+    await expect.poll(() => sent("in/3m").at(-1)?.payload).toBe("");
+    // A device without a tilt sensor says so instead of sending nothing forever.
+    await toggle.click();
+    await expect(page.locator(".tilt-note")).toContainText("沒有收到傾斜資料", { timeout: 4000 });
+    await expect(page.getByRole("button", { name: "開始傾斜控制" })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+
+    broker.send(`${DASH}state`, "offline");
+    await expect(page.locator("#board-info")).toBeHidden();
   });
 
   test("an example that uses dash gets its own topic name", async ({ page }) => {

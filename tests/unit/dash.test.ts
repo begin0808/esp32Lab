@@ -1,7 +1,27 @@
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { dashFile, dashTopic, findDashboardUrl, formatClock, formatNumber, parseColor, gaugeFraction, parseLayout, parseNumber, usesDash } from "../../src/dash";
+import {
+  dashFile,
+  dashTopic,
+  findDashboardUrl,
+  fitNumber,
+  formatClock,
+  formatDateTime,
+  formatInfo,
+  formatNumber,
+  formatUptime,
+  gaugeFraction,
+  logCsv,
+  parseColor,
+  parseInfo,
+  parseLayout,
+  parseNumber,
+  parseRows,
+  stickVector,
+  tiltVector,
+  usesDash,
+} from "../../src/dash";
 
 const HAS_CJK = /[　-〿㐀-鿿＀-￯]/;
 
@@ -59,10 +79,10 @@ describe("parseLayout", () => {
       ],
     });
     expect(parseLayout(layout)).toEqual([
-      { id: "0g", kind: "gauge", label: "溫度", unit: "°C", min: 0, max: 50, color: "green", options: [] },
-      { id: "1l", kind: "led", label: "警報", unit: "", min: 0, max: 100, color: "red", options: [] },
-      { id: "2r", kind: "slider", label: "亮度", unit: "%", min: 0, max: 100, color: "green", options: [] },
-      { id: "3b", kind: "button", label: "響鈴", unit: "", min: 0, max: 100, color: "green", options: [] },
+      { id: "0g", kind: "gauge", label: "溫度", unit: "°C", min: 0, max: 50, step: 1, color: "green", options: [] },
+      { id: "1l", kind: "led", label: "警報", unit: "", min: 0, max: 100, step: 1, color: "red", options: [] },
+      { id: "2r", kind: "slider", label: "亮度", unit: "%", min: 0, max: 100, step: 1, color: "green", options: [] },
+      { id: "3b", kind: "button", label: "響鈴", unit: "", min: 0, max: 100, step: 1, color: "green", options: [] },
     ]);
   });
 
@@ -169,5 +189,69 @@ describe("dash.py on the board", () => {
     expect(result, "Python is needed for this test").toBeDefined();
     expect(result!.status, result!.stderr).toBe(0);
     expect(result!.stderr).toMatch(/Ran \d+ tests/);
+  });
+});
+
+describe("card 13 widgets", () => {
+  it("reads the new widgets from a layout, keeping log columns in place", () => {
+    const widgets = parseLayout(
+      JSON.stringify({
+        v: 1,
+        w: [
+          { id: "0n", t: "number", l: "門檻", min: 20, max: 40, step: 0.5, u: "°C" },
+          { id: "1o", t: "log", l: "紀錄", o: ["溫度", "溫度", "", "a", "b", "c", "d"] },
+          { id: "2o", t: "log", l: "空的", o: [] },
+          { id: "3m", t: "tilt", l: "傾斜" },
+          { id: "4j", t: "joystick", l: "搖桿" },
+          { id: "5n", t: "number", l: "壞的", step: -1 },
+        ],
+      }),
+    )!;
+    expect(widgets.map((widget) => widget.id)).toEqual(["0n", "1o", "3m", "4j", "5n"]);
+    expect(widgets[0]).toMatchObject({ kind: "number", min: 20, max: 40, step: 0.5, unit: "°C" });
+    expect(widgets[1].options).toEqual(["溫度", "溫度", "-", "a", "b", "c"]);
+    expect(widgets[4].step).toBe(1);
+  });
+
+  it("keeps a number setting in range and on its steps", () => {
+    expect(fitNumber(31.3, 20, 40, 0.5)).toBe(31.5);
+    expect(fitNumber(99, 20, 40, 0.5)).toBe(40);
+    expect(fitNumber(0.1 + 0.2, 0, 1, 0.1)).toBe(0.3);
+    expect(fitNumber(-3, 0, 10, 3)).toBe(0);
+  });
+
+  it("reads log rows with one cell per column, and nothing that is not rows", () => {
+    expect(parseRows("[[25.123, 60], [null, \"錯誤\", 9], [1]]", 2)).toEqual([["25.12", "60"], ["", "錯誤"], ["1", ""]]);
+    expect(parseRows("[[1], 5, \"x\"]", 1)).toEqual([["1"]]);
+    expect(parseRows("{}", 2)).toBeNull();
+    expect(parseRows("not json", 2)).toBeNull();
+    expect(parseRows(JSON.stringify(Array.from({ length: 30 }, (_, index) => [index])), 1)).toHaveLength(20);
+  });
+
+  it("writes a log as CSV that spreadsheets read, with numbers left as numbers", () => {
+    const time = new Date(2026, 10, 13, 10, 8, 2).getTime();
+    expect(formatDateTime(new Date(time))).toBe("2026-11-13 10:08:02");
+    const csv = logCsv(["溫度", "說明"], [{ time, cells: ["-5", "=SUM(A1)"] }]);
+    expect(csv).toBe("\ufeff時間,溫度,說明\r\n2026-11-13 10:08:02,-5,'=SUM(A1)\r\n");
+  });
+
+  it("reads the board's report and keeps only sensible numbers", () => {
+    expect(parseInfo('{"r": -55, "u": 3725, "m": 87040}')).toEqual({ signal: -55, uptime: 3725, memory: 87040 });
+    expect(parseInfo('{"r": "x", "u": -1, "m": 1e12}')).toEqual({ signal: null, uptime: null, memory: null });
+    expect(parseInfo("[")).toBeNull();
+    expect(formatInfo({ signal: -55, uptime: 3725, memory: 87040 })).toBe("Wi-Fi 訊號 -55 dBm（強）・已執行 1 小時 2 分・剩餘記憶體 85 KB");
+    expect(formatInfo({ signal: -75, uptime: null, memory: null })).toBe("Wi-Fi 訊號 -75 dBm（弱）");
+    expect(formatInfo({ signal: 0, uptime: null, memory: null })).toBe("");
+    expect([5, 65, 3600 * 30].map(formatUptime)).toEqual(["5 秒", "1 分 5 秒", "1 天 6 小時"]);
+  });
+
+  it("turns tilt angles and joystick drags into -100 to 100 on each axis", () => {
+    expect(tiltVector(0, 0)).toBe("0,0");
+    // The top edge dipping 45 degrees is full forward; the right edge dipping is right.
+    expect(tiltVector(-45, 22.5)).toBe("50,100");
+    expect(tiltVector(90, -90)).toBe("-100,-100");
+    expect(stickVector(0, -50, 100)).toBe("0,50");
+    expect(stickVector(300, 0, 100)).toBe("100,0");
+    expect(stickVector(100, 100, 100)).toBe("71,-71");
   });
 });

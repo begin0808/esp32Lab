@@ -37,9 +37,9 @@ afterEach(() => {
 });
 
 describe("example catalog", () => {
-  it("has 34 examples with distinct ids, each with a Chinese and an English file", () => {
-    expect(EXAMPLES).toHaveLength(34);
-    expect(new Set(EXAMPLES.map((chosen) => chosen.id)).size).toBe(34);
+  it("has 38 examples with distinct ids, each with a Chinese and an English file", () => {
+    expect(EXAMPLES).toHaveLength(38);
+    expect(new Set(EXAMPLES.map((chosen) => chosen.id)).size).toBe(38);
     for (const { id, code } of EXAMPLES) {
       expect(code, id).toBeTruthy();
       expect(existsSync(`src/examples/en/${id}.py`), id).toBe(true);
@@ -51,6 +51,7 @@ describe("example catalog", () => {
     expect(numberedName(findExample("asyncio_tasks")!)).toBe("26. asyncio 同時做三件事");
     expect(numberedName(findExample("dash_knob")!)).toBe("29. 滑桿調 LED 亮度、看可變電阻");
     expect(numberedName(findExample("dash_doorbell")!)).toBe("34. 按鈕門鈴通知手機");
+    expect(numberedName(findExample("dash_joycar")!)).toBe("38. 手機搖桿遙控車");
     expect(findExample("nothing")).toBeUndefined();
   });
 });

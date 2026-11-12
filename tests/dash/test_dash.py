@@ -51,6 +51,9 @@ class FakeWlan:
     def connect(self, ssid, password):
         pass
 
+    def status(self, name):
+        return -55 if name == "rssi" else 0
+
 
 class FakeClient:
     """Plays the broker: keeps retained messages and hands the board what it subscribed to."""
@@ -110,6 +113,7 @@ def install_fakes():
     umqtt.simple = types.SimpleNamespace(MQTTClient=FakeClient)
     sys.modules["umqtt"] = umqtt
     sys.modules["umqtt.simple"] = umqtt.simple
+    sys.modules["gc"] = types.SimpleNamespace(collect=lambda: None, mem_free=lambda: 123456)
 
 
 def load_dash(language):
@@ -118,13 +122,14 @@ def load_dash(language):
     path = os.path.join(ROOT, "src", "lib", *(["en"] if language == "en" else []), "dash.py")
     spec = importlib.util.spec_from_file_location("dash_" + language, path)
     module = importlib.util.module_from_spec(spec)
-    real_time = sys.modules.get("time")
+    real = {name: sys.modules.get(name) for name in ("time", "gc")}
     install_fakes()
     try:
         spec.loader.exec_module(module)
     finally:
-        if real_time is not None:
-            sys.modules["time"] = real_time
+        for name, original in real.items():
+            if original is not None:
+                sys.modules[name] = original
     return module
 
 
@@ -446,6 +451,141 @@ class DashTests(unittest.TestCase):
             board.led(str(number))
         with self.assertRaises(ValueError):
             board.led("one too many")
+
+    def test_number_stays_in_range_on_its_steps_and_reports_changes(self):
+        board = self.board()
+        limit = board.number("溫度門檻", value=30, min=20, max=40, step=0.5, unit="°C")
+        count = board.number("次數")
+        board.start()
+        layout = json.loads(FakeClient.retained[BASE + "layout"])
+        self.assertEqual(layout["w"][0], {"id": "0n", "t": "number", "l": "溫度門檻", "min": 20, "max": 40, "step": 0.5, "u": "°C"})
+        self.assertEqual(limit.value, 30)
+        self.assertEqual(count.value, 0)
+        self.assertEqual(self.sent("out/0n"), ["30.0"])
+        self.assertFalse(limit.changed())
+        for text in (b"31.3", b"99", b"abc"):
+            self.client().inbox.append(((BASE + "in/0n").encode(), text))
+            board.check()
+        self.assertEqual(limit.value, 40)
+        self.assertTrue(limit.changed())
+        self.assertFalse(limit.changed())
+        self.client().inbox.append(((BASE + "in/1n").encode(), b"7.6"))
+        board.check()
+        self.assertEqual(count.value, 8)
+        self.assertIsInstance(count.value, int)
+        Clock.now += 600
+        limit.set(25.2)
+        board.check()
+        self.assertEqual(limit.value, 25)
+        self.assertEqual(FakeClient.retained[BASE + "in/0n"], "25.0")
+        with self.assertRaises(ValueError):
+            board.number("壞的", min=5, max=5)
+        with self.assertRaises(ValueError):
+            board.number("壞的", step=0)
+
+    def test_number_keeps_the_phone_setting_after_a_restart(self):
+        FakeClient.retained[BASE + "in/0n"] = "33.5"
+        board = self.board()
+        limit = board.number("溫度門檻", value=30, min=20, max=40, step=0.5)
+        board.start()
+        self.assertEqual(limit.value, 33.5)
+
+    def test_log_sends_each_row_once_and_never_keeps_it(self):
+        board = self.board()
+        table = board.log("溫濕度", ["溫度", "濕度"])
+        board.start()
+        layout = json.loads(FakeClient.retained[BASE + "layout"])
+        self.assertEqual(layout["w"][0], {"id": "0o", "t": "log", "l": "溫濕度", "o": ["溫度", "濕度"]})
+        self.assertEqual(self.sent("out/0o"), [])
+        Clock.now += 600
+        table.add(25.123, 60)
+        board.check()
+        # Rows added faster than a widget may send wait, and then go out together.
+        table.add(25.5, 61)
+        table.add(None, "錯誤")
+        board.check()
+        Clock.now += 600
+        board.check()
+        board.check()
+        self.assertEqual([json.loads(text) for text in self.sent("out/0o")], [[[25.12, 60]], [[25.5, 61], [None, "錯誤"]]])
+        self.assertNotIn(BASE + "out/0o", FakeClient.retained)
+        with self.assertRaises(ValueError):
+            table.add(1)
+        with self.assertRaises(ValueError):
+            table.set([1, 2])
+        with self.assertRaises(ValueError):
+            board.log("空的", [])
+
+    def test_log_keeps_the_newest_rows_while_offline_and_sends_them_later(self):
+        board = self.board()
+        table = board.log("計數", ["次數"])
+        board.start()
+        self.client().broken = True
+        board.check()
+        for number in range(25):
+            table.add(number)
+        Clock.now += 5000
+        board.check()
+        rows = json.loads(self.sent("out/0o")[0])
+        self.assertEqual(rows, [[number] for number in range(5, 25)])
+        # A reconnect does not send the same rows again.
+        self.client().broken = True
+        board.check()
+        Clock.now += 5000
+        board.check()
+        self.assertEqual(self.sent("out/0o"), [])
+
+    def test_joystick_and_tilt_follow_the_phone_and_return_to_rest(self):
+        board = self.board()
+        stick = board.joystick("搖桿")
+        tilt = board.tilt("傾斜")
+        board.start()
+        self.assertEqual((stick.x, stick.y, stick.on), (0, 0, False))
+        for text in (b"30,-150", b"oops", b"1,2,3", b"5"):
+            self.client().inbox.append(((BASE + "in/0j").encode(), text))
+            board.check()
+        self.assertEqual((stick.x, stick.y, stick.on), (30, -100, True))
+        self.client().inbox.append(((BASE + "in/0j").encode(), b""))
+        board.check()
+        self.assertEqual((stick.x, stick.y, stick.on), (0, 0, False))
+
+        self.client().inbox.append(((BASE + "in/1m").encode(), b"-40,70"))
+        board.check()
+        self.assertEqual((tilt.x, tilt.y, tilt.on), (-40, 70, True))
+        # The phone sends every 0.2 s while tilt is on; when it goes quiet the board stops by itself.
+        Clock.now += 900
+        board.check()
+        self.assertEqual(tilt.y, 70)
+        Clock.now += 200
+        board.check()
+        self.assertEqual((tilt.x, tilt.y, tilt.on), (0, 0, False))
+
+        self.client().inbox.append(((BASE + "in/1m").encode(), b"10,10"))
+        board.check()
+        self.client().broken = True
+        board.check()
+        self.assertEqual((tilt.x, tilt.y, tilt.on), (0, 0, False))
+        self.assertEqual(self.sent("out/0j") + self.sent("out/1m"), [])
+        with self.assertRaises(ValueError):
+            stick.set((1, 1))
+
+    def test_reports_signal_running_time_and_memory_every_ten_seconds(self):
+        board = self.board()
+        board.value("溫度")
+        board.start()
+        info = json.loads(FakeClient.retained[BASE + "info"])
+        self.assertEqual(sorted(info), ["m", "r", "u"])
+        self.assertEqual(info["r"], -55)
+        self.assertEqual(info["m"], 123456)
+        # The board has run as long as the clock shows, counted from when it started.
+        self.assertEqual(info["u"], Clock.now // 1000)
+        Clock.now += 9000
+        board.check()
+        self.assertEqual(len(self.sent("info")), 1)
+        Clock.now += 1500
+        board.check()
+        self.assertEqual(len(self.sent("info")), 2)
+        self.assertEqual(json.loads(self.sent("info")[-1])["u"], Clock.now // 1000)
 
 
 class EnglishDashTests(DashTests):
