@@ -492,7 +492,7 @@ test("MQTT example gets its own channel when loaded", async ({ page }) => {
   expect(code).toContain("/voice.html");
 });
 
-for (const path of ["/", "/voice.html", "/help.html"]) {
+for (const path of ["/", "/voice.html", "/dashboard.html", "/help.html"]) {
   test(`shows the visit count on ${path} without recording a local visit`, async ({ page }) => {
     const requests: string[] = [];
     await page.route("https://esp32lab.goatcounter.com/**", (route) => {
@@ -635,6 +635,7 @@ for (const id of STYLE_IDS) {
 for (const [path, icon] of [
   ["/", "logo"],
   ["/voice.html", "voice"],
+  ["/dashboard.html", "dashboard"],
 ]) {
   test(`shows the ${icon} logo in the tab and header of ${path}`, async ({ page, request }) => {
     await page.goto(path);
@@ -685,7 +686,7 @@ test("marks the site as a beta version and asks for feedback", async ({ page }) 
   );
 });
 
-for (const [id, path] of [["help-link", "/help.html"], ["voice-link", "/voice.html"]]) {
+for (const [id, path] of [["help-link", "/help.html"], ["voice-link", "/voice.html"], ["dashboard-link", "/dashboard.html"]]) {
   test(`returns from ${path} to the editor that opened it, without reloading it`, async ({ page, context }) => {
     await page.goto("/");
     await page.locator("#editor .cm-content").fill('print("保留")\n');
@@ -829,8 +830,8 @@ for (const id of STYLE_IDS) {
 
 test("offers every example, grouped, and loads the wiring notes into the editor", async ({ page }) => {
   await page.goto("/");
-  await expect(page.locator("#examples optgroup")).toHaveCount(5);
-  await expect(page.locator("#examples optgroup option")).toHaveCount(26);
+  await expect(page.locator("#examples optgroup")).toHaveCount(6);
+  await expect(page.locator("#examples optgroup option")).toHaveCount(29);
   page.on("dialog", (dialog) => dialog.accept());
   await page.locator("#examples").selectOption({ label: "13. SSD1306 OLED 顯示器" });
   await expect(page.locator("#editor .cm-content")).toContainText("class SSD1306");
@@ -1474,7 +1475,7 @@ function chineseLeftOnPage(page: Page) {
 test.describe("in an English browser", () => {
   test.use({ locale: "en-US" });
 
-  for (const path of ["/", "/voice.html", "/help.html"]) {
+  for (const path of ["/", "/voice.html", "/dashboard.html", "/help.html"]) {
     test(`${path} shows no Chinese`, async ({ page }) => {
       await page.goto(path);
       await expect(page.locator("html")).toHaveAttribute("lang", "en");
@@ -1531,7 +1532,7 @@ test.describe("in an English browser", () => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     await page.goto("/");
     await expect(page.locator("#editor .cm-content")).toContainText("Blink an LED");
-    await expect(page.locator("#examples optgroup option")).toHaveCount(26);
+    await expect(page.locator("#examples optgroup option")).toHaveCount(29);
 
     page.on("dialog", (dialog) => dialog.accept());
     await page.locator("#examples").selectOption({ label: "17. Voice-controlled LED (MQTT)" });
@@ -1977,7 +1978,7 @@ test.describe("example numbers", () => {
         page.on("dialog", (dialog) => void dialog.accept());
         await page.goto("/");
         const options = await page.locator("#examples optgroup option").evaluateAll((items) => items.map((item) => (item as HTMLOptionElement).value));
-        expect(options).toHaveLength(26);
+        expect(options).toHaveLength(29);
         for (const [index, value] of options.entries()) {
           const label = await page.locator(`#examples option[value="${value}"]`).textContent();
           expect(label!.startsWith(`${index + 1}. `)).toBe(true);
@@ -1987,4 +1988,242 @@ test.describe("example numbers", () => {
       });
     });
   }
+});
+
+/** MQTT packets carry their length as a variable-length number. */
+function mqttPacket(header: number, body: Buffer): Buffer {
+  const length: number[] = [];
+  let remaining = body.length;
+  do {
+    let byte = remaining % 128;
+    remaining = Math.floor(remaining / 128);
+    if (remaining > 0) byte |= 0x80;
+    length.push(byte);
+  } while (remaining > 0);
+  return Buffer.concat([Buffer.from([header, ...length]), body]);
+}
+
+function publishPacket(topic: string, payload: string, retain = false): Buffer {
+  const name = Buffer.from(topic);
+  return mqttPacket(0x30 | (retain ? 1 : 0), Buffer.concat([Buffer.from([name.length >> 8, name.length & 255]), name, Buffer.from(payload)]));
+}
+
+/** Splits a packet into its type, flags and body, past the variable-length header. */
+function readPacket(data: Buffer): { type: number; flags: number; body: Buffer } {
+  let offset = 1;
+  let length = 0;
+  let scale = 1;
+  for (;;) {
+    const byte = data[offset++];
+    length += (byte & 0x7f) * scale;
+    scale *= 128;
+    if (!(byte & 0x80)) break;
+  }
+  return { type: data[0] >> 4, flags: data[0] & 15, body: data.subarray(offset, offset + length) };
+}
+
+function topicMatches(filter: string, topic: string): boolean {
+  const parts = filter.split("/");
+  const names = topic.split("/");
+  return parts.length === names.length && parts.every((part, index) => part === "+" || part === names[index]);
+}
+
+interface Published {
+  topic: string;
+  payload: string;
+  retain: boolean;
+}
+
+/**
+ * A broker that keeps retained messages and plays the board: it echoes a switch or slider back on out/,
+ * as dash.py does after it receives them.
+ */
+async function fakeDashBroker(page: Page, retained: Record<string, string>) {
+  const published: Published[] = [];
+  const sockets: { send(data: Buffer): void }[] = [];
+  await page.routeWebSocket(/broker\.emqx\.io/, (socket) => {
+    sockets.push(socket);
+    socket.onMessage((message) => {
+      const { type, flags, body } = readPacket(Buffer.from(message as Buffer));
+      if (type === 1) socket.send(Buffer.from([0x20, 2, 0, 0]));
+      if (type === 12) socket.send(Buffer.from([0xd0, 0]));
+      if (type === 8) {
+        const filters: string[] = [];
+        for (let offset = 2; offset < body.length; ) {
+          const size = body.readUInt16BE(offset);
+          filters.push(body.subarray(offset + 2, offset + 2 + size).toString());
+          offset += 3 + size;
+        }
+        socket.send(mqttPacket(0x90, Buffer.from([body[0], body[1], ...filters.map(() => 0)])));
+        for (const [topic, payload] of Object.entries(retained)) {
+          if (filters.some((filter) => topicMatches(filter, topic))) socket.send(publishPacket(topic, payload, true));
+        }
+      }
+      if (type === 3) {
+        const size = body.readUInt16BE(0);
+        const topic = body.subarray(2, 2 + size).toString();
+        const payload = body.subarray(2 + size).toString();
+        published.push({ topic, payload, retain: (flags & 1) === 1 });
+        const input = topic.match(/^(.*\/dash\/)in\/(\d+[wr])$/);
+        if (input) socket.send(publishPacket(`${input[1]}out/${input[2]}`, payload, true));
+      }
+    });
+  });
+  return {
+    published,
+    send: (topic: string, payload: string) => {
+      for (const socket of sockets) socket.send(publishPacket(topic, payload, true));
+    },
+  };
+}
+
+const DASH = "esp32-mp-class/room1/dash/";
+
+test.describe("phone dashboard", () => {
+  const layout = {
+    v: 1,
+    w: [
+      { id: "0v", t: "value", l: "濕度", u: "%" },
+      { id: "1g", t: "gauge", l: "溫度", min: 0, max: 50, u: "°C" },
+      { id: "2c", t: "chart", l: "溫度變化", u: "°C" },
+      { id: "3l", t: "led", l: "警報", c: "red" },
+      { id: "4t", t: "text", l: "<b>狀態</b>" },
+      { id: "5w", t: "switch", l: "LED" },
+      { id: "6b", t: "button", l: "響鈴" },
+      { id: "7r", t: "slider", l: "亮度", min: 0, max: 100, u: "%" },
+    ],
+  };
+
+  test("builds the widgets the board describes and sends what is done on the phone", async ({ page }) => {
+    const broker = await fakeDashBroker(page, {
+      [`${DASH}layout`]: JSON.stringify(layout),
+      [`${DASH}state`]: "online",
+      [`${DASH}out/0v`]: "61",
+      [`${DASH}out/1g`]: "25",
+      [`${DASH}out/2c`]: "24.5",
+      [`${DASH}out/3l`]: "1",
+      [`${DASH}out/4t`]: "溫度正常",
+      [`${DASH}out/5w`]: "0",
+      [`${DASH}out/7r`]: "30",
+    });
+    await page.goto("/dashboard.html?ch=room1");
+    await expect(page.locator("#link-status")).toContainText("已連線，主題：room1");
+    await expect(page.locator("#board-status")).toHaveText("開發板：在線");
+    await expect(page.locator("#empty")).toBeHidden();
+    await expect(page.locator(".widget")).toHaveCount(8);
+    await expect(page.locator("#topic-preview")).toContainText("esp32-mp-class/room1/dash/");
+
+    await expect(page.locator(".widget-value .widget-number")).toHaveText("61%");
+    await expect(page.locator(".widget-gauge .number")).toHaveText("25");
+    await expect(page.locator(".gauge-fill")).toHaveAttribute("stroke-dasharray", "50 100");
+    await expect(page.locator(".lamp")).toHaveAttribute("data-on", "true");
+    await expect(page.locator(".lamp")).toHaveAttribute("data-color", "red");
+    // A label is shown as text, so markup from the broker never runs.
+    await expect(page.locator(".widget-text .widget-label")).toHaveText("<b>狀態</b>");
+    await expect(page.locator(".widget-text p.widget-text")).toHaveText("溫度正常");
+
+    // The switch moves only after the board reports back.
+    const toggle = page.getByRole("switch", { name: "LED" });
+    await expect(toggle).toHaveAttribute("aria-checked", "false");
+    await toggle.click();
+    await expect(toggle).toHaveAttribute("aria-checked", "true");
+    expect(broker.published).toContainEqual({ topic: `${DASH}in/5w`, payload: "1", retain: true });
+
+    // A press is not kept by the broker, or the board would see it again after every restart.
+    await page.getByRole("button", { name: "響鈴" }).click();
+    await expect.poll(() => broker.published).toContainEqual({ topic: `${DASH}in/6b`, payload: "1", retain: false });
+
+    const slider = page.getByRole("slider", { name: "亮度" });
+    await expect(slider).toHaveValue("30");
+    await slider.fill("80");
+    await expect.poll(() => broker.published).toContainEqual({ topic: `${DASH}in/7r`, payload: "80", retain: true });
+    await expect(page.locator(".widget-slider .number")).toHaveText("80");
+
+    broker.send(`${DASH}out/2c`, "26");
+    await expect(page.locator(".widget-chart .number")).toHaveText("26");
+    await expect(page.locator(".chart-range")).toHaveText("最低 24.5，最高 26");
+    expect((await page.locator(".chart-line").getAttribute("points"))!.split(" ")).toHaveLength(2);
+
+    broker.send(`${DASH}state`, "offline");
+    await expect(page.locator("#board-status")).toContainText("離線");
+    await expect(toggle).toBeDisabled();
+    await expect(page.getByRole("button", { name: "響鈴" })).toBeDisabled();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+  });
+
+  test("waits for the board's layout, and fits a phone screen", async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 740 });
+    const broker = await fakeDashBroker(page, {});
+    await page.goto("/dashboard.html");
+    await page.locator("#channel").fill("room1");
+    await page.locator("#channel-connect").click();
+    await expect(page.locator("#link-status")).toContainText("已連線");
+    await expect(page.locator("#empty")).toBeVisible();
+    await expect(page.locator("#board-status")).toHaveText("開發板：尚未回報");
+
+    broker.send(`${DASH}layout`, JSON.stringify(layout));
+    broker.send(`${DASH}state`, "online");
+    await expect(page.locator(".widget")).toHaveCount(8);
+    await expect(page.locator("#empty")).toBeHidden();
+    // Values that have not arrived show a dash instead of a stale number.
+    await expect(page.locator(".widget-value .number")).toHaveText("—");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+
+    await page.reload();
+    await expect(page.locator("#channel")).toHaveValue("room1");
+  });
+
+  test("an example that uses dash gets its own topic name", async ({ page }) => {
+    await page.goto("/");
+    page.on("dialog", (dialog) => dialog.accept());
+    await page.locator("#examples").selectOption({ label: "27. 儀表板入門：開關 LED、看按鈕" });
+    const code = await page.evaluate(() => localStorage.getItem("esp32-mp-code"));
+    expect(code).toMatch(/TOPIC_NAME = "dash-[0-9a-f]{12}"/);
+    expect(code).not.toContain("{{");
+  });
+
+  test("saves dash.py before the program, only when the board does not have it yet", async ({ page }) => {
+    await mockSerial(page, { runOutput: "已連上 MQTT 伺服器\r\n手機儀表板： http://localhost:4173/dashboard.html?ch=dash-0a1b2c\r\n" });
+    await page.goto("/");
+    await page.locator("#connect").click();
+    await expect(page.locator("#upload")).toBeEnabled();
+    await page.locator("#editor .cm-content").fill('import dash\nprint("儀表板")\n');
+    await page.locator("#upload").click();
+
+    await expect(page.locator("#status")).toContainText("程式執行中");
+    const files = await page.evaluate(() => (globalThis as any).board.files);
+    expect(files["/lib/dash.py"]).toContain('PAGE = "http://localhost:4173/dashboard.html"');
+    expect(files["/main.py"]).toContain("import dash");
+    const saved = page.locator("#monitor .system", { hasText: "已把手機儀表板工具 dash.py 存到板子的 /lib" });
+    await expect(saved).toHaveCount(1);
+
+    // The board's output becomes a link and a QR code for the phone.
+    await expect(page.locator("#dash-card")).toBeVisible();
+    await expect(page.locator("#dash-link")).toHaveAttribute("href", "http://localhost:4173/dashboard.html?ch=dash-0a1b2c");
+    await expect(page.locator("#dash-qr svg")).toBeVisible();
+
+    // Each upload clears the monitor, so the second one shows only its own notes.
+    await page.locator("#upload").click();
+    await expect.poll(() => page.evaluate(() => (globalThis as any).board.resets)).toBe(2);
+    await expect(page.locator("#monitor .system", { hasText: "上傳完成" })).toHaveCount(1);
+    await expect(saved).toHaveCount(0);
+  });
+
+  test("puts dash.py back when the board's copy was changed, also for Run (no save)", async ({ page }) => {
+    await mockSerial(page);
+    await page.addInitScript(() => {
+      const board = (globalThis as any).board;
+      board.dirs.add("/lib");
+      board.files["/lib/dash.py"] = "# edited by hand\n";
+    });
+    await page.goto("/");
+    await page.locator("#connect").click();
+    await expect(page.locator("#run")).toBeEnabled();
+    await page.locator("#editor .cm-content").fill('from dash import Dashboard\nwhile True:\n    print("x")\n');
+    await page.locator("#run").click();
+    await expect(page.locator("#status")).toContainText("程式執行中（未存檔）");
+    // The note comes after the monitor is cleared for the run, so it stays visible.
+    await expect(page.locator("#monitor .system", { hasText: "dash.py" })).toHaveCount(1);
+    expect(await page.evaluate(() => (globalThis as any).board.files["/lib/dash.py"])).toContain("PAGE =");
+  });
 });

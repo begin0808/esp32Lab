@@ -37,9 +37,9 @@ afterEach(() => {
 });
 
 describe("example catalog", () => {
-  it("has 26 examples with distinct ids, each with a Chinese and an English file", () => {
-    expect(EXAMPLES).toHaveLength(26);
-    expect(new Set(EXAMPLES.map((chosen) => chosen.id)).size).toBe(26);
+  it("has 29 examples with distinct ids, each with a Chinese and an English file", () => {
+    expect(EXAMPLES).toHaveLength(29);
+    expect(new Set(EXAMPLES.map((chosen) => chosen.id)).size).toBe(29);
     for (const { id, code } of EXAMPLES) {
       expect(code, id).toBeTruthy();
       expect(existsSync(`src/examples/en/${id}.py`), id).toBe(true);
@@ -49,6 +49,7 @@ describe("example catalog", () => {
   it("finds an example by id and numbers it as the menu does", () => {
     expect(numberedName(findExample("blink")!)).toBe("1. LED 閃爍");
     expect(numberedName(findExample("asyncio_tasks")!)).toBe("26. asyncio 同時做三件事");
+    expect(numberedName(findExample("dash_knob")!)).toBe("29. 滑桿調 LED 亮度、看可變電阻");
     expect(findExample("nothing")).toBeUndefined();
   });
 });

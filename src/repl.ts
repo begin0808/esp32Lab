@@ -287,6 +287,47 @@ export class RawRepl {
     return output.trim() === "ok";
   }
 
+  /** A file's size and SHA-256 as "size|hex", or null when the board has no such file. */
+  async digest(path: string): Promise<string | null> {
+    const output = await this.exec(
+      [
+        "import binascii,hashlib",
+        `P=${pythonString(path)}`,
+        "try:",
+        " f=open(P,'rb')",
+        "except OSError:",
+        " f=None",
+        " print('none')",
+        "if f:",
+        " h=hashlib.sha256()",
+        " n=0",
+        " b=bytearray(512)",
+        " m=memoryview(b)",
+        " while 1:",
+        "  k=f.readinto(b)",
+        "  if not k:",
+        "   break",
+        "  n+=k",
+        "  h.update(m[:k])",
+        " f.close()",
+        " print(str(n)+'|'+binascii.hexlify(h.digest()).decode())",
+      ].join("\n"),
+      15000,
+    );
+    const answer = output.trim();
+    return answer === "none" ? null : answer;
+  }
+
+  /** Writes a file only when the board does not already hold the same bytes there, creating its folder if needed. */
+  async ensureFile(path: string, data: Uint8Array, onProgress?: (fraction: number) => void): Promise<boolean> {
+    const [stored, expected] = await Promise.all([this.digest(path), sha256Hex(data)]);
+    if (stored === `${data.length}|${expected}`) return false;
+    const folder = path.slice(0, path.lastIndexOf("/"));
+    if (folder) await this.exec(["import os", `P=${pythonString(folder)}`, "try:", " os.mkdir(P)", "except OSError:", " pass"].join("\n"));
+    await this.writeFile(path, data, onProgress);
+    return true;
+  }
+
   /** Writes to a temporary file first, so a failed upload leaves the old program intact. */
   async writeFile(path: string, data: Uint8Array, onProgress?: (fraction: number) => void): Promise<void> {
     try {
@@ -322,29 +363,8 @@ export class RawRepl {
     await this.exec("f.close()");
 
     // The board's own SHA-256 is far faster than adding up bytes in Python, and catches any change.
-    const [stored, expected] = await Promise.all([
-      this.exec(
-        [
-          "import hashlib",
-          `f=open(${pythonString(TMP_PATH)},'rb')`,
-          "h=hashlib.sha256()",
-          "n=0",
-          "b=bytearray(512)",
-          "m=memoryview(b)",
-          "while 1:",
-          " k=f.readinto(b)",
-          " if not k:",
-          "  break",
-          " n+=k",
-          " h.update(m[:k])",
-          "f.close()",
-          "print(str(n)+'|'+binascii.hexlify(h.digest()).decode())",
-        ].join("\n"),
-        15000,
-      ),
-      sha256Hex(data),
-    ]);
-    if (stored.trim() !== `${data.length}|${expected}`) {
+    const [stored, expected] = await Promise.all([this.digest(TMP_PATH), sha256Hex(data)]);
+    if (stored !== `${data.length}|${expected}`) {
       throw new Error(t("檔案驗證失敗，請重新上傳"));
     }
   }

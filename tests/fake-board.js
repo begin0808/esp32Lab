@@ -226,6 +226,9 @@
         this.list(pathIn(code));
       } else if (code.includes("b2a_base64")) {
         this.dump(pathIn(code));
+      } else if (code.includes("os.mkdir(P)")) {
+        this.dirs.add(pathIn(code));
+        this.emit(END);
       } else if (code.includes("os.rmdir")) {
         const path = pathIn(code);
         const full = Object.keys(this.files).some((file) => file.startsWith(`${path}/`)) || [...this.dirs].some((dir) => dir.startsWith(`${path}/`));
@@ -244,7 +247,12 @@
         this.tempData = null;
         this.emit(END);
       } else if (code.includes("sha256")) {
-        const data = new Uint8Array(this.tempData);
+        const path = pathIn(code);
+        if (path !== "/.upload.tmp" && !(path in this.files)) {
+          this.emit("none\r\n" + END);
+          return;
+        }
+        const data = path === "/.upload.tmp" ? new Uint8Array(this.tempData) : this.fileBytes(path);
         crypto.subtle.digest("SHA-256", data).then((digest) => {
           const hex = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
           this.emit(`${data.length}|${hex}\r\n` + END);

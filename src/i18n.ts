@@ -20,6 +20,9 @@ const en = {
   "測試 Beta 版": "Beta",
   "ESP32 語音控制｜ESP32 Lab MicroPython 版": "ESP32 Voice Control | ESP32 Lab MicroPython Edition",
   "用手機或電腦的語音，透過 MQTT 控制 ESP32 上的 LED。": "Control an LED on the ESP32 with your voice from a phone or computer, through MQTT.",
+  "ESP32 手機儀表板｜ESP32 Lab MicroPython 版": "ESP32 Phone Dashboard | ESP32 Lab MicroPython Edition",
+  "在手機上看 ESP32 的感測器數值，也能用開關、按鈕和滑桿控制開發板，透過 MQTT 連線。":
+    "See the ESP32's sensor readings on a phone, and control the board with switches, buttons and sliders, through MQTT.",
 
   // Editor page
   尚未連接開發板: "Board not connected",
@@ -40,6 +43,7 @@ const en = {
   說明與工具: "Help and tools",
   使用說明: "Help",
   語音控制頁: "Voice control page",
+  手機儀表板頁: "Phone dashboard page",
   腳位圖: "Pinout",
   驅動程式: "Drivers",
   "電腦找不到開發板時才需要。請依板子上的 USB 晶片選擇。": "Only needed when the computer cannot find the board. Choose by the USB chip on your board.",
@@ -129,6 +133,10 @@ const en = {
   深度睡眠定時醒來: "Deep sleep with timed wake-ups",
   "ESP-NOW 多塊板子互傳": "ESP-NOW between boards",
   "asyncio 同時做三件事": "asyncio: three things at once",
+  手機儀表板: "Phone dashboard",
+  "儀表板入門：開關 LED、看按鈕": "Dashboard basics: LED switch and button",
+  "DHT11 溫濕度儀表板": "DHT11 dashboard",
+  "滑桿調 LED 亮度、看可變電阻": "Slider dims an LED, gauge shows a knob",
   "選擇範例…": "Choose an example…",
   "要用「{name}」取代目前的程式嗎？": 'Replace the current program with "{name}"?',
   "已從學習路徑載入「{name}」。打開「設定與說明」→「使用說明」，會回到學習路徑的這一步。": 'Loaded "{name}" from the learning path. Open "Settings and help" → "Help" to return to this step of the path.',
@@ -253,6 +261,28 @@ const en = {
   "伺服器設定不正確：連接埠是 1–65535 的數字，路徑以 / 開頭": "The broker settings are not valid: the port must be a number from 1 to 65535, and the path must start with /",
   有填密碼時也要填帳號: "A password also needs a username",
   "請輸入 MQTT 密碼後按「連線」": 'Enter the MQTT password and press "Connect"',
+
+  // Phone dashboard page
+  "ESP32 手機儀表板": "ESP32 Phone Dashboard",
+  "還沒收到開發板的畫面。請在開發板執行用到 dash 的程式（例如範例 27），並確認主題名稱和這裡一樣。":
+    "Nothing from the board yet. Run a program that uses dash on the board (such as example 27), and check that the topic name matches this one.",
+  '這一頁只能使用加密的 WSS 連線，改完按「連線」生效。開發板程式要指向同一台伺服器，例如 dash.Dashboard(..., broker="伺服器位址", port=1883)，連接埠通常和這裡不同。帳號和密碼填在 user= 和 mqtt_password=。密碼不會儲存，重新整理後要再輸入一次。':
+    'This page can only use encrypted WSS connections. Press "Connect" to apply changes. The board\'s program must point to the same broker, for example dash.Dashboard(..., broker="broker address", port=1883), usually on a different port from this one. The username and password go into user= and mqtt_password=. The password is not saved, so enter it again after reloading.',
+  "資料會經過 MQTT 伺服器（預設是公用的 broker.emqx.io），知道主題名稱的人都能看到和操作，請勿用於重要設備，也不要在主題名稱填入個人資料。":
+    "Data passes through an MQTT broker (the public broker.emqx.io by default), and anyone who knows the topic name can see and use it. Do not use this for anything important, and keep personal details out of the topic name.",
+  "實際使用的 Topic：{topic}（畫面、數值和操作都在這裡面）": "Topics in use: {topic} (the layout, values and controls are all under it)",
+  "開發板：在線": "Board: online",
+  "最低 {low}，最高 {high}": "Lowest {low}, highest {high}",
+  亮: "On",
+  暗: "Off",
+  開: "On",
+  關: "Off",
+
+  // Phone dashboard in the editor
+  "已把手機儀表板工具 dash.py 存到板子的 /lib": "Saved the phone dashboard helper dash.py to the board's /lib",
+  正在存入手機儀表板工具: "Saving the dashboard helper",
+  "用手機掃描，或點網址開啟手機儀表板": "Scan with a phone, or open the link, to see the phone dashboard",
+  "手機儀表板的 QR code": "QR code for the phone dashboard",
   版本: "Version",
   開發板傳回非預期的資料: "The board sent unexpected data",
   "上傳完成：main.py，{size} KB，用了 {seconds} 秒": "Uploaded main.py: {size} KB in {seconds} s",

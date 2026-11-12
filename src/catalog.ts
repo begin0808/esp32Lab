@@ -69,6 +69,14 @@ export const EXAMPLE_GROUPS: { label: string; examples: Example[] }[] = [
       item("asyncio_tasks", t("asyncio 同時做三件事")),
     ],
   },
+  {
+    label: t("手機儀表板"),
+    examples: [
+      item("dash_intro", t("儀表板入門：開關 LED、看按鈕")),
+      item("dash_dht11", t("DHT11 溫濕度儀表板")),
+      item("dash_knob", t("滑桿調 LED 亮度、看可變電阻")),
+    ],
+  },
 ];
 
 export const EXAMPLES = EXAMPLE_GROUPS.flatMap((group) => group.examples);

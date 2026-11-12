@@ -47,6 +47,16 @@ Phone and computer browsers only allow the microphone on HTTPS pages, so voice c
 
 The default broker is the public `broker.emqx.io`. Its messages have no encryption or access control, so it only suits low-risk experiments such as LEDs, and you should not send personal details through it. To use your own broker, fill in its address and login under "Advanced" on the voice control page, and change the matching settings in the program. The voice control page does not save the password.
 
+## Phone dashboard
+
+`dashboard.html` is the phone dashboard page. Like the voice control page it connects through an MQTT broker, and the board's program decides what it shows:
+
+1. Choose the example "27. Dashboard basics", fill in your Wi-Fi details and upload it. For a program with `import dash`, the site first saves `src/lib/dash.py` to the board as `/lib/dash.py`, and skips this when the board already has the same file (compared by SHA-256).
+2. Once the board reaches the MQTT broker, it prints the dashboard's address, and the address and a QR code appear above the monitor for a phone to scan.
+3. The program creates widgets with calls such as `board.gauge()` and `board.switch()`, and the phone page lays them out from the `layout` the board sends.
+
+Everything is under `esp32-mp-class/<topic name>/dash/`: `layout` (the widgets), `state` (online or not), `out/<id>` (the board's values) and `in/<id>` (what was done on the phone). The phone page treats everything it receives as untrusted and shows it only as text. `dash.py` is tested on a computer by `tests/dash/test_dash.py`, with fake Wi-Fi, MQTT and a fake clock, as part of the unit tests.
+
 ## Help pages
 
 `help.en.html` (English) and `help.html` (Chinese) list the supported boards and parts, along with safety notes, and follow the chosen style. After testing new hardware, update the status labels and the date on both pages.

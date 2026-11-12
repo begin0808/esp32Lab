@@ -206,3 +206,37 @@ describe("board files", () => {
     expect((await session.repl.listDir("/")).entries.map((entry) => entry.name)).not.toContain(".upload.tmp");
   });
 });
+
+describe("saving a file only when it changed", () => {
+  let session: ReturnType<typeof connect>;
+
+  beforeEach(async () => {
+    session = connect();
+    await session.repl.enter();
+  });
+
+  it("reports a missing file and the size and hash of one that exists", async () => {
+    expect(await session.repl.digest("/lib/dash.py")).toBeNull();
+    session.board.files["/lib/dash.py"] = "abc";
+    expect(await session.repl.digest("/lib/dash.py")).toBe("3|ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+  });
+
+  it("creates the folder and writes a missing file, then skips writing the same bytes again", async () => {
+    const data = new TextEncoder().encode("# 儀表板\nPAGE = 1\n");
+    expect(await session.repl.ensureFile("/lib/dash.py", data)).toBe(true);
+    expect(session.board.dirs.has("/lib")).toBe(true);
+    expect(session.board.files["/lib/dash.py"]).toBe("# 儀表板\nPAGE = 1\n");
+
+    const writes = session.board.execs;
+    expect(await session.repl.ensureFile("/lib/dash.py", data)).toBe(false);
+    // Only the check ran: one command, with nothing written.
+    expect(session.board.execs - writes).toBe(1);
+  });
+
+  it("replaces a file whose bytes differ", async () => {
+    session.board.dirs.add("/lib");
+    session.board.files["/lib/dash.py"] = "edited by hand";
+    expect(await session.repl.ensureFile("/lib/dash.py", new TextEncoder().encode("site version"))).toBe(true);
+    expect(session.board.files["/lib/dash.py"]).toBe("site version");
+  });
+});

@@ -73,9 +73,9 @@ export function stateTopic(channel: string): string {
   return `esp32-mp-class/${channel}/state`;
 }
 
-export function randomChannel(): string {
+export function randomChannel(prefix = "led"): string {
   const bytes = crypto.getRandomValues(new Uint8Array(6));
-  return `led-${[...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join("")}`;
+  return `${prefix}-${[...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join("")}`;
 }
 
 /** Each student gets a private channel, and the board can print where the control page is. */

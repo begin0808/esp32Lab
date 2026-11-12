@@ -5,6 +5,7 @@ import { tags } from "@lezer/highlight";
 import { CommandHistory, enterAction, nextIndent, parseCompletion } from "./command";
 import { example, EXAMPLE_GROUPS, EXAMPLES, findExample, numberedName, type Example } from "./catalog";
 import { adaptExamplePins, chipFromMachine, CHIPS, FIRMWARE_VERSION, isChipId, type ChipId } from "./chips";
+import { dashFile, DASH_PATH, findDashboardUrl, usesDash } from "./dash";
 import { FileManager } from "./filemanager";
 import { installFirmware, isConnectFailure } from "./flasher";
 import { setupLanguagePicker, t, translatePage } from "./i18n";
@@ -15,6 +16,7 @@ import { pasteModeBytes, RawRepl, ReplExecError, ReplTimeoutError } from "./repl
 import { SerialLink } from "./serial";
 import { setupStats } from "./stats";
 import { setupStylePicker } from "./theme";
+import { renderSVG } from "uqr";
 import {
   arduinoConvertPrompt,
   describeLines,
@@ -94,6 +96,9 @@ const ui = {
   ipCard: el("ip-card"),
   ipLink: el<HTMLAnchorElement>("ip-link"),
   copyIp: el<HTMLButtonElement>("copy-ip"),
+  dashCard: el("dash-card"),
+  dashLink: el<HTMLAnchorElement>("dash-link"),
+  dashQr: el("dash-qr"),
   errorCard: el("error-card"),
   copyError: el<HTMLButtonElement>("copy-error"),
   replForm: el<HTMLFormElement>("repl-form"),
@@ -450,6 +455,7 @@ function clearMonitor(): void {
   pendingBoardText = "";
   scanFrom = 0;
   ui.ipCard.hidden = true;
+  ui.dashCard.hidden = true;
   ui.errorCard.hidden = true;
 }
 
@@ -539,6 +545,14 @@ function scanOutput(): void {
       ui.ipCard.hidden = false;
     }
   }
+  const dashboard = findDashboardUrl(complete);
+  // The board prints the address again after each reconnect, and it may change when the topic name does.
+  if (dashboard && (ui.dashCard.hidden || ui.dashLink.href !== dashboard)) {
+    ui.dashLink.textContent = dashboard;
+    ui.dashLink.href = dashboard;
+    ui.dashQr.innerHTML = renderSVG(dashboard, { border: 1 });
+    ui.dashCard.hidden = false;
+  }
   if (findLastTraceback(monitorText)) ui.errorCard.hidden = false;
 }
 
@@ -623,9 +637,9 @@ async function disconnect(): Promise<void> {
 }
 
 /** `note` is shown first in the emptied monitor, so it stays above the program's output. */
-async function restartBoard(note?: string): Promise<void> {
+async function restartBoard(...notes: string[]): Promise<void> {
   clearMonitor();
-  if (note) appendMonitor(`${t("[系統]")} ${note}
+  for (const note of notes) appendMonitor(`${t("[系統]")} ${note}
 `, "system");
   // A line left unfinished before the reset, such as the prompt, must not swallow the program's first value.
   dataLines.reset();
@@ -642,6 +656,24 @@ async function restartBoard(note?: string): Promise<void> {
   if (receivedChars === before) await link.write(wasRunning ? Uint8Array.of(0x03, 0x02, 0x04) : Uint8Array.of(0x03, 0x04));
 }
 
+/**
+ * A program that imports dash needs the helper on the board, in the site's own version.
+ * Returns whether it had to be saved; the board's copy is usually already the same, and then nothing is written.
+ */
+async function saveDashIfNeeded(repl: RawRepl, code: string): Promise<boolean> {
+  if (!usesDash(code)) return false;
+  const data = new TextEncoder().encode(dashFile(new URL("dashboard.html", location.href).href));
+  try {
+    return await repl.ensureFile(DASH_PATH, data, (fraction) => showProgress(t("正在存入手機儀表板工具"), fraction));
+  } finally {
+    hideProgress();
+  }
+}
+
+function dashSavedNote(): string {
+  return t("已把手機儀表板工具 dash.py 存到板子的 /lib");
+}
+
 async function upload(): Promise<void> {
   const code = getCode();
   if (looksLikeArduino(code) && !confirm(t("這段程式看起來是 Arduino C++，上傳後會出現語法錯誤。仍要上傳嗎？"))) return;
@@ -652,14 +684,19 @@ async function upload(): Promise<void> {
   const started = performance.now();
   const bytes = new TextEncoder().encode(code);
   try {
-    await withRepl((repl) =>
-      repl.writeFile("/main.py", bytes, (fraction) => {
+    let dashSaved = false;
+    await withRepl(async (repl) => {
+      dashSaved = await saveDashIfNeeded(repl, code);
+      showProgress(t("正在上傳程式"), 0);
+      await repl.writeFile("/main.py", bytes, (fraction) => {
         showProgress(t("正在上傳程式"), fraction);
-      }),
-    );
+      });
+    });
     const seconds = ((performance.now() - started) / 1000).toFixed(1);
     setStatus(t("程式執行中"), "ready");
-    await restartBoard(t("上傳完成：main.py，{size} KB，用了 {seconds} 秒", { size: Math.max(0.1, bytes.length / 1024).toFixed(1), seconds }));
+    const uploaded = t("上傳完成：main.py，{size} KB，用了 {seconds} 秒", { size: Math.max(0.1, bytes.length / 1024).toFixed(1), seconds });
+    // Restarting clears the monitor, so the note about dash.py goes with the upload's own note.
+    await restartBoard(...(dashSaved ? [uploaded, dashSavedNote()] : [uploaded]));
   } catch (error) {
     setStatus(t("上傳失敗"), "error");
     systemMessage(t("上傳失敗：{message}", { message: failureMessage(error) }));
@@ -684,10 +721,13 @@ async function runWithoutSaving(): Promise<void> {
   repl.attach();
   try {
     await enterRawRepl(repl);
+    const dashSaved = await saveDashIfNeeded(repl, code);
     await repl.softReset();
     clearMonitor();
     appendMonitor(`${t("[系統]")} ${t("執行（不存檔）：程式在板子的記憶體裡執行，沒有存成 main.py。重新啟動或拔掉電源後，板子會執行原本的 main.py。")}
 `, "system");
+    // After clearing, so the note is not wiped away with the old output.
+    if (dashSaved) systemMessage(dashSavedNote());
     dataLines.reset();
     atPrompt = false;
     // An empty command would mean "soft reset" to the board instead of "run nothing".
@@ -994,7 +1034,7 @@ ui.examples.addEventListener("change", () => {
 });
 
 function loadExample(chosen: Example): void {
-  const code = fillExample(chosen.code, randomChannel(), new URL("voice.html", location.href).href);
+  const code = fillExample(chosen.code, randomChannel(usesDash(chosen.code) ? "dash" : "led"), new URL("voice.html", location.href).href);
   setCode(adaptExamplePins(code, selectedChip()));
 }
 

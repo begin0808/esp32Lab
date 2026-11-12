@@ -1,0 +1,245 @@
+/* The dashboard reuses the voice page's layout from voice.css and adds its widgets. */
+
+.empty[hidden] {
+  display: none;
+}
+
+.widgets {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.widgets:empty {
+  display: none;
+}
+
+.widget {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  min-height: 96px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--input-bg);
+}
+
+/* Charts and text need the whole width to be readable. */
+.widget-chart,
+.widget-text {
+  grid-column: 1 / -1;
+}
+
+.widget-label {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.widget-number {
+  margin: 0;
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+.widget-number .number {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.widget-number .unit {
+  margin-left: 4px;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.gauge {
+  width: 100%;
+  max-width: 180px;
+}
+
+.gauge-track,
+.gauge-fill {
+  fill: none;
+  stroke-linecap: round;
+  stroke-width: 12;
+}
+
+.gauge-track {
+  stroke: var(--border);
+}
+
+.gauge-fill {
+  stroke: var(--success);
+  transition: stroke-dasharray 0.3s;
+}
+
+.gauge-range,
+.chart-range {
+  display: flex;
+  justify-content: space-between;
+  max-width: 180px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.chart-range {
+  max-width: none;
+}
+
+.chart {
+  width: 100%;
+  height: 110px;
+  border-bottom: 1px solid var(--border);
+}
+
+.chart-dot {
+  fill: none;
+  stroke: var(--link);
+  stroke-linecap: round;
+  stroke-width: 9;
+  vector-effect: non-scaling-stroke;
+}
+
+.chart-line {
+  fill: none;
+  stroke: var(--link);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.lamp-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.lamp {
+  width: 34px;
+  height: 34px;
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  background: var(--code-gutter);
+}
+
+.lamp[data-on="true"][data-color="green"] {
+  background: #22c55e;
+  box-shadow: 0 0 12px #22c55e;
+}
+
+.lamp[data-on="true"][data-color="red"] {
+  background: #ef4444;
+  box-shadow: 0 0 12px #ef4444;
+}
+
+.lamp[data-on="true"][data-color="yellow"] {
+  background: #facc15;
+  box-shadow: 0 0 12px #facc15;
+}
+
+.lamp[data-on="true"][data-color="blue"] {
+  background: #3b82f6;
+  box-shadow: 0 0 12px #3b82f6;
+}
+
+.widget-text {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+  min-height: 44px;
+  padding: 4px 12px 4px 4px;
+  border: 2px solid var(--border);
+  border-radius: 999px;
+  background: var(--code-gutter);
+  color: var(--text);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.toggle-knob {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--muted);
+  transition: transform 0.2s;
+}
+
+/* On, the knob moves to the right end, as on a phone's own switches. */
+.toggle[aria-checked="true"] {
+  flex-direction: row-reverse;
+  padding: 4px 4px 4px 12px;
+  border-color: var(--success);
+  background: var(--success-bg);
+}
+
+.toggle[aria-checked="true"] .toggle-knob {
+  background: var(--success);
+}
+
+.toggle[data-waiting="true"] {
+  opacity: 0.6;
+}
+
+.toggle:disabled,
+.slider:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toggle:focus-visible,
+.slider:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.btn.press {
+  width: 100%;
+  min-height: 72px;
+  background: var(--go-bg);
+  color: var(--go-text);
+  overflow-wrap: anywhere;
+}
+
+.btn.press:active:not(:disabled) {
+  transform: translateY(2px);
+}
+
+.slider {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  accent-color: var(--success);
+}
+
+@media (max-width: 380px) {
+  .widgets {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (pointer: coarse) {
+  .slider {
+    height: 36px;
+  }
+}

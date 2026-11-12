@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ESP32 手機儀表板｜ESP32 Lab MicroPython 版</title>
+    <meta name="description" content="在手機上看 ESP32 的感測器數值，也能用開關、按鈕和滑桿控制開發板，透過 MQTT 連線。" />
+    <script>
+      // Runs before the first paint so a saved style never flashes the default one.
+      try {
+        document.documentElement.dataset.style = localStorage.getItem("esp32-mp-style") || "mat";
+      } catch {}
+    </script>
+    <script>
+      // Decides the language before the first paint. The text stays hidden until it is translated.
+      (function () {
+        var saved = "";
+        try {
+          saved = localStorage.getItem("esp32-mp-lang") || "";
+        } catch {}
+        if (/^zh/i.test(saved || navigator.language)) return;
+        document.documentElement.lang = "en";
+        document.documentElement.classList.add("translating");
+      })();
+    </script>
+    <link rel="icon" href="/icons/dashboard.svg" type="image/svg+xml" />
+    <link rel="icon" href="/icons/dashboard-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/icons/dashboard-180.png" />
+    <link rel="stylesheet" href="/src/themes.css" />
+    <link rel="stylesheet" href="/src/voice.css" />
+    <link rel="stylesheet" href="/src/dashboard.css" />
+  </head>
+  <body>
+    <main class="page">
+      <div class="page-top">
+        <div class="brand">
+          <img class="brand-logo" src="/icons/dashboard.svg" alt="" width="38" height="38" />
+          <h1>ESP32 手機儀表板</h1>
+        </div>
+        <div class="page-pickers">
+          <label class="style-picker">
+            風格
+            <select id="style-picker"></select>
+          </label>
+          <label class="style-picker language-picker">
+            語言 Language
+            <select id="language-picker"></select>
+          </label>
+        </div>
+      </div>
+
+      <form id="channel-form" class="row">
+        <label for="channel">MQTT 主題名稱（Topic）</label>
+        <div class="fields">
+          <input id="channel" type="text" placeholder="序列埠監控窗顯示的主題名稱" autocomplete="off" autocapitalize="off" spellcheck="false" />
+          <button id="channel-connect" class="btn">連線</button>
+        </div>
+        <p id="topic-preview" class="hint topic-preview"></p>
+        <details id="broker-settings" class="advanced">
+          <summary>進階：自訂 MQTT 伺服器與帳號密碼</summary>
+          <div class="broker-fields">
+            <label for="broker-host">伺服器位址</label>
+            <input id="broker-host" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" />
+            <label for="broker-port">WSS 連接埠</label>
+            <input id="broker-port" type="text" inputmode="numeric" autocomplete="off" />
+            <label for="broker-path">路徑</label>
+            <input id="broker-path" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" />
+            <label for="broker-user">帳號</label>
+            <input id="broker-user" type="text" placeholder="公用伺服器不用填" autocomplete="off" autocapitalize="off" spellcheck="false" />
+            <label for="broker-password">密碼</label>
+            <input id="broker-password" type="password" placeholder="公用伺服器不用填" autocomplete="off" />
+          </div>
+          <p class="hint">這一頁只能使用加密的 WSS 連線，改完按「連線」生效。開發板程式要指向同一台伺服器，例如 dash.Dashboard(..., broker="伺服器位址", port=1883)，連接埠通常和這裡不同。帳號和密碼填在 user= 和 mqtt_password=。密碼不會儲存，重新整理後要再輸入一次。</p>
+          <button id="broker-reset" class="btn" type="button">還原預設</button>
+        </details>
+      </form>
+
+      <p id="link-status" class="status" data-state="idle" role="status">尚未連線</p>
+      <p id="board-status" class="status" data-state="idle" role="status">開發板：尚未回報</p>
+
+      <p id="empty" class="hint empty">還沒收到開發板的畫面。請在開發板執行用到 dash 的程式（例如範例 27），並確認主題名稱和這裡一樣。</p>
+      <div id="widgets" class="widgets"></div>
+
+      <p id="message" class="message" aria-live="polite"></p>
+
+      <footer class="footer">
+        <p class="help-line"><a id="home-link" class="home-link" href="./index.html"><span aria-hidden="true">←</span> 回程式編輯頁</a><a id="help-link" href="./help.html" target="_blank" rel="noopener">查看使用說明</a></p>
+        資料會經過 MQTT 伺服器（預設是公用的 broker.emqx.io），知道主題名稱的人都能看到和操作，請勿用於重要設備，也不要在主題名稱填入個人資料。
+        <div class="copyright">
+          <span>© 2026 <a href="https://begin0808.github.io/studio0808/" target="_blank" rel="noopener">Studio0808 智造實驗室</a>. All rights reserved.</span>
+          <span class="contact-note">如有建議或報錯，歡迎來信</span>
+          <a class="contact-link" href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=begin0808@gmail.com" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>寫信給我
+          </a>
+          <a class="contact-link" href="https://www.facebook.com/begin.li.1/" target="_blank" rel="noopener" aria-label="Facebook">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="#1877f2" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
+          </a>
+          <span id="visit-count" class="visit-count" hidden></span>
+        </div>
+      </footer>
+    </main>
+
+    <script type="module" src="/src/dashboard.ts"></script>
+  </body>
+</html>

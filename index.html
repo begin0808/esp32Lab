@@ -75,6 +75,7 @@
         <div class="settings-links">
           <a id="help-link" class="btn" href="./help.html" target="_blank" rel="opener">使用說明</a>
           <a id="voice-link" class="btn" href="./voice.html" target="_blank" rel="opener">語音控制頁</a>
+          <a id="dashboard-link" class="btn" href="./dashboard.html" target="_blank" rel="opener">手機儀表板頁</a>
           <a id="pinout-link" class="btn" href="./images/nodemcu-32s-pinout.png" target="_blank" rel="noopener">腳位圖</a>
         </div>
       </section>
@@ -154,6 +155,14 @@
             <a id="ip-link" class="ip-value" target="_blank" rel="noopener"></a>
           </div>
           <button id="copy-ip" class="btn small">複製網址</button>
+        </div>
+
+        <div id="dash-card" class="ip-card dash-card" hidden>
+          <div>
+            <span class="ip-label">用手機掃描，或點網址開啟手機儀表板</span>
+            <a id="dash-link" class="dash-value" target="_blank" rel="noopener"></a>
+          </div>
+          <div id="dash-qr" class="dash-qr" role="img" aria-label="手機儀表板的 QR code"></div>
         </div>
 
         <div id="error-card" class="error-card" hidden>

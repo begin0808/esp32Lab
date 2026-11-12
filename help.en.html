@@ -53,6 +53,7 @@
         <a href="#parts">Parts and sensors</a>
         <a href="#wiring">Wiring notes</a>
         <a href="#voice">Phone and voice control</a>
+        <a href="#dashboard">Phone dashboard</a>
         <a href="#google-sheets">Google Sheets</a>
         <a href="#privacy">Privacy and safety</a>
         <a href="#faq">Common questions</a>
@@ -66,7 +67,7 @@
         <h2>Getting started</h2>
         <p>You do not need the Arduino IDE or any development setup. Open this site in <strong>Chrome or Edge on a computer</strong>, and connect the board with a USB cable that can carry data.</p>
         <ol>
-          <li><strong>Install a driver:</strong> only if the computer cannot find the board. Boards whose USB goes straight to an S2, S3 or C3 chip usually need none. If the board's USB chip is a CP2102, install the <a href="https://www.silabs.com/software-and-tools/usb-to-uart-bridge-vcp-drivers?tab=downloads" target="_blank" rel="noopener">CP210x driver</a>; if it is a CH340, install the <a href="https://www.wch-ic.com/downloads/CH341SER_EXE.html" target="_blank" rel="noopener">CH340 driver</a>. "Settings and help" at the top right of the editor has these links too, along with the pinout, the voice control page, and the language, style and font settings.</li>
+          <li><strong>Install a driver:</strong> only if the computer cannot find the board. Boards whose USB goes straight to an S2, S3 or C3 chip usually need none. If the board's USB chip is a CP2102, install the <a href="https://www.silabs.com/software-and-tools/usb-to-uart-bridge-vcp-drivers?tab=downloads" target="_blank" rel="noopener">CP210x driver</a>; if it is a CH340, install the <a href="https://www.wch-ic.com/downloads/CH341SER_EXE.html" target="_blank" rel="noopener">CH340 driver</a>. "Settings and help" at the top right of the editor has these links too, along with the pinout, the voice control page, the phone dashboard page, and the language, style and font settings.</li>
           <li><strong>Connect the board:</strong> close programs that hold the serial port, such as the Arduino IDE. Then press "Connect board" and choose the serial port that appears.</li>
           <li><strong>Install the firmware:</strong> only needed the first time, or after flashing an Arduino program. Pressing "Install firmware" <strong>erases all programs and files on the board</strong>, so do not unplug the USB cable while it runs. For boards whose USB goes straight to the chip, press RST afterwards and connect again.</li>
           <li><strong>Get a program:</strong> choose a built-in example, or press "Gemini prompts" → "Write a new program", fill in your wiring and what you want, paste it into Gemini, and paste the MicroPython program it writes back into the editor.</li>
@@ -106,6 +107,9 @@
               <tr><td>Deep sleep with timed wake-ups</td><td>Wakes, blinks the LED, counts the wake-ups, then sleeps 10 seconds</td><td>Onboard LED (GPIO 2)</td><td>Not needed</td></tr>
               <tr><td>ESP-NOW between boards</td><td>Press the button on any board and every board's LED toggles</td><td>Every board as example 2</td><td>Not needed; boards talk directly</td></tr>
               <tr><td>asyncio: three things at once</td><td>Blinks the LED, watches the button and reports the running time, all at once</td><td>As example 2: button GPIO 19, LED GPIO 18</td><td>Not needed</td></tr>
+              <tr><td>Dashboard basics: LED switch and button</td><td>A switch on the phone dashboard controls the LED, a lamp shows the button, and a number counts the presses</td><td>As example 2: button GPIO 19, LED GPIO 18</td><td>Board and phone both need the internet</td></tr>
+              <tr><td>DHT11 dashboard</td><td>See a temperature gauge, the humidity, a temperature chart and a status line on a phone</td><td>DATA GPIO 4</td><td>Board and phone both need the internet</td></tr>
+              <tr><td>Slider dims an LED, gauge shows a knob</td><td>A slider on the phone sets the LED's brightness, a gauge shows the knob, and a "Full brightness" button moves the slider to 100%</td><td>Knob GPIO 34, LED GPIO 18</td><td>Board and phone both need the internet</td></tr>
             </tbody>
           </table>
         </div>
@@ -114,14 +118,14 @@
 
       <section id="path">
         <h2>Learning path</h2>
-        <p>The 26 examples are arranged in three levels: beginner, intermediate and advanced. Work through them in order to learn step by step. <strong>Click an example's name to load it into the editor</strong>; you are asked first whether to replace the current program. Each step has a "Try changing it" task with no single right answer. If a change breaks the program, just load the example again. When you do not understand a program, use the explain option in <a href="#gemini">Gemini prompts</a> to have Gemini explain it.</p>
+        <p>The 29 examples are arranged in three levels: beginner, intermediate and advanced. Work through them in order to learn step by step. <strong>Click an example's name to load it into the editor</strong>; you are asked first whether to replace the current program. Each step has a "Try changing it" task with no single right answer. If a change breaks the program, just load the example again. When you do not understand a program, use the explain option in <a href="#gemini">Gemini prompts</a> to have Gemini explain it.</p>
         <div class="table-wrap">
           <table>
             <thead><tr><th scope="col">Level</th><th scope="col">Examples</th><th scope="col">Suggested time</th><th scope="col">By the end you can</th></tr></thead>
             <tbody>
               <tr><td><a href="#path-beginner">Beginner</a></td><td>1–5</td><td>About 4 lessons</td><td>Upload and run programs, read the monitor and error notes, and control LEDs and a buzzer</td></tr>
               <tr><td><a href="#path-intermediate">Intermediate</a></td><td>6–15, 21</td><td>About 8 lessons</td><td>Read many kinds of sensors, watch their values on a chart, and show results on displays and lights</td></tr>
-              <tr><td><a href="#path-advanced">Advanced</a></td><td>16–20, 22–26</td><td>About 10 lessons</td><td>Make a program do several things at once, connect to phones and online services, and build battery-saving or multi-board projects</td></tr>
+              <tr><td><a href="#path-advanced">Advanced</a></td><td>16–20, 22–29</td><td>About 12 lessons</td><td>Make a program do several things at once, connect to phones and online services, read and control the board from a phone dashboard, and build battery-saving or multi-board projects</td></tr>
             </tbody>
           </table>
         </div>
@@ -165,10 +169,10 @@
 
         <h3 id="path-advanced">Advanced: several things at once, and going online</h3>
         <ul>
-          <li><strong>By the end you can:</strong> use interrupts, timers and asyncio to make a program handle several things at once; connect the board to phones and online services; and build battery-saving or multi-board projects.</li>
-          <li><strong>Suggested time:</strong> about 10 lessons.</li>
-          <li><strong>Parts:</strong> the button and LED from example 2, a DHT11, a 2.4GHz Wi-Fi network and a phone. The Telegram example needs a Telegram account, the Google Sheets example needs a Google account, and ESP-NOW needs two or more boards.</li>
-          <li><strong>Site features used:</strong> the explain option in <a href="#gemini">Gemini prompts</a>, <a href="#voice">Phone and voice control</a>, <a href="#google-sheets">Google Sheets</a>, and <a href="#privacy">Privacy and safety</a> (take care when a program holds a Wi-Fi password).</li>
+          <li><strong>By the end you can:</strong> use interrupts, timers and asyncio to make a program handle several things at once; connect the board to phones and online services, and read and control it from a phone dashboard; and build battery-saving or multi-board projects.</li>
+          <li><strong>Suggested time:</strong> about 12 lessons.</li>
+          <li><strong>Parts:</strong> the button and LED from example 2, a DHT11, a 10kΩ potentiometer, a 2.4GHz Wi-Fi network and a phone. The Telegram example needs a Telegram account, the Google Sheets example needs a Google account, and ESP-NOW needs two or more boards.</li>
+          <li><strong>Site features used:</strong> the explain option in <a href="#gemini">Gemini prompts</a>, <a href="#voice">Phone and voice control</a>, <a href="#dashboard">Phone dashboard</a>, <a href="#google-sheets">Google Sheets</a>, and <a href="#privacy">Privacy and safety</a> (take care when a program holds a Wi-Fi password).</li>
         </ul>
         <ul class="path-steps">
           <li id="path-button_irq"><a class="example-link" href="./index.html?example=button_irq">22. Button interrupt (IRQ)</a>: the interrupt handler runs the moment the button is pressed and only sets a flag; <code>ticks_diff</code> filters out bounce.<span class="path-try"><strong>Try changing it:</strong> make the main loop wait 5 seconds, and check that no press is missed even when you press quickly several times.</span></li>
@@ -177,6 +181,9 @@
           <li id="path-web_led"><a class="example-link" href="./index.html?example=web_led">16. Phone-controlled LED (same Wi-Fi)</a>: join Wi-Fi, make the board a web server, and use asyncio to serve the page and blink at the same time.<span class="path-try"><strong>Try changing it:</strong> add a "fast blink" button to the page.</span></li>
           <li id="path-dht11_alarm"><a class="example-link" href="./index.html?example=dht11_alarm">18. DHT11 humidity alarm</a>: the phone page asks the board for JSON data every 2 seconds.<span class="path-try"><strong>Try changing it:</strong> change the alarm threshold from 50% to a number that suits your room.</span></li>
           <li id="path-mqtt_led"><a class="example-link" href="./index.html?example=mqtt_led">17. Voice-controlled LED (MQTT)</a>: send and receive messages across different networks through an online MQTT server.<span class="path-try"><strong>Try changing it:</strong> add a button that toggles the LED and reports the new state, so the voice control page updates too.</span></li>
+          <li id="path-dash_intro"><a class="example-link" href="./index.html?example=dash_intro">27. Dashboard basics: LED switch and button</a>: create widgets on the phone with <code>dash</code>, send values to the phone with <code>.set()</code>, and read the phone's switch with <code>.value</code>.<span class="path-try"><strong>Try changing it:</strong> add a <code>board.text("Message")</code> that says "Someone pressed it!" when the button is pressed.</span></li>
+          <li id="path-dash_dht11"><a class="example-link" href="./index.html?example=dash_dht11">28. DHT11 dashboard</a>: one value can go to a gauge and a chart at once; the sensor is read every 2 seconds by checking the time, while <code>board.check()</code> keeps running.<span class="path-try"><strong>Try changing it:</strong> add a <code>board.led("Too hot", color="red")</code> that lights up above <code>HOT</code>.</span></li>
+          <li id="path-dash_knob"><a class="example-link" href="./index.html?example=dash_knob">29. Slider dims an LED, gauge shows a knob</a>: the phone's slider and button control the board, and the board can move the slider with <code>.set()</code>.<span class="path-try"><strong>Try changing it:</strong> add an "Off" button that sets the slider to 0.</span></li>
           <li id="path-telegram_led"><a class="example-link" href="./index.html?example=telegram_led">19. Telegram bot LED</a>: call an online API over HTTPS; the button's interrupt only sets a flag and leaves network work to the main program.<span class="path-try"><strong>Try changing it:</strong> add a <code>/blink</code> command that blinks the LED 5 times.</span></li>
           <li id="path-sheets_dht11"><a class="example-link" href="./index.html?example=sheets_dht11">20. Log DHT11 data to Google Sheets</a>: put the readings in the address's parameters and send them to Apps Script, which writes them to the sheet.<span class="path-try"><strong>Try changing it:</strong> set <code>SEND_SECONDS</code> to 10 for testing, then draw a line chart in the sheet from the data collected.</span></li>
           <li id="path-deep_sleep"><a class="example-link" href="./index.html?example=deep_sleep">24. Deep sleep with timed wake-ups</a>: the board uses almost no power while asleep, RTC memory keeps data during sleep, and waking up is like restarting.<span class="path-try"><strong>Try changing it:</strong> read the DHT11 once on each wake-up before sleeping again, to make a battery-saving temperature logger.</span></li>
@@ -549,7 +556,7 @@ mylib.hello("ESP32")</pre>
 
       <section id="voice">
         <h2>Phone and voice control</h2>
-        <p>There are two ways to control a board from a phone web page, and you can also use the Telegram bot at the end of this section:</p>
+        <p>There are two ways to control a board from a phone web page, and you can also use the Telegram bot at the end of this section. To see several values on a phone at once, or control the board with switches and sliders, see the <a href="#dashboard">Phone dashboard</a>.</p>
         <div class="table-wrap">
           <table>
             <thead><tr><th scope="col"></th><th scope="col">Web page on the board</th><th scope="col">Voice control page (MQTT)</th></tr></thead>
@@ -585,6 +592,40 @@ mylib.hello("ESP32")</pre>
         <p class="tip warn"><strong>Wi-Fi is 2.4GHz only.</strong> The ESP32 cannot connect to 5GHz networks.</p>
       </section>
 
+      <section id="dashboard">
+        <h2>Phone dashboard</h2>
+        <p>The phone dashboard shows sensor readings on a phone, and lets you control the board with switches, buttons and sliders. <strong>The board's program decides what is on the screen</strong>: when the program says <code>board.gauge("Temperature")</code>, a temperature gauge appears on the phone, with nothing to set up there. The data passes through an MQTT broker, so the board and the phone do not have to share a Wi-Fi network, but both need the internet. Examples 27–29 all use the phone dashboard.</p>
+        <h3>Steps</h3>
+        <ol>
+          <li>Choose the example "27. Dashboard basics: LED switch and button", fill in the Wi-Fi name and password, and press "Upload and run".</li>
+          <li>The site first saves the dashboard helper <code>dash.py</code> to the board's <code>/lib</code>, and the monitor says "Saved the phone dashboard helper dash.py to the board's /lib". When the board already has the same version, this is skipped, so uploads stay fast.</li>
+          <li>Once the board reaches the MQTT broker, the dashboard's address and a QR code appear above the monitor. Scan it with a phone camera to open the <a href="./dashboard.html" target="_blank" rel="noopener">phone dashboard page</a> with the topic name already filled in.</li>
+          <li>You can also open the phone dashboard page yourself (there is a link in "Settings and help"), enter the topic name shown in the monitor, and press "Connect".</li>
+        </ol>
+        <h3>Widgets</h3>
+        <p>First create the dashboard with <code>board = dash.Dashboard(TOPIC_NAME, SSID, PASSWORD)</code>, then the widgets, and finally call <code>board.start()</code> to connect. Call <code>board.check()</code> every time round the loop: it reads the phone, sends new values, and reconnects if the connection drops.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Widget</th><th scope="col">Code</th><th scope="col">On the phone</th><th scope="col">How to use it</th></tr></thead>
+            <tbody>
+              <tr><td>Value</td><td><code>board.value("Humidity", unit="%")</code></td><td>A big number with its unit</td><td><code>.set(number or text)</code></td></tr>
+              <tr><td>Gauge</td><td><code>board.gauge("Temperature", min=0, max=50, unit="°C")</code></td><td>A half-circle gauge</td><td><code>.set(number)</code></td></tr>
+              <tr><td>Chart</td><td><code>board.chart("Temperature over time", unit="°C")</code></td><td>A line of the last 60 values</td><td><code>.set(number)</code>, one point each time</td></tr>
+              <tr><td>Lamp</td><td><code>board.led("Alarm", color="red")</code></td><td>A round light, on or off, in green, red, yellow or blue</td><td><code>.set(True)</code> for on, <code>.set(False)</code> for off</td></tr>
+              <tr><td>Text</td><td><code>board.text("Status")</code></td><td>One line of text</td><td><code>.set("text")</code></td></tr>
+              <tr><td>Switch</td><td><code>board.switch("LED")</code></td><td>A switch</td><td><code>.value</code> is True or False; the board can change it with <code>.set()</code></td></tr>
+              <tr><td>Button</td><td><code>board.button("Ring")</code></td><td>A big button</td><td>After a press, <code>.pressed()</code> returns True once</td></tr>
+              <tr><td>Slider</td><td><code>board.slider("Brightness", min=0, max=100)</code></td><td>A slider to drag, in whole numbers</td><td><code>.value</code> is the current number; the board can change it with <code>.set()</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="tip"><strong>No need to worry about sending too fast:</strong> each widget sends at most every 0.5 seconds, so calling <code>.set()</code> all the time in the loop does not flood the public broker, and the phone always shows the newest value. The broker keeps the positions of switches and sliders, so after a restart the board goes back to their last state. A dashboard holds up to 30 widgets.</p>
+        <p><strong>Topic names and MQTT topics:</strong> for the topic name <code>dash-1</code>, everything is under <code>esp32-mp-class/dash-1/dash/</code>: <code>layout</code> lists the widgets, <code>state</code> says whether the board is online, <code>out/…</code> holds the board's values and <code>in/…</code> what was done on the phone.</p>
+        <p><strong>Using your own MQTT broker:</strong> fill in the broker under "Advanced" on the phone dashboard page, and change the program to <code>dash.Dashboard(TOPIC_NAME, SSID, PASSWORD, broker="broker address", port=1883, user="username", mqtt_password="password")</code>.</p>
+        <p><strong>About dash.py:</strong> do not edit <code>/lib/dash.py</code> on the board, because the site puts its own version back at the next upload. When you upload without this site (with Thonny, for example), open <code>/lib</code> in <a href="#files">Board files</a> to download <code>dash.py</code>, then put it on the other board. The phone dashboard page does not need Web Serial, so it opens in phone and computer browsers, but it has not been tested on every kind of phone.</p>
+        <p class="tip warn"><strong>When the board cannot connect:</strong> if the school firewall blocks port 1883, the monitor keeps saying "Could not connect, retrying in 5 s"; try a phone hotspot instead. When the phone dashboard page says the board is offline or not responding, check that the program on the board is running and that both sides use the same topic name.</p>
+      </section>
+
       <section id="google-sheets">
         <h2>Saving sensor data to Google Sheets</h2>
         <p>The example "Log DHT11 data to Google Sheets" adds a row of time, temperature and humidity every minute. Google Apps Script is free, but needs setting up once. This example has been tested with simulated hardware and simulated Google responses, but not with a real Google Sheet.</p>
@@ -618,7 +659,7 @@ mylib.hello("ESP32")</pre>
           <li><strong>Wi-Fi passwords:</strong> the password is part of the program, so it is stored as plain text in the browser and in <code>main.py</code> on the board. Delete it before using a shared computer or lending out a board; see "Shared computers and boards" below.</li>
           <li><strong>Before pasting into Gemini:</strong> the "explain" prompt, "Copy for Gemini" and the "convert to MicroPython" prompt hide common forms of Wi-Fi details, logins, tokens and Apps Script URLs, but may not catch them all. Copying the program yourself hides nothing, so delete passwords first.</li>
           <li><strong>Screenshots and projectors:</strong> the editor shows your password, so cover it before projecting or sharing your screen. A dedicated class Wi-Fi or phone hotspot is recommended.</li>
-          <li><strong>Voice control:</strong> commands pass through a public MQTT broker with no encryption or access control, and anyone who knows the topic name can send them. It only suits low-risk experiments such as LEDs. Do not control sockets or door locks, and keep personal details out of the topic name.</li>
+          <li><strong>Voice control and the phone dashboard:</strong> data passes through a public MQTT broker with no encryption or access control, and anyone who knows the topic name can see it and send commands. It only suits low-risk experiments such as LEDs. Do not control sockets or door locks, and keep personal details out of the topic name.</li>
           <li><strong>Speech recognition:</strong> your browser and its speech service handle recognition, which usually needs the internet.</li>
           <li><strong>Telegram bot token:</strong> the token is the bot's password, and anyone with it can impersonate your bot, so do not project or share it. If it leaks, send <code>/revoke</code> to @BotFather for a new one. The example does not verify the server certificate, so do not control anything important.</li>
         </ul>

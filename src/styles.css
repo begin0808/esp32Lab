@@ -475,6 +475,34 @@ input:focus-visible,
   font-weight: 700;
 }
 
+.dash-card > div:first-child {
+  flex: 1 1 160px;
+  min-width: 0;
+}
+
+.dash-value {
+  color: var(--success);
+  font-size: 14px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+/* A white background with a quiet zone, so phones read the code in every style. */
+.dash-qr {
+  flex: none;
+  width: 132px;
+  height: 132px;
+  padding: 4px;
+  border-radius: 4px;
+  background: #ffffff;
+}
+
+.dash-qr svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 .error-card {
   background: var(--danger-bg);
   color: var(--danger);

@@ -124,6 +124,8 @@ describe("MQTT channel helpers", () => {
   it("generates valid, different channels", () => {
     expect(isValidChannel(randomChannel())).toBe(true);
     expect(randomChannel()).not.toBe(randomChannel());
+    expect(randomChannel()).toMatch(/^led-[0-9a-f]{12}$/);
+    expect(randomChannel("dash")).toMatch(/^dash-[0-9a-f]{12}$/);
     expect(commandTopic("abc")).toBe("esp32-mp-class/abc/command");
   });
 
