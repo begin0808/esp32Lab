@@ -2145,7 +2145,7 @@ test.describe("phone dashboard", () => {
     await expect(page.locator(".chart-range")).toHaveText("最低 24.5，最高 26");
     expect((await page.locator(".chart-line").getAttribute("points"))!.split(" ")).toHaveLength(2);
     // Each value is marked with the time the phone got it.
-    await expect(page.locator(".chart-times span")).toHaveCount(2);
+    await expect(page.locator(".chart-times span")).toHaveCount(3);
     await expect(page.locator(".chart-times span").last()).toHaveText(/^\d\d:\d\d:\d\d$/);
 
     broker.send(`${DASH}state`, "offline");

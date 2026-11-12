@@ -107,17 +107,22 @@ function chartView(card: HTMLElement, widget: Widget): View {
       range.textContent = "";
       return;
     }
-    const shown = points.length >= 3 ? [entries[0], entries[Math.floor((entries.length - 1) / 2)], entries.at(-1)!] : [entries[0], entries.at(-1)!].slice(2 - points.length);
-    times.replaceChildren(...shown.map((entry) => part("span", "", formatClock(new Date(entry.time)))));
+    // The time across runs from the oldest value at the left to the newest at the right, so the times below
+    // match the line, and a pause in the data shows as a gap instead of being hidden.
+    const first = entries[0].time;
+    const last = entries.at(-1)!.time;
+    const shown = last > first ? [first, (first + last) / 2, last] : [last];
+    times.replaceChildren(...shown.map((time) => part("span", "", formatClock(new Date(time)))));
     const low = Math.min(...points);
     const high = Math.max(...points);
     const span = high - low || 1;
     // A margin on both sides keeps the round dot at the newest value inside the chart.
-    const step = 288 / (CHART_POINTS - 1);
-    const start = CHART_POINTS - points.length;
-    const place = (value: number, index: number) => [6 + (start + index) * step, high === low ? 50 : 95 - ((value - low) / span) * 90];
-    line.setAttribute("points", points.map((value, index) => place(value, index).map((number) => number.toFixed(1)).join(",")).join(" "));
-    const [x, y] = place(points.at(-1)!, points.length - 1);
+    const place = ({ value, time }: { value: number; time: number }) => [
+      last > first ? 6 + ((time - first) / (last - first)) * 288 : 294,
+      high === low ? 50 : 95 - ((value - low) / span) * 90,
+    ];
+    line.setAttribute("points", entries.map((entry) => place(entry).map((number) => number.toFixed(1)).join(",")).join(" "));
+    const [x, y] = place(entries.at(-1)!);
     // A line with no length and round ends stays a round dot, however the chart is stretched.
     dot.setAttribute("d", `M ${x.toFixed(1)} ${y.toFixed(1)} h 0`);
     range.textContent = t("最低 {low}，最高 {high}", { low: formatNumber(low), high: formatNumber(high) });
