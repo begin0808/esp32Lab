@@ -135,7 +135,7 @@ describe("dash.py on the board", () => {
   it("passes its own tests on Python, with fake Wi-Fi, MQTT and clock", () => {
     // Python is called python3 on Linux and usually python on Windows.
     const result = ["python3", "python"]
-      .map((command) => spawnSync(command, ["-I", "-X", "utf8", "tests/dash/test_dash.py"], { encoding: "utf8" }))
+      .map((command) => spawnSync(command, ["-I", "-B", "-X", "utf8", "tests/dash/test_dash.py"], { encoding: "utf8" }))
       .find((run) => !run.error && run.status !== 9009 && !/not found|Microsoft Store/.test(run.stderr ?? ""));
     expect(result, "Python is needed for this test").toBeDefined();
     expect(result!.status, result!.stderr).toBe(0);

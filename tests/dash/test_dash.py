@@ -5,7 +5,10 @@ import sys
 import types
 import unittest
 
-HERE = os.path.dirname(os.path.abspath(__file__))
+# Loading dash.py must not leave a __pycache__ folder next to the site's source.
+sys.dont_write_bytecode = True
+
+HERE =os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 
 
