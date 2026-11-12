@@ -55,6 +55,9 @@
   --btn-border: 0 solid transparent;
   --btn-radius: 4px;
   --btn-shadow: 0 2px 0 #0b3d33;
+  /* Buttons on the phone pages are filled, so they read as buttons at a glance on a phone. */
+  --solid-bg: #17705f;
+  --solid-text: #ffffff;
   --go-bg: #ffd23f;
   --go-text: #14211d;
   --panel-border: 0 solid transparent;
@@ -89,6 +92,8 @@
   --btn-bg: #ffffff;
   --btn-text: #101218;
   --btn-border: 2.5px solid #101218;
+  --solid-bg: #1e2159;
+  --solid-text: #ffffff;
   --btn-radius: 12px;
   --btn-shadow: 3px 3px 0 #101218;
   --go-bg: #ffd400;

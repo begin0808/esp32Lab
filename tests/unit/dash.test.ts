@@ -7,7 +7,7 @@ import {
   findDashboardUrl,
   fitNumber,
   formatClock,
-  formatDateTime,
+  formatDate,
   formatInfo,
   formatNumber,
   formatUptime,
@@ -230,9 +230,9 @@ describe("card 13 widgets", () => {
 
   it("writes a log as CSV that spreadsheets read, with numbers left as numbers", () => {
     const time = new Date(2026, 10, 13, 10, 8, 2).getTime();
-    expect(formatDateTime(new Date(time))).toBe("2026-11-13 10:08:02");
+    expect(formatDate(new Date(time))).toBe("2026-11-13");
     const csv = logCsv(["溫度", "說明"], [{ time, cells: ["-5", "=SUM(A1)"] }]);
-    expect(csv).toBe("\ufeff時間,溫度,說明\r\n2026-11-13 10:08:02,-5,'=SUM(A1)\r\n");
+    expect(csv).toBe("\ufeff日期,時間,溫度,說明\r\n2026-11-13,10:08:02,-5,'=SUM(A1)\r\n");
   });
 
   it("reads the board's report and keeps only sensible numbers", () => {

@@ -2305,8 +2305,8 @@ test.describe("phone dashboard", () => {
     const file = await downloading;
     expect(file.suggestedFilename()).toMatch(/^esp32-log-\d{8}-\d{6}\.csv$/);
     const csv = readFileSync(await file.path(), "utf8");
-    expect(csv.startsWith("\ufeff時間,溫度,濕度\r\n")).toBe(true);
-    expect(csv).toMatch(/\r\n\d{4}-\d\d-\d\d \d\d:\d\d:\d\d,25\.12,60\r\n\d{4}-.*,26,61\r\n$/);
+    expect(csv.startsWith("\ufeff日期,時間,溫度,濕度\r\n")).toBe(true);
+    expect(csv).toMatch(/\r\n\d{4}-\d\d-\d\d,\d\d:\d\d:\d\d,25\.12,60\r\n\d{4}-.*,26,61\r\n$/);
 
     // Dragging the joystick sends where it points, and letting go centres it.
     const stick = page.locator(".joystick");

@@ -303,6 +303,7 @@ const en = {
   增加: "Increase",
   設定: "Set",
   "範圍 {min}～{max}，每次 {step}": "Range {min} to {max}, steps of {step}",
+  日期: "Date",
   時間: "Time",
   "下載 CSV": "Download CSV",
   "共 {count} 筆": "{count} rows",

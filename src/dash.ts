@@ -166,16 +166,18 @@ export function parseRows(payload: string, columns: number): string[][] | null {
     .map((row) => Array.from({ length: columns }, (_, index) => cell(row[index])));
 }
 
-/** A date and time a spreadsheet understands, such as 2026-11-13 10:08:02. */
-export function formatDateTime(date: Date): string {
-  const day = [date.getFullYear(), date.getMonth() + 1, date.getDate()].map((part) => String(part).padStart(2, "0")).join("-");
-  return `${day} ${formatClock(date)}`;
+/** A date a spreadsheet understands, such as 2026-11-13. */
+export function formatDate(date: Date): string {
+  return [date.getFullYear(), date.getMonth() + 1, date.getDate()].map((part) => String(part).padStart(2, "0")).join("-");
 }
 
-/** A log as CSV. Numbers stay numbers, so a spreadsheet can chart them; text is made safe like the plotter's CSV. */
+/**
+ * A log as CSV. Numbers stay numbers, so a spreadsheet can chart them; text is made safe like the plotter's CSV.
+ * The date and the time have their own columns, because Excel shows a date and time in one cell without the seconds.
+ */
 export function logCsv(columns: string[], rows: { time: number; cells: string[] }[]): string {
-  const header = [t("時間"), ...columns].map(csvCell).join(",");
-  const lines = rows.map((row) => [formatDateTime(new Date(row.time)), ...row.cells.map((value) => (parseNumber(value) === null ? csvCell(value) : value))].join(","));
+  const header = [t("日期"), t("時間"), ...columns].map(csvCell).join(",");
+  const lines = rows.map((row) => [formatDate(new Date(row.time)), formatClock(new Date(row.time)), ...row.cells.map((value) => (parseNumber(value) === null ? csvCell(value) : value))].join(","));
   return `\ufeff${[header, ...lines].join("\r\n")}\r\n`;
 }
 
