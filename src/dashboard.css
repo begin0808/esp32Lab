@@ -435,8 +435,9 @@
 /* Wi-Fi signal, running time and free memory, under the board's status. */
 .board-info {
   margin: -4px 0 0 22px;
-  color: var(--muted);
-  font-size: 13px;
+  color: var(--accent-text);
+  font-size: 14px;
+  font-weight: 700;
 }
 
 .board-info[hidden] {
@@ -570,13 +571,17 @@
   outline-offset: 2px;
 }
 
+/* A dark button that stands out, because nothing happens until it is pressed. */
 .tilt-toggle {
   align-self: flex-start;
+  border-color: var(--success);
+  background: var(--success);
+  color: #fff;
 }
 
 .tilt-toggle[aria-pressed="true"] {
   border-color: var(--danger);
-  color: var(--danger);
+  background: var(--danger);
 }
 
 @media (max-width: 380px) {
