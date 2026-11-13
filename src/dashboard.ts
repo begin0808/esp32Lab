@@ -350,7 +350,10 @@ function padView(card: HTMLElement, widget: Widget): View {
     button.addEventListener("keyup", (event) => {
       if (event.key === "Enter" || event.key === " ") stop();
     });
-    button.addEventListener("blur", () => stop());
+    // Pressing another key moves the focus there, and the key it left must not stop the new direction.
+    button.addEventListener("blur", () => {
+      if (held === direction) stop();
+    });
     // A long press must not open the phone's text menu.
     button.addEventListener("contextmenu", (event) => event.preventDefault());
     buttons.push(button);

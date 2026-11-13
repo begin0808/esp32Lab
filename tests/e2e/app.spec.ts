@@ -2255,6 +2255,14 @@ test.describe("phone dashboard", () => {
     expect(held.slice(0, -1).every((message) => message.payload === "up" && !message.retain)).toBe(true);
     await page.waitForTimeout(600);
     expect(sent("in/1p")).toHaveLength(held.length);
+    // The first press on another key drives at once, even though the focus is still on the last key.
+    await page.getByRole("button", { name: "右" }).hover();
+    await page.mouse.down();
+    await page.waitForTimeout(100);
+    await expect(page.locator(".pad-state")).toHaveText("按住：右");
+    expect(sent("in/1p").slice(held.length).map((message) => message.payload)).toEqual(["right"]);
+    await page.mouse.up();
+    await expect.poll(() => sent("in/1p").at(-1)?.payload).toBe("");
     expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
   });
 
