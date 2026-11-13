@@ -103,6 +103,49 @@ body {
   font-weight: 600;
 }
 
+/* The sections of the page being read sit in a lighter bar right under the page list, with the filled page's
+   colour down its side, so they read as part of that page rather than as more pages. */
+.doc > .toc {
+  align-items: baseline;
+  gap: 4px 18px;
+  padding: 10px 20px;
+  border-left: 6px solid var(--solid-bg);
+  background: var(--code-gutter);
+  font-size: 15px;
+}
+
+.help-pages + .toc {
+  margin-top: -8px;
+  margin-left: 24px;
+}
+
+@media (max-width: 600px) {
+  .help-pages + .toc {
+    margin-left: 12px;
+  }
+}
+
+.toc-label {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.doc .toc a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.doc .toc a::before {
+  content: "# ";
+  color: var(--muted);
+}
+
+.doc .toc a:hover,
+.doc .toc a:focus-visible {
+  text-decoration: underline;
+}
+
 /* Every help page lists all of them, with the one being read filled in. */
 .help-pages {
   display: flex;
