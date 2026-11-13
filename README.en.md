@@ -60,11 +60,16 @@ Everything is under `esp32-mp-class/<topic name>/dash/`: `layout` (the widgets),
 
 ## Help pages
 
-`help.en.html` (English) and `help.html` (Chinese) list the supported boards and parts, along with safety notes, and follow the chosen style. After testing new hardware, update the status labels and the date on both pages.
+The help is split over several pages, each with a Chinese file (`help-*.html`) and an English one (`help-*.en.html`), and they follow the chosen style:
+
+- `help.html`: the help home page, with cards linking to each topic page
+- `help-start.html` quick start, `help-path.html` learning path, `help-challenge.html` challenge projects, `help-tools.html` editor tools, `help-hardware.html` boards and wiring, `help-iot.html` phone and cloud, `help-faq.html` troubleshooting and safety
+
+`src/helppages.ts` says which page holds each section, so older links such as `help.html#dashboard` move on to the new page. A new section must go there too, and `npm test` fails if it is missing. After testing new hardware, update the status labels and the date on both languages' pages.
 
 ## Learning path
 
-The help page's "Learning path" arranges the 26 examples in beginner, intermediate and advanced levels. Each step names what it teaches and has a "Try changing it" task, and each level has a suggested time and a parts list. Example names link to `index.html?example=<file name>`. A help page opened from the editor asks first, then sends the example back to that editor tab, so the board connection is kept. A help page opened on its own opens the editor, which asks instead. The list of examples and their numbers is in `src/catalog.ts`. A new example must also go in the learning path on both help pages, and `npm test` fails if it is missing.
+The help's "Learning path" (`help-path.html`) arranges all the examples in beginner, intermediate and advanced levels. Each step names what it teaches and has a "Try changing it" task, and each level has a suggested time and a parts list. Example names link to `index.html?example=<file name>`. A help page opened from the editor asks first, then sends the example back to that editor tab, so the board connection is kept. A help page opened on its own opens the editor, which asks instead. The list of examples and their numbers is in `src/catalog.ts`. A new example must also go in the learning path and the "Wiring for each example" table (`help-hardware.html`) in both languages, and `npm test` fails if it is missing.
 
 ## English and Chinese
 

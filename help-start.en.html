@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quick start | Help | ESP32 Lab MicroPython Edition</title>
+    <meta name="description" content="Using ESP32 Lab MicroPython Edition for the first time: connecting a board, installing firmware, uploading and running programs, and supported browsers." />
+    <script>
+      // Runs before the first paint so a saved style never flashes the default one.
+      try {
+        document.documentElement.dataset.style = localStorage.getItem("esp32-mp-style") || "mat";
+      } catch {}
+    </script>
+    <link rel="icon" href="/icons/logo.svg" type="image/svg+xml" />
+    <link rel="icon" href="/icons/logo-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/icons/logo-180.png" />
+    <link rel="stylesheet" href="/src/themes.css" />
+    <link rel="stylesheet" href="/src/help.css" />
+  </head>
+  <body>
+    <header class="help-top">
+      <div class="brand">
+        <img class="brand-logo" src="/icons/logo.svg" alt="" width="40" height="40" />
+        <div>
+          <h1>ESP32 Lab <span class="edition">MicroPython Edition</span> Help <span class="version" title="Version">v%VITE_APP_VERSION%</span></h1>
+          <p class="updated">Last updated: November 14, 2026</p>
+        </div>
+      </div>
+      <div class="help-actions">
+        <a id="home-link" class="home-link" href="./index.html"><span aria-hidden="true">←</span> Back to the editor</a>
+        <label class="style-picker">
+          Style
+          <select id="style-picker"></select>
+        </label>
+        <label class="style-picker language-picker">
+          語言 Language
+          <select id="language-picker"></select>
+        </label>
+      </div>
+    </header>
+
+    <main class="doc">
+      <nav class="help-pages" aria-label="Help pages">
+        <a href="./help.en.html">Help home</a>
+        <a href="./help-start.en.html" aria-current="page">Quick start</a>
+        <a href="./help-path.en.html">Learning path</a>
+        <a href="./help-challenge.en.html">Challenge projects</a>
+        <a href="./help-tools.en.html">Editor tools</a>
+        <a href="./help-hardware.en.html">Boards and wiring</a>
+        <a href="./help-iot.en.html">Phone and cloud</a>
+        <a href="./help-faq.en.html">Troubleshooting and safety</a>
+      </nav>
+      <nav class="toc" aria-label="On this page">
+        <a href="#start">Getting started</a>
+        <a href="#run">Run (no save)</a>
+        <a href="#browsers">Supported browsers</a>
+        <a href="#languages">MicroPython and Arduino</a>
+      </nav>
+      <section id="start">
+        <h2>Getting started</h2>
+        <p>You do not need the Arduino IDE or any development setup. Open this site in <strong>Chrome or Edge on a computer</strong>, and connect the board with a USB cable that can carry data.</p>
+        <ol>
+          <li><strong>Install a driver:</strong> only if the computer cannot find the board. Boards whose USB goes straight to an S2, S3 or C3 chip usually need none. If the board's USB chip is a CP2102, install the <a href="https://www.silabs.com/software-and-tools/usb-to-uart-bridge-vcp-drivers?tab=downloads" target="_blank" rel="noopener">CP210x driver</a>; if it is a CH340, install the <a href="https://www.wch-ic.com/downloads/CH341SER_EXE.html" target="_blank" rel="noopener">CH340 driver</a>. "Settings and help" at the top right of the editor has these links too, along with the pinout, the voice control page, the phone dashboard page, and the language, style and font settings.</li>
+          <li><strong>Connect the board:</strong> close programs that hold the serial port, such as the Arduino IDE. Then press "Connect board" and choose the serial port that appears.</li>
+          <li><strong>Install the firmware:</strong> only needed the first time, or after flashing an Arduino program. Pressing "Install firmware" <strong>erases all programs and files on the board</strong>, so do not unplug the USB cable while it runs. For boards whose USB goes straight to the chip, press RST afterwards and connect again.</li>
+          <li><strong>Get a program:</strong> choose a built-in example, or press "Gemini prompts" → "Write a new program", fill in your wiring and what you want, paste it into Gemini, and paste the MicroPython program it writes back into the editor.</li>
+          <li><strong>Upload and run:</strong> press "Upload and run". The program is saved as <code>main.py</code> on the board and runs automatically whenever the board powers up. The first line in the serial monitor shows the program's size and how many seconds the upload took, followed by the program's output and errors.</li>
+          <li><strong>Just trying something:</strong> press "Run (no save)" or <kbd>F5</kbd>. The program runs straight from the board's memory and is not saved as <code>main.py</code>; see <a href="#run">Run (no save)</a>.</li>
+        </ol>
+      </section>
+      <section id="run">
+        <h2>Run (no save) and Upload and run</h2>
+        <p>"Run (no save)" stops the current program, clears the variables left from last time, and sends the code in the editor to the board's memory to run at once. <strong>It is not saved as <code>main.py</code>.</strong> While a board is connected you can also press <kbd>F5</kbd>; without a board, <kbd>F5</kbd> still reloads the page.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col"></th><th scope="col">Run (no save)</th><th scope="col">Upload and run</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Speed</th><td>Faster: no file to write and no restart</td><td>A little slower</td></tr>
+              <tr><th scope="row">After a restart or power cycle</th><td>The program is gone and the board runs its own <code>main.py</code> again</td><td>The program stays on the board and runs at every power-up</td></tr>
+              <tr><th scope="row">Best for</th><td>Trying things, changing values, finding mistakes</td><td>Finished projects, or running away from the computer</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>A broken program is nothing to worry about: press "Restart" or unplug the power, and the board runs its own <code>main.py</code> again. Once the program works, press "Upload and run" to keep it on the board. The same goes for a program that restarts the board, for example with deep sleep or <code>machine.reset()</code>: it wakes into its own <code>main.py</code>, and the monitor says so.</p>
+        <h3>Looking at variables after the program ends</h3>
+        <p>After the program ends, or after you press "Stop", <strong>its variables are still on the board</strong>. Type a variable's name in the REPL below the serial monitor to see its last value. For example:</p>
+        <pre class="code-block" tabindex="0">total = 0
+for i in range(1, 11):
+    total = total + i</pre>
+        <p>When it has run, typing <code>total</code> in the REPL shows <code>55</code>, and <code>i</code> shows <code>10</code>. When hunting for a mistake, this is easier than adding <code>print</code> everywhere. "Upload and run" restarts the board, so this works only with "Run (no save)".</p>
+        <p class="tip">In error messages, <code>File "&lt;stdin&gt;", line 3</code> means line 3 in the editor, the same line numbers as <code>main.py</code>. "Copy for Gemini" works as usual.</p>
+      </section>
+      <section id="browsers">
+        <h2>Supported browsers</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Device and browser</th><th scope="col">Editor (USB upload)</th><th scope="col">Voice control page</th></tr></thead>
+            <tbody>
+              <tr><td>Chrome and Edge on a computer</td><td>Works</td><td>Tested in Chrome; voice not yet tested in Edge</td></tr>
+              <tr><td>Chrome on a Chromebook</td><td><span class="badge tested">Tested</span> A school Chromebook with an ESP32-S board connected, installed firmware and uploaded programs normally</td><td>Not yet tested</td></tr>
+              <tr><td>Chrome on an Android phone</td><td>Use a computer instead</td><td>The page opens; speech recognition not yet tested</td></tr>
+              <tr><td>Safari on an iPhone</td><td>Does not work</td><td>Not yet tested; use text commands if voice does not work</td></tr>
+              <tr><td>Firefox and Safari on a computer</td><td>Does not work (no Web Serial)</td><td>Not yet tested</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>If a Chromebook has only USB-C ports, a USB-C to USB-A adapter with the board's usual USB cable works, or you can use a USB-C to Micro USB data cable. On a school-managed Chromebook, if no serial port appears after pressing "Connect board", the management policy may have turned the feature off; ask the school's IT staff to allow it in the Google Admin console.</p>
+      </section>
+      <section id="languages">
+        <h2>The differences between MicroPython and Arduino</h2>
+        <p>Both can control an ESP32, and neither is better in every way. This site uses MicroPython because there is nothing to install, changes run within seconds, and error messages are easier to understand, which suits classrooms and quick experiments.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col"></th><th scope="col">MicroPython (this site)</th><th scope="col">Arduino C++</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Language</th><td>Python, short and easy to start with</td><td>C++, with declared types and stricter syntax</td></tr>
+              <tr><th scope="row">Setup</th><td>Works in a browser after one firmware install</td><td>Needs the Arduino IDE and board package, reinstalled if the computer is restored</td></tr>
+              <tr><th scope="row">Uploading changes</th><td>No compiling, usually done in seconds</td><td>Compiles and flashes every time, so it takes longer</td></tr>
+              <tr><th scope="row">Finding errors</th><td>Errors give the line number, and you can try commands in the monitor</td><td>The compiler catches syntax errors first; runtime problems are mostly traced through serial output</td></tr>
+              <tr><th scope="row">Speed</th><td>Slower, but usually enough for sensing and control</td><td>Much faster, suits heavy computing and high-speed work</td></tr>
+              <tr><th scope="row">Memory</th><td>The interpreter takes up space, so less is left</td><td>More is available, better for large programs</td></tr>
+              <tr><th scope="row">Timing</th><td>Garbage collection can cause short pauses, so it does not suit precise timing</td><td>More precise timing</td></tr>
+              <tr><th scope="row">Libraries</th><td>Common features are built in, others may need code you find yourself</td><td>Plenty available, for most modules</td></tr>
+              <tr><th scope="row">Best for</th><td>Teaching beginners, writing code with AI, sensor and IoT experiments</td><td>Camera images, high-speed signals, large or long-running projects</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>One board can switch back and forth, but it runs only one at a time. Flashing from the Arduino IDE overwrites MicroPython and the files on the board. To come back, press "Install firmware" on this site.</p>
+      </section>
+      <nav class="page-turn" aria-label="Previous and next page">
+        <a rel="prev" href="./help.en.html"><span aria-hidden="true">←</span> Help home</a>
+        <a rel="next" href="./help-path.en.html">Learning path <span aria-hidden="true">→</span></a>
+      </nav>
+
+      <p class="help-bottom"><a class="home-link" href="./index.html"><span aria-hidden="true">←</span> Back to the editor</a></p>
+    </main>
+
+    <footer class="footer">
+      <div class="copyright">
+        <span>© 2026 <a href="https://begin0808.github.io/studio0808/" target="_blank" rel="noopener">Studio0808</a>. All rights reserved.</span>
+        <span class="contact-note">Suggestions and bug reports are welcome</span>
+        <a class="contact-link" href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=begin0808@gmail.com" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>Email me
+        </a>
+        <a class="contact-link" href="https://www.facebook.com/begin.li.1/" target="_blank" rel="noopener" aria-label="Facebook">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="#1877f2" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
+        </a>
+        <span id="visit-count" class="visit-count" hidden></span>
+      </div>
+    </footer>
+
+    <button id="to-top" class="to-top" type="button" hidden><span aria-hidden="true">↑</span> Back to top</button>
+
+    <script type="module" src="/src/help.ts"></script>
+  </body>
+</html>

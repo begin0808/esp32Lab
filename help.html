@@ -50,775 +50,91 @@
     </header>
 
     <main class="doc">
-      <nav class="toc" aria-label="本頁目錄">
-        <a href="#start">開始使用</a>
-        <a href="#path">學習路徑</a>
-        <a href="#challenge">挑戰專題</a>
-        <a href="#run">執行（不存檔）</a>
-        <a href="#gemini">Gemini 提示詞</a>
-        <a href="#languages">MicroPython 與 Arduino</a>
-        <a href="#repl">REPL 即時指令</a>
-        <a href="#plot">圖表與 CSV</a>
-        <a href="#files">板上檔案</a>
-        <a href="#boards">支援的開發板</a>
-        <a href="#parts">電子元件與感測器</a>
-        <a href="#wiring">接線注意事項</a>
-        <a href="#voice">手機與語音控制</a>
-        <a href="#dashboard">手機儀表板</a>
-        <a href="#google-sheets">Google 試算表</a>
-        <a href="#privacy">隱私與安全</a>
-        <a href="#faq">常見問題</a>
+      <nav class="help-pages" aria-label="說明頁面">
+        <a href="./help.html" aria-current="page">說明首頁</a>
+        <a href="./help-start.html">快速上手</a>
+        <a href="./help-path.html">學習路徑</a>
+        <a href="./help-challenge.html">挑戰專題</a>
+        <a href="./help-tools.html">編輯器功能</a>
+        <a href="./help-hardware.html">硬體與接線</a>
+        <a href="./help-iot.html">手機與雲端</a>
+        <a href="./help-faq.html">問題排解與安全</a>
       </nav>
-
-      <p id="micropython-notice" class="tip"><strong>本網站採用 MicroPython，用 Python 語法寫程式，不是 Arduino C++。</strong>開發板要先安裝 MicroPython 韌體，安裝時會清除板子上原有的 Arduino 程式。Arduino 程式不能直接執行，貼上時畫面會出現提示，可以複製提示詞請 Gemini 改寫。兩者的差異請看 <a href="#languages">MicroPython 與 Arduino 的差異</a>。</p>
-
+      <p id="micropython-notice" class="tip"><strong>本網站採用 MicroPython，用 Python 語法寫程式，不是 Arduino C++。</strong>開發板要先安裝 MicroPython 韌體，安裝時會清除板子上原有的 Arduino 程式。Arduino 程式不能直接執行，貼上時畫面會出現提示，可以複製提示詞請 Gemini 改寫。兩者的差異請看 <a href="./help-start.html#languages">MicroPython 與 Arduino 的差異</a>。</p>
       <p id="feedback-notice" class="tip">所有範例都已在 ESP32 開發板上實測過，網站也會持續更新。如果發現錯誤，或有希望新增的功能，歡迎<a href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=begin0808@gmail.com" target="_blank" rel="noopener">寫信告訴我</a>。</p>
-
-      <section id="start">
-        <h2>開始使用</h2>
-        <p>這個網站不用安裝 Arduino IDE，也不需要設定開發環境。請用<strong>電腦版 Chrome 或 Edge</strong> 開啟，用能傳輸資料的 USB 線接上開發板。</p>
-        <ol>
-          <li><strong>安裝驅動程式：</strong>電腦找不到開發板時才需要；USB 直接接 S2、S3、C3 晶片的板子通常不用裝。板子上的 USB 晶片是 CP2102 就裝 <a href="https://www.silabs.com/software-and-tools/usb-to-uart-bridge-vcp-drivers?tab=downloads" target="_blank" rel="noopener">CP210x 驅動</a>，是 CH340 就裝 <a href="https://www.wch-ic.com/downloads/CH341SER_EXE.html" target="_blank" rel="noopener">CH340 驅動</a>。編輯器右上角的「設定與說明」也有這些連結，以及腳位圖、語音控制頁、手機儀表板頁、語言、風格和字體設定。</li>
-          <li><strong>連接開發板：</strong>先關閉 Arduino IDE 這類會佔用序列埠的程式，再按「連接開發板」，選擇跳出的序列埠。</li>
-          <li><strong>安裝韌體：</strong>第一次使用，或燒錄過 Arduino 程式時才需要。按「安裝韌體」後，<strong>板子上原有的程式和檔案都會被清除</strong>，安裝期間不要拔 USB 線。USB 直接接晶片的板子，裝完要按一下 RST 鍵並重新連接。</li>
-          <li><strong>準備程式：</strong>選內建範例，或按「Gemini 提示詞」→「寫新程式」，填入接線和功能後貼給 Gemini，再把產生的 MicroPython 程式貼回編輯器。</li>
-          <li><strong>上傳並執行：</strong>按「上傳並執行」，程式會存成板子上的 <code>main.py</code>，之後通電就會自動執行。監控窗第一行會顯示程式大小和上傳花了幾秒，接著是程式的輸出和錯誤訊息。</li>
-          <li><strong>只是試試看：</strong>按「執行（不存檔）」或 <kbd>F5</kbd>，程式會直接在板子的記憶體裡執行，不會存成 <code>main.py</code>，見<a href="#run">執行（不存檔）</a>。</li>
-        </ol>
-
-        <h3>內建範例</h3>
-        <p>下表是 ESP32（包含 ESP32-S、ESP-WROOM-32 模組）的預設接線。在編輯器的「晶片」選單選擇 S2、S3 或 C3 後再選範例，程式和開頭的接線說明會自動換成該晶片適用的腳位。連接開發板時，網站也會自動切換晶片選單。</p>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th scope="col">範例</th><th scope="col">功能</th><th scope="col">預設接線</th><th scope="col">需要 Wi-Fi</th></tr></thead>
-            <tbody>
-              <tr><td>LED 閃爍</td><td>LED 每秒切換一次</td><td>板載 LED（GPIO 2）</td><td>不需要</td></tr>
-              <tr><td>按鈕開關 LED</td><td>每按一次切換亮暗</td><td>按鈕 GPIO 19、LED GPIO 18</td><td>不需要</td></tr>
-              <tr><td>呼吸燈（PWM）</td><td>LED 慢慢變亮再變暗</td><td>LED GPIO 18</td><td>不需要</td></tr>
-              <tr><td>可變電阻調亮度</td><td>轉旋鈕調整 LED 亮度</td><td>旋鈕 GPIO 34、LED GPIO 18</td><td>不需要</td></tr>
-              <tr><td>無源蜂鳴器播放小星星</td><td>用不同頻率播放旋律</td><td>蜂鳴器 GPIO 25</td><td>不需要</td></tr>
-              <tr><td>SG90 伺服馬達來回轉動</td><td>在 0 到 180 度之間掃動</td><td>訊號 GPIO 13，外部 5V 供電</td><td>不需要</td></tr>
-              <tr><td>光敏電阻自動夜燈</td><td>環境變暗時 LED 自動點亮</td><td>光敏電阻 GPIO 34、LED GPIO 18</td><td>不需要</td></tr>
-              <tr><td>人體紅外線警報（HC-SR501）</td><td>偵測到人時蜂鳴器響、LED 亮</td><td>OUT GPIO 27、蜂鳴器 GPIO 25、LED GPIO 18</td><td>不需要</td></tr>
-              <tr><td>超音波測距（HC-SR04）</td><td>在監控窗顯示距離</td><td>Trig GPIO 26，Echo 分壓後接 GPIO 33</td><td>不需要</td></tr>
-              <tr><td>DHT11 溫濕度（監控窗）</td><td>每 2 秒顯示溫度和濕度</td><td>DATA GPIO 4</td><td>不需要</td></tr>
-              <tr><td>DS18B20 溫度計</td><td>每 2 秒顯示溫度</td><td>DATA GPIO 4</td><td>不需要</td></tr>
-              <tr><td>WS2812 全彩 LED 彩虹</td><td>彩虹顏色沿燈條流動</td><td>DIN GPIO 16</td><td>不需要</td></tr>
-              <tr><td>SSD1306 OLED 顯示器</td><td>顯示文字和開機秒數</td><td>SDA GPIO 21、SCL GPIO 22</td><td>不需要</td></tr>
-              <tr><td>I2C LCD 1602 顯示器</td><td>顯示文字和開機秒數</td><td>SDA GPIO 21、SCL GPIO 22</td><td>不需要</td></tr>
-              <tr><td>MAX7219 點矩陣</td><td>輪流顯示笑臉和愛心</td><td>DIN GPIO 23、CLK GPIO 18、CS GPIO 5</td><td>不需要</td></tr>
-              <tr><td>手機控制 LED（同一個 Wi-Fi）</td><td>手機網頁按鈕或文字指令控制 LED</td><td>外接 LED 接 GPIO 18</td><td>手機和板子要同一個 Wi-Fi</td></tr>
-              <tr><td>語音控制 LED（MQTT）</td><td>用語音控制頁說「開燈」、「關燈」、「閃爍」</td><td>外接 LED 接 GPIO 18</td><td>板子和手機都要能上網</td></tr>
-              <tr><td>DHT11 溫濕度警報</td><td>手機網頁每 2 秒更新，濕度超過 50% 發出警報</td><td>DHT11 DATA 接 GPIO 4</td><td>手機和板子要同一個 Wi-Fi</td></tr>
-              <tr><td>Telegram 機器人控制 LED</td><td>傳 /on、/off、/status 控制 LED，按按鈕時通知手機</td><td>LED GPIO 18、按鈕 GPIO 19</td><td>板子要能上網</td></tr>
-              <tr><td>DHT11 資料存到 Google 試算表</td><td>每分鐘把溫度和濕度新增成一列，步驟見 <a href="#google-sheets">Google 試算表</a></td><td>DATA GPIO 4</td><td>板子要能上網</td></tr>
-              <tr><td>I2C 掃描（找出裝置位址）</td><td>列出接在 I2C 上的裝置位址和可能的型號，OLED、LCD 沒反應時先用它檢查</td><td>SDA GPIO 21、SCL GPIO 22</td><td>不需要</td></tr>
-              <tr><td>按鈕中斷（IRQ）</td><td>按鈕一按下就記錄，主程式每 2 秒才看一次也不會漏掉</td><td>同範例 2：按鈕 GPIO 19、LED GPIO 18</td><td>不需要</td></tr>
-              <tr><td>計時器讓 LED 自己閃（Timer）</td><td>計時器讓 LED 每 0.5 秒閃一次，主程式同時計數</td><td>LED GPIO 18</td><td>不需要</td></tr>
-              <tr><td>深度睡眠定時醒來</td><td>醒來閃一下 LED、記下第幾次醒來，再睡 10 秒</td><td>板載 LED（GPIO 2）</td><td>不需要</td></tr>
-              <tr><td>ESP-NOW 多塊板子互傳</td><td>按任一塊板子的按鈕，所有板子的 LED 一起切換</td><td>每塊板子都同範例 2</td><td>不需要，板子之間直接傳</td></tr>
-              <tr><td>asyncio 同時做三件事</td><td>LED 閃爍、監看按鈕、每 2 秒報告執行時間同時進行</td><td>同範例 2：按鈕 GPIO 19、LED GPIO 18</td><td>不需要</td></tr>
-              <tr><td>儀表板入門：開關 LED、看按鈕</td><td>手機儀表板的開關控制 LED，指示燈顯示按鈕有沒有按下，數字顯示按了幾下</td><td>同範例 2：按鈕 GPIO 19、LED GPIO 18</td><td>板子和手機都要能上網</td></tr>
-              <tr><td>DHT11 溫濕度儀表板</td><td>手機上看溫度和濕度儀表、標有時間的濕度變化圖，溫度超過 30°C 時狀態文字會提醒</td><td>DATA GPIO 4</td><td>板子和手機都要能上網</td></tr>
-              <tr><td>旋鈕和手機滑桿一起調 LED 亮度</td><td>轉旋鈕或拉手機滑桿都能調 LED 亮度，轉旋鈕時手機的滑桿也會跟著動；儀表顯示旋鈕位置，「全亮」按鈕讓滑桿跳到 100%</td><td>旋鈕 GPIO 34、LED GPIO 18</td><td>板子和手機都要能上網</td></tr>
-              <tr><td>手機選顏色點亮全彩 LED</td><td>手機色盤選顏色，WS2812 燈條跟著變色，滑桿調亮度</td><td>DIN GPIO 16</td><td>板子和手機都要能上網</td></tr>
-              <tr><td>手機方向鍵遙控車</td><td>按住手機的方向鍵，車子前進、後退或轉彎，放開就停；手機斷線時自動停車</td><td>L298N 或 L9110S：IN1–IN4 接 GPIO 18、19、21、22</td><td>板子和手機都要能上網</td></tr>
-              <tr><td>選單切換 LED 模式</td><td>手機選單切換關、亮、閃爍、呼吸燈，儀表顯示目前亮度</td><td>LED GPIO 18</td><td>板子和手機都要能上網</td></tr>
-              <tr><td>手機傳文字到 OLED</td><td>在手機輸入英文，OLED 顯示出來；「清除畫面」按鈕清空</td><td>SDA GPIO 21、SCL GPIO 22</td><td>板子和手機都要能上網</td></tr>
-              <tr><td>按鈕門鈴通知手機</td><td>按下板子的按鈕，手機跳出提醒並發出聲音；手機按「回應」，LED 閃 3 秒</td><td>同範例 2：按鈕 GPIO 19、LED GPIO 18</td><td>板子和手機都要能上網</td></tr>
-            </tbody>
-          </table>
+      <section id="guide">
+        <h2>說明目錄</h2>
+        <p>第一次使用，請從「快速上手」開始，接著照「學習路徑」做範例。遇到問題時，先看「問題排解與安全」。</p>
+        <div class="help-cards">
+          <div class="help-card">
+            <h3><a href="./help-start.html">快速上手</a></h3>
+            <p>第一次使用：連接開發板、安裝韌體、上傳和執行程式。</p>
+            <ul>
+              <li><a href="./help-start.html#start">開始使用</a></li>
+              <li><a href="./help-start.html#run">執行與上傳</a></li>
+              <li><a href="./help-start.html#browsers">支援的瀏覽器</a></li>
+              <li><a href="./help-start.html#languages">MicroPython 與 Arduino</a></li>
+            </ul>
+          </div>
+          <div class="help-card">
+            <h3><a href="./help-path.html">學習路徑</a></h3>
+            <p>全部範例分成初階、中階、進階三級，每一步都有「動手改改看」。</p>
+            <ul>
+              <li><a href="./help-path.html#path-beginner">初階</a></li>
+              <li><a href="./help-path.html#path-intermediate">中階</a></li>
+              <li><a href="./help-path.html#path-advanced">進階</a></li>
+            </ul>
+          </div>
+          <div class="help-card">
+            <h3><a href="./help-challenge.html">挑戰專題</a></h3>
+            <p>把好幾個範例組合成完整的作品，適合分組專題或期末作品。</p>
+            <ul>
+              <li><a href="./help-challenge.html#challenge-mood-light">情境燈控制器</a></li>
+              <li><a href="./help-challenge.html#challenge-classroom">教室環境監測站</a></li>
+              <li><a href="./help-challenge.html#challenge-car">自動避障遙控車</a></li>
+            </ul>
+          </div>
+          <div class="help-card">
+            <h3><a href="./help-tools.html">編輯器功能</a></h3>
+            <p>請 Gemini 寫程式、用 REPL 下指令、把數值畫成圖表、管理板上檔案。</p>
+            <ul>
+              <li><a href="./help-tools.html#gemini">Gemini 提示詞</a></li>
+              <li><a href="./help-tools.html#repl">REPL</a></li>
+              <li><a href="./help-tools.html#plot">圖表與 CSV</a></li>
+              <li><a href="./help-tools.html#files">板上檔案</a></li>
+            </ul>
+          </div>
+          <div class="help-card">
+            <h3><a href="./help-hardware.html">硬體與接線</a></h3>
+            <p>選開發板、安全接線、認識元件，查每個範例的接線。</p>
+            <ul>
+              <li><a href="./help-hardware.html#boards">支援的開發板</a></li>
+              <li><a href="./help-hardware.html#wiring">接線注意事項</a></li>
+              <li><a href="./help-hardware.html#parts">電子元件</a></li>
+              <li><a href="./help-hardware.html#example-wiring">範例接線一覽</a></li>
+            </ul>
+          </div>
+          <div class="help-card">
+            <h3><a href="./help-iot.html">手機與雲端</a></h3>
+            <p>用手機、語音和 Telegram 控制板子，做手機儀表板，把資料存到 Google 試算表。</p>
+            <ul>
+              <li><a href="./help-iot.html#voice">語音控制</a></li>
+              <li><a href="./help-iot.html#telegram">Telegram</a></li>
+              <li><a href="./help-iot.html#dashboard">手機儀表板</a></li>
+              <li><a href="./help-iot.html#google-sheets">Google 試算表</a></li>
+            </ul>
+          </div>
+          <div class="help-card">
+            <h3><a href="./help-faq.html">問題排解與安全</a></h3>
+            <p>連不上、裝不了韌體、程式出錯時看這裡，也說明隱私和共用電腦的注意事項。</p>
+            <ul>
+              <li><a href="./help-faq.html#faq-connect">安裝與連線</a></li>
+              <li><a href="./help-faq.html#faq-run">執行程式</a></li>
+              <li><a href="./help-faq.html#faq-network">網路與手機</a></li>
+              <li><a href="./help-faq.html#privacy">隱私與安全</a></li>
+            </ul>
+          </div>
         </div>
-        <p class="tip"><strong>進階技巧範例（21–26）：</strong>22、23、25、26 都沿用範例 2 的接線，接好一次就能全部試。中斷和計時器的範例按「停止」時會關掉中斷和計時器，不然程式停了 LED 還會繼續動。ESP-NOW 要兩塊以上的板子，每塊都上傳同一份程式。深度睡眠請用「上傳並執行」，板子醒來後有 5 秒可以按「停止」；USB 直接接晶片的板子（S2、S3、C3）睡著時會斷線，醒來後要重新連接。</p>
-      </section>
-
-      <section id="path">
-        <h2>學習路徑</h2>
-        <p>38 個範例分成初階、中階、進階三級，照順序做就能一步一步學會。<strong>點範例名稱會把它載入編輯器</strong>，載入前會先問你要不要取代目前的程式。每一步都有「動手改改看」，沒有標準答案，改壞了重新載入範例就好。看不懂程式時，可以用 <a href="#gemini">Gemini 提示詞</a>的「解說程式」請 Gemini 說明。</p>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th scope="col">等級</th><th scope="col">範例</th><th scope="col">建議時數</th><th scope="col">學完能做到</th></tr></thead>
-            <tbody>
-              <tr><td><a href="#path-beginner">初階</a></td><td>1–5</td><td>約 4 節</td><td>上傳和執行程式、看懂監控窗和錯誤提示，控制 LED 和蜂鳴器</td></tr>
-              <tr><td><a href="#path-intermediate">中階</a></td><td>6–15、21</td><td>約 8 節</td><td>讀取各種感測器、用圖表觀察數值，把結果顯示在螢幕和燈光上</td></tr>
-              <tr><td><a href="#path-advanced">進階</a></td><td>16–20、22–38</td><td>約 12 節（30–38 依器材和時間選做）</td><td>讓程式同時做好幾件事，連上手機和雲端服務，用手機儀表板看數值、控制板子，做出省電或多塊板子合作的作品</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <p class="tip"><strong>給老師：</strong>建議時數以一節 50 分鐘計算，包含接線和動手改改看，不包含學生自己的專題。第一節課還要安裝驅動程式和韌體，可以先在課前幫板子裝好韌體。中階的感測器很多，器材不夠時可以分組，每組做不同的感測器再互相分享。</p>
-
-        <h3 id="path-beginner">初階：讓 LED 和蜂鳴器動起來</h3>
-        <ul>
-          <li><strong>學完能做到：</strong>連接開發板、上傳和執行程式，看懂監控窗的輸出和錯誤提示；用數位輸出入、PWM 和類比讀值控制 LED 和蜂鳴器。</li>
-          <li><strong>建議時數：</strong>約 4 節。</li>
-          <li><strong>材料：</strong>ESP32 開發板和能傳資料的 USB 線、麵包板、杜邦線、LED、220Ω 電阻、按鈕、10kΩ 可變電阻、無源蜂鳴器。</li>
-          <li><strong>用到的網站功能：</strong><a href="#start">上傳並執行</a>、<a href="#run">執行（不存檔）</a>、監控窗和錯誤提示、<a href="#repl">REPL 即時指令</a>。</li>
-        </ul>
-        <ul class="path-steps">
-          <li id="path-blink"><a class="example-link" href="./index.html?example=blink">1. LED 閃爍</a>：用 <code>Pin.OUT</code> 控制腳位、<code>while True</code> 一直重複、<code>time.sleep</code> 暫停。順便比較「執行（不存檔）」和「上傳並執行」的差別。<span class="path-try"><strong>動手改改看：</strong>把間隔改成 0.2 秒；再試著做出「亮 0.2 秒、暗 1 秒」的節奏。</span></li>
-          <li id="path-button_led"><a class="example-link" href="./index.html?example=button_led">2. 按鈕開關 LED</a>：用 <code>Pin.IN</code> 和 <code>Pin.PULL_UP</code> 讀按鈕，比較前後兩次的狀態，找出「剛按下去」的那一刻。<span class="path-try"><strong>動手改改看：</strong>改成「按住才亮，放開就暗」。</span></li>
-          <li id="path-breathing_led"><a class="example-link" href="./index.html?example=breathing_led">3. 呼吸燈（PWM）</a>：用 PWM 的 <code>duty_u16</code> 調整亮度，用 <code>for</code> 和 <code>range</code> 一步一步改變數值。<span class="path-try"><strong>動手改改看：</strong>讓呼吸慢一倍；再改成最亮只到 50%。</span></li>
-          <li id="path-knob_led"><a class="example-link" href="./index.html?example=knob_led">4. 可變電阻調亮度</a>：用 <code>ADC</code> 讀類比電壓，得到 0 到 65535 的數字，再交給 PWM。<span class="path-try"><strong>動手改改看：</strong>反過來，旋鈕轉越多，LED 越暗。</span></li>
-          <li id="path-buzzer_song"><a class="example-link" href="./index.html?example=buzzer_song">5. 無源蜂鳴器播放小星星</a>：頻率決定音高，用字典存音名、用串列存旋律。<span class="path-try"><strong>動手改改看：</strong>把 <code>BEAT_MS</code> 改小讓歌變快；再把 <code>SONG</code> 換成「兩隻老虎」（C D E C、C D E C、E F G、E F G）。</span></li>
-        </ul>
-
-        <h3 id="path-intermediate">中階：感測器和顯示器</h3>
-        <ul>
-          <li><strong>學完能做到：</strong>讀取光線、人體、距離、溫濕度等感測器，用圖表觀察數值；把結果顯示在 OLED、LCD 和燈光上；接線有問題時會用 I2C 掃描檢查。</li>
-          <li><strong>建議時數：</strong>約 8 節。</li>
-          <li><strong>材料：</strong>SG90 伺服馬達和外部 5V 電源、光敏電阻和 10kΩ 電阻、HC-SR501、有源蜂鳴器模組、HC-SR04 和分壓用的 1kΩ、2kΩ 電阻、DHT11、DS18B20（裸元件要加 4.7kΩ 電阻）、SSD1306 OLED 或 I2C LCD 1602、WS2812 燈條、MAX7219 點矩陣。</li>
-          <li><strong>用到的網站功能：</strong><a href="#plot">圖表與 CSV</a>、<a href="#files">板上檔案</a>、<a href="#gemini">Gemini 提示詞</a>的「寫新程式」、<a href="#wiring">接線注意事項</a>。</li>
-        </ul>
-        <ul class="path-steps">
-          <li id="path-servo_sweep"><a class="example-link" href="./index.html?example=servo_sweep">6. SG90 伺服馬達來回轉動</a>：用 50 Hz 脈衝的寬度控制角度，自己寫函式 <code>set_angle</code>。馬達要用外部 5V 供電。<span class="path-try"><strong>動手改改看：</strong>改成只在 45 度到 135 度之間擺動。</span></li>
-          <li id="path-light_sensor"><a class="example-link" href="./index.html?example=light_sensor">7. 光敏電阻自動夜燈</a>：讀感測器，再用門檻決定要不要開燈。<span class="path-try"><strong>動手改改看：</strong>打開圖表看亮度變化，找出適合你教室的 <code>DARK_LEVEL</code>。</span></li>
-          <li id="path-pir_alarm"><a class="example-link" href="./index.html?example=pir_alarm">8. 人體紅外線警報（HC-SR501）</a>：狀態改變時才印出，監控窗才不會洗版。<span class="path-try"><strong>動手改改看：</strong>偵測到人時，讓蜂鳴器「嗶、嗶」地響，不要一直響。</span></li>
-          <li id="path-ultrasonic"><a class="example-link" href="./index.html?example=ultrasonic">9. 超音波測距（HC-SR04）</a>：量回音的時間來換算距離；5V 的訊號要先分壓才能接 ESP32。<span class="path-try"><strong>動手改改看：</strong>距離小於 10 公分時印出「太近了！」，再加上 LED 或蜂鳴器提醒。</span></li>
-          <li id="path-dht11_serial"><a class="example-link" href="./index.html?example=dht11_serial">10. DHT11 溫濕度（監控窗）</a>：匯入感測器模組，用 <code>try</code> 和 <code>except</code> 處理讀取失敗。<span class="path-try"><strong>動手改改看：</strong>打開圖表，對感測器呵一口氣，看濕度怎麼變化；再匯出 CSV，用試算表畫圖。</span></li>
-          <li id="path-ds18b20"><a class="example-link" href="./index.html?example=ds18b20">11. DS18B20 溫度計</a>：單線（1-Wire）通訊，一條線可以串好幾顆感測器。<span class="path-try"><strong>動手改改看：</strong>把溫度換算成華氏，和攝氏一起印出來。</span></li>
-          <li id="path-i2c_scan"><a class="example-link" href="./index.html?example=i2c_scan">21. I2C 掃描（找出裝置位址）</a>：I2C 用位址區分裝置；接顯示器前，先確認板子找得到它。<span class="path-try"><strong>動手改改看：</strong>把 OLED 和 LCD 接在同一組 SDA、SCL 上，看看能不能同時掃到兩個位址。</span></li>
-          <li id="path-oled_ssd1306"><a class="example-link" href="./index.html?example=oled_ssd1306">13. SSD1306 OLED 顯示器</a>：先在記憶體裡寫字、畫線，呼叫 <code>show()</code> 後畫面才會更新。<span class="path-try"><strong>動手改改看：</strong>多顯示一行你的名字，再用 <code>oled.rect()</code> 畫一個外框。</span></li>
-          <li id="path-lcd1602_i2c"><a class="example-link" href="./index.html?example=lcd1602_i2c">14. I2C LCD 1602 顯示器</a>：用 <code>move_to(欄, 列)</code> 決定文字的位置。<span class="path-try"><strong>動手改改看：</strong>把秒數改成「分:秒」的格式，例如 <code>01:05</code>。</span></li>
-          <li id="path-ws2812_rainbow"><a class="example-link" href="./index.html?example=ws2812_rainbow">12. WS2812 全彩 LED 彩虹</a>：用（紅, 綠, 藍）三個數字表示顏色，呼叫 <code>write()</code> 後燈條才會更新。<span class="path-try"><strong>動手改改看：</strong>讓整條燈一起輪流顯示紅、綠、藍。</span></li>
-          <li id="path-max7219_matrix"><a class="example-link" href="./index.html?example=max7219_matrix">15. MAX7219 點矩陣</a>：用 0 和 1 組成的二進位數字畫 8×8 的圖案。<span class="path-try"><strong>動手改改看：</strong>自己設計一個圖案，例如箭頭，加進輪播。</span></li>
-        </ul>
-
-        <h3 id="path-advanced">進階：同時做好幾件事，連上網路</h3>
-        <ul>
-          <li><strong>學完能做到：</strong>用中斷、計時器和 asyncio 讓程式同時處理好幾件事；讓板子和手機、雲端服務互動，用手機儀表板看數值、控制板子；做出省電或多塊板子合作的作品。</li>
-          <li><strong>建議時數：</strong>約 12 節。</li>
-          <li><strong>材料：</strong>範例 2 的按鈕和 LED、DHT11、10kΩ 可變電阻、2.4GHz 的 Wi-Fi、手機；選做的範例 30–38 另外要 WS2812 燈條、SSD1306 OLED、馬達驅動板和小車；Telegram 範例要 Telegram 帳號，Google 試算表範例要 Google 帳號；ESP-NOW 要兩塊以上的板子。</li>
-          <li><strong>用到的網站功能：</strong><a href="#gemini">Gemini 提示詞</a>的「解說程式」、<a href="#voice">手機與語音控制</a>、<a href="#dashboard">手機儀表板</a>、<a href="#google-sheets">Google 試算表</a>、<a href="#privacy">隱私與安全</a>（程式裡有 Wi-Fi 密碼時要注意）。</li>
-        </ul>
-        <ul class="path-steps">
-          <li id="path-button_irq"><a class="example-link" href="./index.html?example=button_irq">22. 按鈕中斷（IRQ）</a>：按鈕一按下就執行中斷函式，函式裡只做記號；用 <code>ticks_diff</code> 去除彈跳。<span class="path-try"><strong>動手改改看：</strong>把主程式的等待改成 5 秒，確認快速按好幾下也一下都沒漏。</span></li>
-          <li id="path-timer_blink"><a class="example-link" href="./index.html?example=timer_blink">23. 計時器讓 LED 自己閃（Timer）</a>：計時器定時呼叫函式，主程式同時做別的事；用 <code>finally</code> 收尾。<span class="path-try"><strong>動手改改看：</strong>再加一個計時器，每 3 秒在監控窗印一次訊息。</span></li>
-          <li id="path-asyncio_tasks"><a class="example-link" href="./index.html?example=asyncio_tasks">26. asyncio 同時做三件事</a>：asyncio 是「非同步輸入輸出」，等待時先去做別的事。用 <code>async def</code> 和 <code>await</code> 讓好幾個工作輪流執行。<span class="path-try"><strong>動手改改看：</strong>加第四個工作，每 5 秒用 <code>gc.mem_free()</code> 印出剩下多少記憶體。</span></li>
-          <li id="path-web_led"><a class="example-link" href="./index.html?example=web_led">16. 手機控制 LED（同一個 Wi-Fi）</a>：連上 Wi-Fi，讓板子當網頁伺服器，用 asyncio 同時處理網頁和閃爍。<span class="path-try"><strong>動手改改看：</strong>在網頁上多加一個「快閃」按鈕。</span></li>
-          <li id="path-dht11_alarm"><a class="example-link" href="./index.html?example=dht11_alarm">18. DHT11 溫濕度警報</a>：手機網頁每 2 秒向板子要一次 JSON 資料。<span class="path-try"><strong>動手改改看：</strong>把警報門檻從 50% 改成適合你教室的數字。</span></li>
-          <li id="path-mqtt_led"><a class="example-link" href="./index.html?example=mqtt_led">17. 語音控制 LED（MQTT）</a>：透過網路上的 MQTT 伺服器，在不同的 Wi-Fi 之間收發訊息。<span class="path-try"><strong>動手改改看：</strong>加上一顆按鈕，按下時切換 LED，並回報狀態，讓語音控制頁跟著更新。</span></li>
-          <li id="path-dash_intro"><a class="example-link" href="./index.html?example=dash_intro">27. 儀表板入門：開關 LED、看按鈕</a>：用 <code>dash</code> 建立手機上的元件，<code>.set()</code> 把值送到手機，<code>.value</code> 讀手機上的開關。<span class="path-try"><strong>動手改改看：</strong>加一個 <code>board.text("訊息")</code>，按下按鈕時顯示「有人按了！」。</span></li>
-          <li id="path-dash_dht11"><a class="example-link" href="./index.html?example=dash_dht11">28. DHT11 溫濕度儀表板</a>：同一個數值可以同時給儀表和折線圖，儀表可以用 <code>color=</code> 選顏色；用時間差每 3 秒讀一次感測器，<code>board.check()</code> 照樣一直執行。對感測器哈氣，濕度變化最明顯。<span class="path-try"><strong>動手改改看：</strong>加一個 <code>board.led("太熱", color="red")</code>，溫度超過 <code>HOT</code> 時亮紅燈。</span></li>
-          <li id="path-dash_knob"><a class="example-link" href="./index.html?example=dash_knob">29. 旋鈕和手機滑桿一起調 LED 亮度</a>：手機的滑桿和按鈕控制板子；轉旋鈕時，板子用 <code>.set()</code> 把手機的滑桿移到同樣的位置，兩邊誰最後動就聽誰的。<span class="path-try"><strong>動手改改看：</strong>加一個「關燈」按鈕，按下時把滑桿設成 0。</span></li>
-          <li id="path-dash_color"><a class="example-link" href="./index.html?example=dash_color">30. 手機選顏色點亮全彩 LED</a>：色盤的值是（紅, 綠, 藍）三個 0～255 的數字，和範例 12 的燈條用同一種寫法。<span class="path-try"><strong>動手改改看：</strong>加一個「彩虹」開關，打開時燈條自己變換顏色。</span></li>
-          <li id="path-dash_car"><a class="example-link" href="./index.html?example=dash_car">31. 手機方向鍵遙控車</a>：用兩支 PWM 腳控制一顆馬達的方向和速度；方向鍵要按住才會動，手機斷線時板子會自己停車。<span class="path-try"><strong>動手改改看：</strong>轉彎時改成一邊輪子慢、一邊快，轉得比較平順。</span></li>
-          <li id="path-dash_mode"><a class="example-link" href="./index.html?example=dash_mode">32. 選單切換 LED 模式</a>：用 <code>time.ticks_ms()</code> 算出閃爍和呼吸燈的亮度，不用 <code>time.sleep</code> 等待。<span class="path-try"><strong>動手改改看：</strong>在選單加一個「SOS」模式，閃出三短三長三短。</span></li>
-          <li id="path-dash_oled"><a class="example-link" href="./index.html?example=dash_oled">33. 手機傳文字到 OLED</a>：<code>.changed()</code> 有新文字時才更新畫面，長文字切成一行 16 個字。<span class="path-try"><strong>動手改改看：</strong>在 OLED 最下面一行顯示收到了幾則訊息。</span></li>
-          <li id="path-dash_doorbell"><a class="example-link" href="./index.html?example=dash_doorbell">34. 按鈕門鈴通知手機</a>：提醒只在發生時送出，不會保留；手機和板子可以互相通知。<span class="path-try"><strong>動手改改看：</strong>改用範例 8 的人體紅外線感測器，有人經過就通知手機。</span></li>
-          <li id="path-dash_threshold"><a class="example-link" href="./index.html?example=dash_threshold">35. 手機調整濕度門檻</a>：<code>board.number()</code> 讓手機調整門檻，<code>.changed()</code> 知道手機改了；每一圈都和最新的門檻比較，不用改程式就能做實驗。<span class="path-try"><strong>動手改改看：</strong>再加一個溫度門檻，兩個都超過才亮燈。</span></li>
-          <li id="path-dash_log"><a class="example-link" href="./index.html?example=dash_log">36. 溫濕度紀錄表</a>：<code>board.log()</code> 把每次的數值記成一列，時間由手機加上；記錄間隔也用數字設定調整。<span class="path-try"><strong>動手改改看：</strong>記錄 10 分鐘後下載 CSV，用試算表畫出濕度的折線圖。</span></li>
-          <li id="path-dash_level"><a class="example-link" href="./index.html?example=dash_level">37. 手機水平儀</a>：<code>board.tilt()</code> 讀手機的傾斜，<code>tilt.x</code>、<code>tilt.y</code> 是 -100～100；有變化才重畫 OLED，畫面才不會一直閃。<span class="path-try"><strong>動手改改看：</strong>水平時讓範例 2 的 LED 亮起來。</span></li>
-          <li id="path-dash_joycar"><a class="example-link" href="./index.html?example=dash_joycar">38. 手機搖桿遙控車</a>：<code>board.joystick()</code> 的前進和轉彎相加、相減，就是左右輪的速度；搖桿在中間附近不動，手指抖動也不會亂跑。<span class="path-try"><strong>動手改改看：</strong>把搖桿換成 <code>board.tilt()</code>，傾斜手機來開車。</span></li>
-          <li id="path-telegram_led"><a class="example-link" href="./index.html?example=telegram_led">19. Telegram 機器人控制 LED</a>：用 HTTPS 呼叫網路上的 API，按鈕用中斷做記號，網路工作留給主程式。<span class="path-try"><strong>動手改改看：</strong>加一個 <code>/blink</code> 指令，讓 LED 閃 5 下。</span></li>
-          <li id="path-sheets_dht11"><a class="example-link" href="./index.html?example=sheets_dht11">20. DHT11 資料存到 Google 試算表</a>：把資料放在網址參數裡，送給 Apps Script 寫進試算表。<span class="path-try"><strong>動手改改看：</strong>先把 <code>SEND_SECONDS</code> 改成 10 秒測試，再用收集到的資料在試算表畫一張折線圖。</span></li>
-          <li id="path-deep_sleep"><a class="example-link" href="./index.html?example=deep_sleep">24. 深度睡眠定時醒來</a>：睡著時幾乎不耗電，RTC 記憶體在睡眠時會保留資料，醒來就像重新開機。<span class="path-try"><strong>動手改改看：</strong>醒來時讀一次 DHT11 再去睡，做成省電的溫度記錄器。</span></li>
-          <li id="path-espnow_led"><a class="example-link" href="./index.html?example=espnow_led">25. ESP-NOW 多塊板子互傳</a>：板子之間直接傳訊息，不用經過 Wi-Fi 基地台。<span class="path-try"><strong>動手改改看：</strong>改成傳送「按了第幾次」，收到的板子在監控窗印出來。</span></li>
-        </ul>
-        <p>學完進階範例後，可以挑一個<a href="#challenge">挑戰專題</a>，把好幾個範例組合成完整的作品。</p>
-      </section>
-
-      <section id="challenge">
-        <h2>挑戰專題</h2>
-        <p>學完進階範例後，可以試著把好幾個範例組合成一個完整的作品。這裡只提供目標和提示，<strong>沒有現成的程式，也沒有標準答案</strong>，適合當分組專題或期末作品。★ 越多代表越難。</p>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>專題</th><th>難度</th><th>會用到的範例</th></tr></thead>
-            <tbody>
-              <tr><td><a href="#challenge-mood-light">情境燈控制器</a></td><td>★★</td><td>4、7、12、30、32</td></tr>
-              <tr><td><a href="#challenge-classroom">教室環境監測站</a></td><td>★★★</td><td>7、10、13、20、28、35</td></tr>
-              <tr><td><a href="#challenge-quiz">課堂搶答器</a></td><td>★★★</td><td>2、5、13、22、27、36</td></tr>
-              <tr><td><a href="#challenge-door">智慧門口通知</a></td><td>★★★</td><td>7、8、19、34、36</td></tr>
-              <tr><td><a href="#challenge-maze">傾斜迷宮遊戲</a></td><td>★★★</td><td>5、15、37</td></tr>
-              <tr><td><a href="#challenge-car">自動避障遙控車</a></td><td>★★★★</td><td>6、9、32、38</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <p class="tip"><strong>建議做法：</strong>先列出作品要有哪些功能，畫出接線圖，確認每個零件的腳位沒有重複。從最接近的範例開始改，一次只加一個功能，加完就上傳測試，成功了再加下一個。卡住時，可以用 <a href="#gemini">Gemini 提示詞</a>的「寫手機儀表板程式」或「解說程式」幫忙。</p>
-
-        <h3 id="challenge-mood-light">情境燈控制器 ★★</h3>
-        <ul>
-          <li><strong>目標：</strong>WS2812 燈條依環境亮度自動調整亮度；手機可以選模式（恆亮、呼吸、彩虹）和顏色，旋鈕可以微調亮度。</li>
-          <li><strong>會用到的範例：</strong><a href="#path-knob_led">4</a>、<a href="#path-light_sensor">7</a>、<a href="#path-ws2812_rainbow">12</a>、<a href="#path-dash_color">30</a>、<a href="#path-dash_mode">32</a>。</li>
-          <li><strong>材料：</strong>WS2812 燈條、光敏電阻和 10kΩ 電阻、10kΩ 可變電阻。</li>
-          <li><strong>提示：</strong>範例 4 的旋鈕和範例 7 的光敏電阻都接 GPIO 34，要把其中一個改接 GPIO 35。開了 Wi-Fi 之後，傳統 ESP32 只有 GPIO 32–39 能讀類比數值。呼吸和彩虹的變化用 <code>time.ticks_ms()</code> 算出來，像範例 32 一樣不用 <code>time.sleep</code> 等待，手機的操作才不會卡住。</li>
-          <li><strong>延伸挑戰：</strong>加一個「睡眠模式」，打開後燈光在 10 分鐘內慢慢變暗，最後自動關燈。</li>
-        </ul>
-
-        <h3 id="challenge-classroom">教室環境監測站 ★★★</h3>
-        <ul>
-          <li><strong>目標：</strong>量教室的溫度、濕度和亮度，OLED 和手機儀表板都看得到；每 10 分鐘把資料存進 Google 試算表；太熱或太暗時，手機跳出提醒、蜂鳴器響。</li>
-          <li><strong>會用到的範例：</strong><a href="#path-light_sensor">7</a>、<a href="#path-dht11_serial">10</a>、<a href="#path-oled_ssd1306">13</a>、<a href="#path-sheets_dht11">20</a>、<a href="#path-dash_dht11">28</a>、<a href="#path-dash_threshold">35</a>。</li>
-          <li><strong>材料：</strong>DHT11、光敏電阻和 10kΩ 電阻、SSD1306 OLED、蜂鳴器。</li>
-          <li><strong>提示：</strong>手機每 2 秒更新、OLED 每秒更新、試算表每 10 分鐘一筆，三件事的間隔都不同，要像範例 28 一樣，用 <code>time.ticks_diff()</code> 記下每件事上次做的時間，不能用 <code>time.sleep</code> 等。連到 Google 要花幾秒，這幾秒手機儀表板不會更新，是正常的。門檻可以用範例 35 的 <code>board.number()</code> 從手機調整。</li>
-          <li><strong>延伸挑戰：</strong>記錄一整天，用試算表畫出教室的溫度和亮度變化，找出什麼時候最熱、什麼時候該開燈。</li>
-        </ul>
-
-        <h3 id="challenge-quiz">課堂搶答器 ★★★</h3>
-        <ul>
-          <li><strong>目標：</strong>四組各有一顆按鈕。老師在手機按「開始」後，最先按下的那組 LED 亮起、蜂鳴器響、OLED 顯示組別；按「開始」之前就按的組別算犯規。</li>
-          <li><strong>會用到的範例：</strong><a href="#path-button_led">2</a>、<a href="#path-buzzer_song">5</a>、<a href="#path-oled_ssd1306">13</a>、<a href="#path-button_irq">22</a>、<a href="#path-dash_intro">27</a>、<a href="#path-dash_log">36</a>。</li>
-          <li><strong>材料：</strong>4 顆按鈕、4 顆 LED 和 220Ω 電阻、SSD1306 OLED、無源蜂鳴器。</li>
-          <li><strong>提示：</strong>要分出誰先按，請用範例 22 的中斷。中斷函式裡只記下組別和 <code>time.ticks_us()</code>，判斷和顯示留給主程式。每顆按鈕各接一支 GPIO，另一腳接 GND；GPIO 34–39 沒有內部上拉，不能直接接按鈕，GPIO 21、22 也要留給 OLED。</li>
-          <li><strong>延伸挑戰：</strong>用 <code>board.log()</code> 記下每一題是哪一組搶到、反應時間幾毫秒，最後下載 CSV，算出每組的平均反應時間。</li>
-        </ul>
-
-        <h3 id="challenge-door">智慧門口通知 ★★★</h3>
-        <ul>
-          <li><strong>目標：</strong>有人靠近或按門鈴時，手機跳出提醒、Telegram 也收到訊息，並在紀錄表記下時間。白天不打擾，環境變暗後才啟動。</li>
-          <li><strong>會用到的範例：</strong><a href="#path-light_sensor">7</a>、<a href="#path-pir_alarm">8</a>、<a href="#path-telegram_led">19</a>、<a href="#path-dash_doorbell">34</a>、<a href="#path-dash_log">36</a>。</li>
-          <li><strong>材料：</strong>HC-SR501、按鈕、光敏電阻和 10kΩ 電阻、蜂鳴器。</li>
-          <li><strong>提示：</strong>有人一直站在門口時，HC-SR501 會一直觸發，所以通知一次之後，30 秒內不要再通知。先分別確定 Telegram 和手機儀表板都能動，再把兩個程式合在一起；送 Telegram 訊息要花幾秒，這段時間儀表板會暫停。合併後出現 <code>MemoryError</code> 時，可以在送 Telegram 前呼叫 <code>gc.collect()</code>。</li>
-          <li><strong>延伸挑戰：</strong>手機加一個「外出模式」開關，只有打開時才傳 Telegram，平常只在手機上提醒。</li>
-        </ul>
-
-        <h3 id="challenge-maze">傾斜迷宮遊戲 ★★★</h3>
-        <ul>
-          <li><strong>目標：</strong>傾斜手機，讓 MAX7219 點矩陣上的小球走迷宮，走到終點就過關；撞到牆時蜂鳴器響。</li>
-          <li><strong>會用到的範例：</strong><a href="#path-buzzer_song">5</a>、<a href="#path-max7219_matrix">15</a>、<a href="#path-dash_level">37</a>。</li>
-          <li><strong>材料：</strong>MAX7219 點矩陣、無源蜂鳴器、手機。</li>
-          <li><strong>提示：</strong>迷宮可以存成 8 個數字，一個數字代表一列，二進位的 1 是牆。<code>tilt.x</code> 或 <code>tilt.y</code> 超過 30 才移動一格，而且每 0.2 秒最多移動一次，不然球會一下子衝到底。手機傾斜要用 https 網址打開，用法見<a href="#dashboard">手機儀表板</a>。</li>
-          <li><strong>延伸挑戰：</strong>多做幾關，用 <code>board.log()</code> 記下每一關花了幾秒，比比看誰最快。</li>
-        </ul>
-
-        <h3 id="challenge-car">自動避障遙控車 ★★★★</h3>
-        <ul>
-          <li><strong>目標：</strong>平常用手機搖桿開車，前方小於 20 公分時自動煞車，不能再往前。切到「自動模式」時，車子自己前進，遇到障礙就用伺服馬達帶著超音波左右看，往比較空的方向轉。</li>
-          <li><strong>會用到的範例：</strong><a href="#path-servo_sweep">6</a>、<a href="#path-ultrasonic">9</a>、<a href="#path-dash_mode">32</a>、<a href="#path-dash_joycar">38</a>。</li>
-          <li><strong>材料：</strong>範例 38 的小車和 L9110S 馬達驅動板、HC-SR04 和分壓用的 1kΩ、2kΩ 電阻、SG90 伺服馬達。</li>
-          <li><strong>提示：</strong>馬達接 GPIO 18、19、21、22，超音波接 26、33，伺服馬達接 13，剛好不衝突；還想加 OLED 的話，它原本的 21、22 和馬達衝突，要改接其他腳位。馬達和伺服馬達都很耗電，要接電池盒，並和 ESP32 共地。每次量距離程式會停一下，每 0.1 秒量一次就夠了，<code>board.check()</code> 照樣一直執行。</li>
-          <li><strong>延伸挑戰：</strong>手機加一個儀表顯示前方距離；設計一條障礙賽道，比比看誰的自動模式最快走完。</li>
-        </ul>
-      </section>
-
-      <section id="run">
-        <h2>執行（不存檔）和上傳並執行</h2>
-        <p>「執行（不存檔）」會先停止目前的程式、清空上一次留下的變數，再把編輯器裡的程式送到板子的記憶體直接執行，<strong>不會存成 <code>main.py</code></strong>。連接開發板時，也可以按 <kbd>F5</kbd>；沒有連接時，<kbd>F5</kbd> 照樣是重新整理網頁。</p>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th scope="col"></th><th scope="col">執行（不存檔）</th><th scope="col">上傳並執行</th></tr></thead>
-            <tbody>
-              <tr><th scope="row">速度</th><td>比較快，不用寫檔也不用重新開機</td><td>稍慢</td></tr>
-              <tr><th scope="row">重新啟動或拔掉電源後</th><td>程式消失，板子回到原本的 <code>main.py</code></td><td>程式留在板子上，通電就自動執行</td></tr>
-              <tr><th scope="row">適合</th><td>試東西、改參數、找錯誤</td><td>完成的作品，或要離開電腦執行</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <p>程式寫壞了也不用擔心：按「重新啟動」或拔掉電源，板子就會執行原本的 <code>main.py</code>。試好之後，再按「上傳並執行」存到板子上。程式讓板子重新開機時（例如深度睡眠或 <code>machine.reset()</code>）也一樣，醒來後執行的是板子上的 <code>main.py</code>，監控窗會提示。</p>
-        <h3>程式結束後查看變數</h3>
-        <p>程式結束或按「停止」之後，<strong>變數還留在板子上</strong>，可以在監控窗下方的 REPL 輸入變數名稱，看最後的值。例如：</p>
-        <pre class="code-block" tabindex="0">total = 0
-for i in range(1, 11):
-    total = total + i</pre>
-        <p>執行完在 REPL 輸入 <code>total</code>，會看到 <code>55</code>；輸入 <code>i</code> 會看到 <code>10</code>。找錯誤時，這比到處加 <code>print</code> 方便。用「上傳並執行」時板子會重新開機，所以要用「執行（不存檔）」才能這樣看。</p>
-        <p class="tip">錯誤訊息裡的 <code>File "&lt;stdin&gt;", line 3</code> 指的是編輯器第 3 行，和 <code>main.py</code> 的行號一樣。「複製給 Gemini」照樣可以用。</p>
-      </section>
-
-      <section id="gemini">
-        <h2>Gemini 提示詞</h2>
-        <p>網站會依你選的晶片寫好提示詞，複製後貼到 Gemini 就好。編輯器上方的「Gemini 提示詞」選單有三項：</p>
-        <ul>
-          <li><strong>寫新程式：</strong>請 Gemini 寫一份完整的 <code>main.py</code>。貼上後，把括號裡的接線和想做的功能改成你的，再送出。</li>
-          <li><strong>寫手機儀表板程式：</strong>和「寫新程式」一樣，但會附上<a href="#dashboard">手機儀表板</a>全部元件的寫法和規則，Gemini 才知道 <code>board.gauge()</code> 這些指令怎麼用。程式裡有 <code>import dash</code> 時，「解說程式」和「複製給 Gemini」也會自動附上這份說明。</li>
-          <li><strong>解說程式：</strong>看不懂範例或 Gemini 給的程式時使用。Gemini 會用簡單的中文說明程式在做什麼、要接哪些零件、執行後監控窗會看到什麼，再分段解說。每段都會標出行號，可以對照編輯器左邊的數字。</li>
-        </ul>
-        <p>只想問其中幾行，先在編輯器選取那幾行，再打開選單，最後一項會變成「解說選取的程式（第 5–12 行）」。整份程式也會一起附上，讓 Gemini 了解前後文。沒有選取時，解說整份程式。</p>
-        <p>另外兩種提示詞會在需要時出現：程式出錯時，錯誤提示卡上的「複製給 Gemini」會附上錯誤訊息請 Gemini 修正；貼上 Arduino 程式時，提示列上的按鈕會請 Gemini 改寫成 MicroPython。</p>
-        <p class="tip">這些提示詞都會自動隱藏常見的 Wi-Fi 密碼和 Token 寫法，但不保證全部偵測得到，見<a href="#privacy">隱私與安全</a>。</p>
-      </section>
-
-      <section id="languages">
-        <h2>MicroPython 與 Arduino 的差異</h2>
-        <p>兩者都能控制 ESP32，沒有哪一個絕對比較好。本網站選擇 MicroPython，是因為不用安裝軟體，改完程式幾秒就能看到結果，錯誤訊息也容易看懂，適合課堂和快速實驗。</p>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th scope="col"></th><th scope="col">MicroPython（本網站）</th><th scope="col">Arduino C++</th></tr></thead>
-            <tbody>
-              <tr><th scope="row">語言</th><td>Python，語法簡短，容易入門</td><td>C++，要宣告型別，語法較嚴格</td></tr>
-              <tr><th scope="row">開發環境</th><td>開啟瀏覽器就能使用，要先安裝一次韌體</td><td>要安裝 Arduino IDE 和開發板套件，電腦還原後要重裝</td></tr>
-              <tr><th scope="row">修改後上傳</th><td>不用編譯，通常幾秒完成</td><td>每次都要編譯再燒錄，等待時間較長</td></tr>
-              <tr><th scope="row">找錯誤</th><td>錯誤訊息會指出行號，也可以在監控窗直接輸入指令測試</td><td>編譯時能先抓到語法錯誤，執行時的問題多半靠序列埠輸出追查</td></tr>
-              <tr><th scope="row">執行速度</th><td>較慢，一般感測和控制通常夠用</td><td>快很多，適合大量運算和高速處理</td></tr>
-              <tr><th scope="row">記憶體</th><td>直譯器本身會佔用空間，可用的較少</td><td>可用的較多，比較適合大型程式</td></tr>
-              <tr><th scope="row">時間精準度</th><td>記憶體回收可能造成短暫停頓，不適合要求精準時序的工作</td><td>時間控制較精準</td></tr>
-              <tr><th scope="row">函式庫</th><td>常用功能已內建，其他模組可能要自己找程式碼</td><td>數量很多，大部分模組都找得到</td></tr>
-              <tr><th scope="row">適合用途</th><td>入門教學、搭配 AI 寫程式、感測器和物聯網實驗</td><td>相機影像、高速訊號處理、大型或要長期穩定運作的專案</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <p>同一塊板子可以換來換去，只是一次只能用一種：用 Arduino IDE 燒錄後，MicroPython 和板子上的檔案會被覆蓋；想換回來，再到本網站按「安裝韌體」即可。</p>
-      </section>
-
-      <section id="repl">
-        <h2>用 REPL 和開發板對話</h2>
-        <p>REPL 是 Read-Eval-Print Loop 的縮寫，意思是讀取指令、執行、印出結果，然後重複。平常的 <code>main.py</code> 是寫好整份程式再上傳；REPL 則是說一句、回一句，很適合用來測接線、試指令和找錯誤。</p>
-        <p class="tip">這裡輸入的指令會直接在板子上執行，但<strong>不會存進 <code>main.py</code></strong>。重新啟動或上傳程式後，變數和指令的效果都會消失。</p>
-        <h3>開始使用</h3>
-        <ol>
-          <li>按「連接開發板」。連接時，板子上正在執行的程式會停止，監控窗會出現 <code>&gt;&gt;&gt;</code> 提示符號。</li>
-          <li>如果程式正在執行（例如剛按完「上傳並執行」），先按「停止」。</li>
-          <li>在監控窗下方的輸入框打指令，按 <kbd>Enter</kbd> 送出。</li>
-        </ol>
-        <h3>動手試試看</h3>
-        <p>照順序輸入下面的指令。第二段會用到 GPIO 2，也就是常見 ESP32 開發板的板載 LED；其他晶片或板子請改成自己的腳位。</p>
-        <pre class="code-block" tabindex="0">1 + 1
-
-from machine import Pin
-led = Pin(2, Pin.OUT)
-led.value(1)
-led.value(0)
-
-import os
-os.listdir()</pre>
-        <h3>常用指令</h3>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th scope="col">指令</th><th scope="col">用途</th></tr></thead>
-            <tbody>
-              <tr><td><code>help("modules")</code></td><td>列出韌體內建的模組</td></tr>
-              <tr><td><code>import machine</code>，再輸入 <code>dir(machine)</code></td><td>列出模組裡的功能</td></tr>
-              <tr><td><code>from machine import Pin</code>，再輸入 <code>Pin(19, Pin.IN, Pin.PULL_UP).value()</code></td><td>讀取按鈕腳位，按下時通常是 0</td></tr>
-              <tr><td><code>from machine import Pin, I2C</code>，再輸入 <code>I2C(0, scl=Pin(22), sda=Pin(21)).scan()</code></td><td>掃描 I2C 裝置，確認 OLED、LCD 的接線和位址</td></tr>
-              <tr><td><code>import gc</code>，再輸入 <code>gc.mem_free()</code></td><td>查看剩餘記憶體</td></tr>
-              <tr><td><code>print(open("main.py").read())</code></td><td>看板子上的程式。裡面可能有 Wi-Fi 密碼，投影時要小心</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <h3>快速鍵</h3>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th scope="col">按鍵</th><th scope="col">功能</th></tr></thead>
-            <tbody>
-              <tr><td><kbd>Enter</kbd></td><td>送出指令。行尾是冒號時會換行並縮排</td></tr>
-              <tr><td><kbd>Shift</kbd> + <kbd>Enter</kbd></td><td>換行，不送出</td></tr>
-              <tr><td><kbd>Ctrl</kbd> + <kbd>Enter</kbd></td><td>不論內容，立刻送出</td></tr>
-              <tr><td><kbd>↑</kbd>、<kbd>↓</kbd></td><td>叫回之前的指令</td></tr>
-              <tr><td><kbd>Tab</kbd></td><td>補完名稱。有多個可能時，會列在輸入框上方。要先 <code>import</code>，才補得到模組裡的名稱，例如先輸入 <code>import machine</code>，再輸入 <code>machine.</code> 後按 Tab</td></tr>
-              <tr><td><kbd>Ctrl</kbd> + <kbd>C</kbd></td><td>中斷正在執行的程式，和「停止」相同。有選取文字時則是複製</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <h3>輸入多行程式</h3>
-        <p>輸入 <code>for i in range(3):</code> 後按 <kbd>Enter</kbd>，輸入框會自動換行並縮排。寫完內容後，再多按兩次 <kbd>Enter</kbd>（出現一個空行後送出），整段就會執行。也可以直接貼上多行程式，再按「傳送」。監控窗會顯示 <code>===</code>，這是開發板接收多行程式時的提示，屬於正常現象。</p>
-        <pre class="code-block" tabindex="0">for i in range(3):
-    print(i)</pre>
-        <p>較長的程式請放到左邊的編輯器，用「上傳並執行」，才會保存下來。</p>
-        <p class="tip warn"><strong>REPL 會真的控制硬體。</strong>和寫在程式裡一樣，錯誤的腳位設定仍可能影響接在上面的元件，也不要輸入不了解的刪除檔案指令。之前的指令只留在這個分頁的記憶體，重新整理或切換語言後就會清除，不會存進瀏覽器。</p>
-      </section>
-
-      <section id="plot">
-        <h2>用圖表看感測器數值</h2>
-        <p>監控窗右上角可以切換「文字」和「圖表」。切到「圖表」時，程式印出的數字會畫成折線圖，很適合觀察溫度變化、旋鈕轉動或距離遠近。不管停在哪一頁，資料都會持續記錄，切回來不會漏掉。</p>
-        <h3>怎麼印才畫得出來</h3>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th scope="col">程式這樣印</th><th scope="col">圖上出現</th></tr></thead>
-            <tbody>
-              <tr><td><code>print("溫度:", t)</code></td><td>一條「溫度」線</td></tr>
-              <tr><td><code>print("溫度:", t, "°C  濕度:", h, "%")</code></td><td>「溫度」和「濕度」兩條線，數字後面的單位會略過</td></tr>
-              <tr><td><code>print(t, h)</code></td><td>只印數字時，依順序叫做「數值1」、「數值2」</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <ul>
-          <li>名稱是冒號（或等號）前面的一個詞，<strong>中間不能有空格</strong>。例如 <code>室內溫度:</code> 可以；<code>room temp:</code> 只會取 <code>temp</code>。</li>
-          <li>沒有數字的行、錯誤訊息、<code>&gt;&gt;&gt;</code> 指令列，以及重新啟動時晶片印的系統訊息都不會畫。最多畫 8 條線。</li>
-          <li>範例 4「可變電阻調亮度」、7「光敏電阻自動夜燈」、9「超音波測距（HC-SR04）」、10「DHT11 溫濕度（監控窗）」和 11「DS18B20 溫度計」不用修改，就能直接畫圖。這些範例開頭的註解也寫了怎麼玩，例如轉旋鈕、遮住光敏電阻或對 DHT11 哈氣。</li>
-        </ul>
-        <h3>動手試試看</h3>
-        <p>不接任何元件也能試。上傳下面的程式，再切到「圖表」，會看到兩條波浪線。</p>
-        <pre class="code-block" tabindex="0">import math, time
-
-i = 0
-while True:
-    print("sin:", math.sin(i / 50), "cos:", math.cos(i / 50))
-    i += 1
-    time.sleep(0.05)</pre>
-        <h3>圖表上的按鈕</h3>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th scope="col">按鈕</th><th scope="col">功能</th></tr></thead>
-            <tbody>
-              <tr><td>顯示最近</td><td>選看最近 10 秒、30 秒、1 分鐘、5 分鐘或 10 分鐘。剛開始記錄時，會從 0 秒開始撐滿整個寬度</td></tr>
-              <tr><td>暫停／繼續</td><td>停住畫面方便觀察，資料仍在背景記錄</td></tr>
-              <tr><td>圖例</td><td>顯示每條線的最新數值。點一下可以隱藏或顯示那條線</td></tr>
-              <tr><td>清除</td><td>在圖表頁按，只清掉圖表資料，按之前會先詢問</td></tr>
-              <tr><td>匯出 CSV</td><td>把記錄的資料下載成 CSV 檔</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <h3>匯出 CSV</h3>
-        <p>按「匯出 CSV」會下載 <code>esp32-data-日期-時間.csv</code>。第一欄是時間（秒，從第一筆資料開始算），後面每條線一欄；某一行沒有印到的值會留空。用 Excel 或 Google 試算表打開，中文都不會變成亂碼，可以拿來畫圖、算平均或寫實驗報告。</p>
-        <p class="tip">網站最多保留最近 10 萬筆資料，超過時會丟掉最舊的資料，圖表上方會提示。資料只存在這個分頁，<strong>重新整理網頁就會清除</strong>，長時間記錄請記得匯出。要長期保存，可以參考<a href="#google-sheets">把感測器資料存到 Google 試算表</a>。</p>
-      </section>
-
-      <section id="files">
-        <h2>管理板子上的檔案</h2>
-        <p>連接開發板後，按編輯器上方的「板上檔案」，就能看到板子裡有哪些檔案，也可以下載、上傳和刪除，不用另外安裝 Thonny 或 mpremote。</p>
-        <p class="tip"><strong>打開「板上檔案」時，板子上正在執行的程式會停止。</strong>關掉視窗後程式還是停著，按監控窗的「重新啟動」就會再執行 <code>main.py</code>。</p>
-        <h3>可以做什麼</h3>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th scope="col">操作</th><th scope="col">功能</th></tr></thead>
-            <tbody>
-              <tr><td>點資料夾名稱</td><td>進入資料夾，例如 <code>lib</code>。上方的路徑可以點回上一層</td></tr>
-              <tr><td>開到編輯器</td><td>把 100 KB 以內的文字檔（例如 .py、.txt、.csv、.json）放進編輯器，會先詢問</td></tr>
-              <tr><td>下載</td><td>把檔案存到電腦</td></tr>
-              <tr><td>刪除</td><td>刪除前會先詢問。資料夾要先清空才能刪</td></tr>
-              <tr><td>從電腦上傳檔案…</td><td>上傳到目前所在的資料夾，可以一次選好幾個，也可以直接把檔案拖進視窗。同名檔案會先問要不要覆蓋</td></tr>
-              <tr><td>把編輯器內容存成…</td><td>輸入檔名，把編輯器裡的程式存成那個檔案，例如 <code>mylib.py</code></td></tr>
-            </tbody>
-          </table>
-        </div>
-        <p>視窗右上角會顯示板子還剩多少空間。上傳和下載都會用 SHA-256 檢查檔案有沒有傳錯；上傳失敗時，板子上原來的檔案不會被改到。</p>
-        <h3>自己寫一個函式庫</h3>
-        <ol>
-          <li>在編輯器寫好函式：
-            <pre class="code-block" tabindex="0">def hello(name):
-    print("哈囉,", name)</pre>
-          </li>
-          <li>按「板上檔案」，再按「把編輯器內容存成…」，輸入 <code>mylib.py</code>。</li>
-          <li>關掉視窗，在編輯器寫主程式，按「上傳並執行」：
-            <pre class="code-block" tabindex="0">import mylib
-mylib.hello("ESP32")</pre>
-          </li>
-        </ol>
-        <p>網路上找到的元件函式庫，例如 OLED 的 <code>ssd1306.py</code>，也可以用「從電腦上傳檔案…」放到板子的根目錄或 <code>lib</code> 資料夾，再用 <code>import</code> 匯入。</p>
-        <p class="tip">把 <code>lib/ssd1306.py</code> 這類檔案開到編輯器修改後，<strong>要用「把編輯器內容存成…」存回去</strong>。直接按「上傳並執行」會把它存成 <code>main.py</code>，取代原本的主程式。</p>
-      </section>
-
-      <section id="boards">
-        <h2>支援的開發板</h2>
-        <p>網站內建 MicroPython v1.29.0 的 <strong>ESP32、ESP32-S2、S3 和 C3</strong> 韌體，安裝時會自動偵測晶片並選擇對應版本。ESP32-S、ESP-WROOM-32 模組裡的晶片是 ESP32，和 ESP32-S2、S3 是不同的晶片。快閃記憶體至少要 4 MB。其他晶片或容量不足時，網站會在清除資料前停止安裝。</p>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th scope="col">開發板</th><th scope="col">USB 晶片</th><th scope="col">狀態</th><th scope="col">說明</th></tr></thead>
-            <tbody>
-              <tr><td>NodeMCU-32S（ESP-WROOM-32）</td><td>CP2102</td><td><span class="badge tested">已實測</span></td><td>已實測安裝韌體、上傳程式、Wi-Fi 和 MQTT。可參考<a href="./images/nodemcu-32s-pinout.png" target="_blank" rel="noopener">腳位圖</a>。</td></tr>
-              <tr><td>ESP32-S 開發板</td><td>CH340</td><td><span class="badge tested">已實測</span></td><td>已實測安裝韌體、上傳 LED 閃爍程式和停止程式，這塊板子的 Wi-Fi 尚未實測。腳位排列可能和上面的腳位圖不同，請對照板子上的標示。</td></tr>
-              <tr><td>其他 ESP32-WROOM-32 開發板</td><td>依板子而定</td><td><span class="badge expected">應可使用</span></td><td>快閃記憶體要有 4 MB 以上。尚未逐款實測。</td></tr>
-              <tr><td>ESP32-S2 開發板</td><td>內建 USB 或依板子而定</td><td><span class="badge expected">待實測</span></td><td>網站已支援，但還沒接實體板子測試。</td></tr>
-              <tr><td>ESP32-S3 開發板</td><td>內建 USB 或依板子而定</td><td><span class="badge expected">待實測</span></td><td>網站已支援，但還沒接實體板子測試。使用八線 PSRAM 的版本（例如型號含 R8）可能用不到 PSRAM。</td></tr>
-              <tr><td>ESP32-C3 開發板</td><td>內建 USB 或依板子而定</td><td><span class="badge expected">待實測</span></td><td>網站已支援，但還沒接實體板子測試。MicroPython 官方說明此韌體適用晶片版本 3 以上，安裝時監控窗會顯示版本。</td></tr>
-              <tr><td>ESP32-CAM</td><td>板子本身沒有 USB，要接底板或 USB 轉序列埠模組</td><td><span class="badge expected">相機不能用</span></td><td>晶片是 ESP32，韌體應可安裝，但尚未實測。內建韌體<strong>沒有相機功能，也用不到板上的 PSRAM</strong>，只能當一般 ESP32 使用。多數範例使用的腳位沒有引出，要自行改腳位。</td></tr>
-              <tr><td>ESP32-C6、H2、C2、C5、P4 等</td><td>依板子而定</td><td><span class="badge no">不支援</span></td><td>網站沒有內建這些晶片的韌體，安裝時會自動停止，不會清除板子。</td></tr>
-              <tr><td>ESP8266、Arduino UNO 等</td><td>依板子而定</td><td><span class="badge no">不支援</span></td><td>不是 ESP32，網站無法安裝韌體。</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <h3 id="chips">各種 ESP32 晶片的差異</h3>
-        <p>市面上叫 ESP32 的開發板，上面的晶片有好幾種。上課建議用傳統的 ESP32，教材和網路上的資料最多。其他晶片的腳位編號不同，請看「接線注意事項」的腳位表。</p>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th scope="col">晶片</th><th scope="col">核心</th><th scope="col">記憶體（RAM）</th><th scope="col">藍牙</th><th scope="col">特色</th><th scope="col">本站</th></tr></thead>
-            <tbody>
-              <tr><td>ESP32</td><td>雙核心 240 MHz</td><td>520 KB</td><td>傳統藍牙和 BLE</td><td>最普遍，教材最多，腳位多</td><td><span class="badge tested">已實測</span></td></tr>
-              <tr><td>ESP32-S3</td><td>雙核心 240 MHz</td><td>512 KB，可外加 PSRAM</td><td>BLE 5</td><td>腳位最多，可接相機，適合進階使用</td><td><span class="badge expected">待實測</span></td></tr>
-              <tr><td>ESP32-C3</td><td>單核心 160 MHz（RISC-V）</td><td>400 KB</td><td>BLE 5</td><td>便宜小巧，腳位較少</td><td><span class="badge expected">待實測</span></td></tr>
-              <tr><td>ESP32-S2</td><td>單核心 240 MHz</td><td>320 KB</td><td>沒有藍牙</td><td>已被 S3 取代，市面上少見，不必特地找</td><td><span class="badge expected">待實測</span></td></tr>
-              <tr><td>ESP32-C2（ESP8684）</td><td>單核心 120 MHz（RISC-V）</td><td>272 KB</td><td>BLE 5</td><td>最便宜，用來取代 ESP8266，記憶體最小</td><td><span class="badge no">不支援</span></td></tr>
-            </tbody>
-          </table>
-        </div>
-        <ul>
-          <li><strong>S3 開發板的型號：</strong>例如 N16R8，表示 16 MB 快閃記憶體和 8 MB 八線 PSRAM。八線 PSRAM 會占用 GPIO 35–37，這三支腳不要接元件。板子有兩個 Type-C 孔時，先接標示 COM 或 UART 的那個。</li>
-          <li><strong>名稱有 CAM 的開發板：</strong>本站的韌體沒有相機功能，只能當一般開發板使用。</li>
-          <li><strong>C3、S2、S3 開發板：</strong>有些沒有 USB 轉序列晶片，直接用晶片內建的 USB，不用裝驅動。</li>
-        </ul>
-        <h3>可以用 Arduino UNO 嗎？</h3>
-        <p><strong>不行。</strong>本站只有 ESP32 系列的 MicroPython 韌體，而傳統的 UNO R3 記憶體太小，跑不動 MicroPython。ESP32 Lab 另有 Arduino 版，但那裡的 Arduino 指的是寫程式用的 Arduino 框架（<code>setup()</code>、<code>digitalWrite()</code> 等），不是 Arduino 這塊開發板，所以同樣不支援 UNO。</p>
-        <h3>兩個版本支援的開發板</h3>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th scope="col">開發板</th><th scope="col">MicroPython 版（本站）</th><th scope="col">Arduino 版</th></tr></thead>
-            <tbody>
-              <tr><td>傳統 ESP32（例如 NodeMCU-32S）</td><td><span class="badge tested">已實測</span></td><td><span class="badge tested">已實測</span></td></tr>
-              <tr><td>ESP32-S2、S3、C3</td><td><span class="badge expected">待實測</span></td><td><span class="badge no">不支援</span></td></tr>
-              <tr><td>ESP32-C6 等其他 ESP32 晶片</td><td><span class="badge no">不支援</span></td><td><span class="badge no">不支援</span></td></tr>
-              <tr><td>ESP8266、Arduino UNO</td><td><span class="badge no">不支援</span></td><td><span class="badge no">不支援</span></td></tr>
-            </tbody>
-          </table>
-        </div>
-        <p>Arduino 版要用雲端主機編譯，目前只開放作者任教學校的師生使用，沒有對外公開。</p>
-
-        <h3>支援的瀏覽器</h3>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th scope="col">裝置與瀏覽器</th><th scope="col">編輯器（USB 上傳）</th><th scope="col">語音控制頁</th></tr></thead>
-            <tbody>
-              <tr><td>電腦版 Chrome、Edge</td><td>可以使用</td><td>Chrome 已實測，Edge 的語音尚未實測</td></tr>
-              <tr><td>Chromebook 的 Chrome</td><td><span class="badge tested">已實測</span> 學校的 Chromebook 接 ESP32-S 開發板，連接、安裝韌體、上傳程式都正常</td><td>尚未實測</td></tr>
-              <tr><td>Android 手機 Chrome</td><td>請改用電腦</td><td>頁面可開啟，語音辨識尚未實測</td></tr>
-              <tr><td>iPhone Safari</td><td>不能使用</td><td>尚未實測，語音不能用時請改用文字指令</td></tr>
-              <tr><td>電腦版 Firefox、Safari</td><td>不能使用（沒有 Web Serial）</td><td>尚未實測</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <p>Chromebook 只有 Type-C 孔時，用 Type-C 轉 USB-A 轉接頭接原本的 USB 線就可以，也可以改用 USB-C 轉 Micro USB 傳輸線。學校統一管理的 Chromebook 如果按「連接開發板」後沒有出現序列埠，可能是管理政策關閉了這個功能，請資訊組在 Google 管理控制台開放。</p>
-      </section>
-
-      <section id="parts">
-        <h2>電子元件與感測器</h2>
-        <p><strong>下表不是限制清單。</strong>只要能用 MicroPython 控制，表上沒有的元件也可以使用。請把<strong>完整型號和接線腳位</strong>告訴 Gemini，再依下面的注意事項接線。</p>
-        <ul class="legend">
-          <li><span class="badge tested">已實測</span>已接上實體開發板測試成功。</li>
-          <li><span class="badge example">有範例</span>網站有內建範例，程式已用模擬硬體執行過，但還沒接實體元件測試。</li>
-          <li><span class="badge firmware">韌體支援</span>韌體有所需功能，可以直接寫程式，但沒有專屬範例，也還沒實測。</li>
-        </ul>
-
-        <p class="tip"><strong>OLED、LCD 和 MAX7219 不用另外安裝任何東西。</strong>韌體沒有內建這三種元件的控制程式，所以內建範例把控制程式和主程式寫在同一份 <code>main.py</code>，選範例後直接上傳即可。這和電腦上的 CP210x、CH340 USB 驅動程式無關。</p>
-
-        <h3>輸出元件</h3>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th scope="col">元件</th><th scope="col">狀態</th><th scope="col">控制方式</th><th scope="col">注意事項</th></tr></thead>
-            <tbody>
-              <tr><td>LED</td><td><span class="badge tested">已實測</span></td><td><code>Pin</code></td><td>要串聯限流電阻（例如 220Ω），長腳接 GPIO，短腳接 GND。</td></tr>
-              <tr><td>有源蜂鳴器</td><td><span class="badge example">有範例</span></td><td><code>Pin</code></td><td>通電就響，只能開關。電流較大的元件要用模組或電晶體驅動。</td></tr>
-              <tr><td>無源蜂鳴器</td><td><span class="badge example">有範例</span></td><td><code>PWM</code></td><td>要送頻率才會響，可以發出不同音高。買之前先確認是有源還是無源。</td></tr>
-              <tr><td>SG90 伺服馬達</td><td><span class="badge example">有範例</span></td><td><code>PWM</code>（50 Hz）</td><td>請用外部 5V 供電，並和 ESP32 共地，不要從開發板 3V3 取電。</td></tr>
-              <tr><td>繼電器模組</td><td><span class="badge firmware">韌體支援</span></td><td><code>Pin</code></td><td>先確認模組能接受 3.3V 訊號。<strong>課堂實驗不要接市電。</strong></td></tr>
-              <tr><td>WS2812 全彩 LED、燈條、點矩陣</td><td><span class="badge example">有範例</span></td><td><code>neopixel</code></td><td>燈數多時電流很大，要用外部電源並共地。</td></tr>
-              <tr><td>MAX7219 LED 點矩陣</td><td><span class="badge example">有範例</span></td><td><code>Pin</code></td><td>通常用 5V 供電，ESP32 的 3.3V 訊號可能不穩定，要實測。</td></tr>
-              <tr><td>裸 8×8 LED 點矩陣</td><td><span class="badge firmware">韌體支援</span></td><td><code>Pin</code></td><td>需要很多腳位和掃描程式，不建議初學者使用，改用有驅動晶片的模組。</td></tr>
-              <tr><td>SSD1306 OLED</td><td><span class="badge example">有範例</span></td><td><code>I2C</code></td><td>常見接法是 SDA 接 GPIO 21、SCL 接 GPIO 22。</td></tr>
-              <tr><td>I2C LCD 1602</td><td><span class="badge example">有範例</span></td><td><code>I2C</code></td><td>許多模組用 5V 供電，I2C 訊號可能被上拉到 5V，接線前要先確認電壓。</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <h3>感測器與輸入元件</h3>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th scope="col">元件</th><th scope="col">狀態</th><th scope="col">控制方式</th><th scope="col">注意事項</th></tr></thead>
-            <tbody>
-              <tr><td>DHT11 溫濕度</td><td><span class="badge example">有範例</span></td><td><code>dht</code></td><td>VCC 接 3V3，讀取間隔至少 1 秒。</td></tr>
-              <tr><td>DHT22 溫濕度</td><td><span class="badge firmware">韌體支援</span></td><td><code>dht</code></td><td>程式改用 <code>dht.DHT22</code>，讀取間隔至少 2 秒。</td></tr>
-              <tr><td>光敏電阻</td><td><span class="badge example">有範例</span></td><td><code>ADC</code></td><td>請接 <strong>GPIO 32–39</strong>。裸元件要搭配電阻分壓（例如 10kΩ），模組請用 3V3 供電。</td></tr>
-              <tr><td>可變電阻</td><td><span class="badge example">有範例</span></td><td><code>ADC</code></td><td>同樣接 GPIO 32–39，兩端接 3V3 和 GND。</td></tr>
-              <tr><td>HC-SR501 人體紅外線</td><td><span class="badge example">有範例</span></td><td><code>Pin</code></td><td>通常用 5V 供電，訊號輸出約 3.3V。通電後約 1 分鐘內可能誤判。</td></tr>
-              <tr><td>按鈕</td><td><span class="badge example">有範例</span></td><td><code>Pin</code></td><td>可用內部上拉 <code>Pin.PULL_UP</code>。GPIO 34–39 沒有內部上拉。</td></tr>
-              <tr><td>DS18B20 溫度</td><td><span class="badge example">有範例</span></td><td><code>onewire</code>、<code>ds18x20</code></td><td>DATA 和 3V3 之間要接 4.7kΩ 上拉電阻，模組通常已內建。</td></tr>
-              <tr><td>HC-SR04 超音波</td><td><span class="badge example">有範例</span></td><td><code>Pin</code>、<code>time_pulse_us</code></td><td>Echo 輸出常是 5V，<strong>要先分壓成 3.3V</strong> 才能接 GPIO。</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <h3>請 Gemini 寫程式的訣竅</h3>
-        <ul>
-          <li><strong>寫清楚型號和腳位：</strong>例如「MAX7219 8×8 點矩陣，DIN 接 GPIO 23，CLK 接 GPIO 18，CS 接 GPIO 5」。</li>
-          <li><strong>缺少模組時：</strong>如果執行時出現 <code>ImportError</code>，代表程式用了韌體沒有的模組。可以請 Gemini「把這個元件的控制程式和主程式寫在同一份 main.py」，或用<a href="#files">板上檔案</a>把那個模組的檔案上傳到板子。</li>
-          <li><strong>指定語言：</strong>說明要 MicroPython v1.29.0，不要 Arduino C++。網站的「Gemini 提示詞」→「寫新程式」已經包含這些要求。</li>
-        </ul>
-      </section>
-
-      <section id="wiring">
-        <h2>接線注意事項</h2>
-        <p>下面的腳位表適用於 <strong>ESP32（包含 ESP32-S、ESP-WROOM-32 模組）</strong>，其他晶片請看本章最後的表格。</p>
-        <p class="tip warn"><strong>接線或改線前，請先拔掉 USB 線。</strong>接錯電壓或短路可能會燒毀開發板。</p>
-        <ul>
-          <li><strong>GPIO 只能接受 3.3V：</strong>不要把 5V 訊號直接接到 GPIO。</li>
-          <li><strong>不要直接驅動大電流元件：</strong>馬達、長燈條等要用外部電源或驅動模組。使用外部電源時，GND 要和 ESP32 接在一起。</li>
-          <li><strong>確認腳位編號：</strong>程式裡的編號是 GPIO 編號，請對照板子標示或<a href="./images/nodemcu-32s-pinout.png" target="_blank" rel="noopener">腳位圖</a>。</li>
-        </ul>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th scope="col">腳位</th><th scope="col">建議</th><th scope="col">原因</th></tr></thead>
-            <tbody>
-              <tr><td>GPIO 6–11</td><td><span class="badge no">不要使用</span></td><td>連接內部快閃記憶體，接線可能讓板子無法運作。腳位圖上的 GPIO 9、10 標示 RX1、TX1，也不要使用。</td></tr>
-              <tr><td>GPIO 34、35、36、39</td><td><span class="badge expected">只能輸入</span></td><td>不能輸出，也沒有內部上拉或下拉電阻。</td></tr>
-              <tr><td>GPIO 25–27、GPIO 0、2、4、12–15</td><td><span class="badge expected">類比輸入避開</span></td><td>這些是 ADC2 腳位，Wi-Fi 開啟時不能讀類比值。需要類比輸入請改用 GPIO 32–39。</td></tr>
-              <tr><td>GPIO 0、2、5、12、15</td><td><span class="badge expected">小心使用</span></td><td>開機時的電位會影響啟動。尤其 GPIO 12 開機時若被拉高，板子可能無法啟動。</td></tr>
-              <tr><td>GPIO 1、3</td><td><span class="badge expected">避開</span></td><td>USB 序列埠使用，接其他元件會影響上傳和監控窗。</td></tr>
-              <tr><td>GPIO 4、13、16–19、21–23、25–27、32、33</td><td><span class="badge tested">一般優先選用</span></td><td>用於一般數位輸入和輸出比較不會衝突（GPIO 21、22 常用於 I2C）。</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <h3>ESP32-S2、S3、C3 的腳位</h3>
-        <p>這些晶片的腳位編號和 ESP32 不同，<strong>上面的腳位圖不適用</strong>，請對照你的板子標示。下表是選範例時預設使用的腳位。</p>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th scope="col">用途</th><th scope="col">S2、S3</th><th scope="col">C3</th></tr></thead>
-            <tbody>
-              <tr><th scope="row">LED</th><td>GPIO 18</td><td>GPIO 4</td></tr>
-              <tr><th scope="row">按鈕</th><td>GPIO 17</td><td>GPIO 5</td></tr>
-              <tr><th scope="row">類比輸入（光敏電阻、可變電阻）</th><td>GPIO 1</td><td>GPIO 3</td></tr>
-              <tr><th scope="row">DHT11、DS18B20</th><td>GPIO 4</td><td>GPIO 5</td></tr>
-              <tr><th scope="row">I2C（SDA、SCL）</th><td>GPIO 8、9</td><td>GPIO 6、7</td></tr>
-              <tr><th scope="row">蜂鳴器</th><td>GPIO 14</td><td>GPIO 6</td></tr>
-              <tr><th scope="row">伺服馬達</th><td>GPIO 13</td><td>GPIO 6</td></tr>
-              <tr><th scope="row">WS2812</th><td>GPIO 16</td><td>GPIO 6</td></tr>
-              <tr><th scope="row">USB 使用，不要接元件</th><td>GPIO 19、20</td><td>GPIO 18、19</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section id="voice">
-        <h2>手機與語音控制</h2>
-        <p>網站有兩種手機網頁控制方式，也可以用本章最後的 Telegram 機器人控制。想在手機上同時看好幾個數值、用開關和滑桿控制板子，請看<a href="#dashboard">手機儀表板</a>。</p>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th scope="col"></th><th scope="col">開發板上的網頁</th><th scope="col">語音控制頁（MQTT）</th></tr></thead>
-            <tbody>
-              <tr><th scope="row">範例</th><td>手機控制 LED、DHT11 溫濕度警報</td><td>語音控制 LED（MQTT）</td></tr>
-              <tr><th scope="row">網址</th><td><code>http://192.168.x.x</code>（監控窗會顯示）</td><td><a href="./voice.html" target="_blank" rel="noopener">語音控制頁</a></td></tr>
-              <tr><th scope="row">麥克風語音</th><td>不能用，瀏覽器不允許 <code>http://</code> 網址使用麥克風</td><td>可以用（HTTPS）</td></tr>
-              <tr><th scope="row">網路需求</th><td>手機和板子連同一個 Wi-Fi，不一定要能上網</td><td>板子和手機都要能上網，不必同一個 Wi-Fi</td></tr>
-              <tr><th scope="row">校園網路影響</th><td>禁止裝置互連時會打不開</td><td>防火牆擋 1883 連接埠時，板子會連不上</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <h3>語音控制步驟</h3>
-        <ol>
-          <li>範例選「語音控制 LED（MQTT）」，填入 Wi-Fi 名稱和密碼，按「上傳並執行」。</li>
-          <li>監控窗顯示「已連上 MQTT 伺服器」後，記下 <strong>MQTT 主題名稱</strong>。</li>
-          <li>開啟<a href="./voice.html" target="_blank" rel="noopener">語音控制頁</a>，輸入主題名稱後按「連線」。</li>
-          <li>按語音按鈕，允許使用麥克風，然後說「開燈」、「關燈」或「閃爍」。</li>
-        </ol>
-        <p>語音不能用時，可以按開燈、關燈按鈕，或在文字指令欄用手機鍵盤的麥克風輸入。Windows 電腦也可以按 <kbd>Win</kbd> + <kbd>H</kbd> 語音輸入。</p>
-        <p><strong>主題名稱和 MQTT Topic：</strong>你輸入的名稱會組成兩個 Topic。以 <code>led-1</code> 為例，指令走 <code>esp32-mp-class/led-1/command</code>，開發板回報走 <code>esp32-mp-class/led-1/state</code>，其他 MQTT 工具也可以訂閱或發布這兩個 Topic。</p>
-        <p><strong>使用自己的 MQTT 伺服器：</strong>打開語音控制頁的「進階」，填入伺服器位址、WSS 連接埠、路徑、帳號和密碼；程式裡的 <code>BROKER</code>、<code>MQTT_PORT</code>、<code>MQTT_USER</code>、<code>MQTT_PASSWORD</code> 也要改成同一台。語音控制頁不會儲存密碼，重新整理後要再輸入一次。開發板預設走不加密的 1883 連接埠，帳號密碼可能被同網路的人看到，請使用這台伺服器專用的密碼。</p>
-
-        <h3 id="telegram">Telegram 機器人</h3>
-        <ol>
-          <li>在 Telegram 搜尋 <strong>@BotFather</strong>，傳 <code>/newbot</code>，依指示取名後會拿到 <strong>Bot Token</strong>。</li>
-          <li>範例選「Telegram 機器人控制 LED」，填入 Wi-Fi 名稱、密碼和 <code>BOT_TOKEN</code>，按「上傳並執行」。</li>
-          <li>傳任一則訊息給你的機器人，監控窗會顯示 <strong>CHAT_ID</strong>。把號碼填進程式，再上傳一次。</li>
-          <li>傳 <code>/on</code>、<code>/off</code> 或 <code>/status</code> 控制 LED；按下按鈕時，手機會收到通知。</li>
-        </ol>
-        <p>板子約每 2 秒查一次新訊息，反應會有幾秒延遲。只有 <code>CHAT_ID</code> 指定的聊天室能控制板子，開機前累積的舊指令不會執行。校園網路封鎖 Telegram 時，板子會連不上，可以改用手機熱點。</p>
-
-        <p class="tip warn"><strong>Wi-Fi 只支援 2.4GHz。</strong>ESP32 連不上 5GHz 網路。</p>
-        <p class="tip">填過一次 Wi-Fi 名稱和密碼後，網站會記住最後用的那一組，之後載入其他範例時自動填入，不用再打一次。要換 Wi-Fi，直接改程式裡的 <code>SSID</code> 和 <code>PASSWORD</code>。</p>
-      </section>
-
-      <section id="dashboard">
-        <h2>手機儀表板</h2>
-        <p>手機儀表板可以在手機上看感測器的數值，也能用開關、按鈕和滑桿控制開發板。<strong>畫面由開發板的程式決定</strong>：程式寫了 <code>board.gauge("溫度")</code>，手機上就會出現溫度儀表，不用在手機上另外設定。資料經過 MQTT 伺服器，所以板子和手機不必連同一個 Wi-Fi，但都要能上網。範例 27–38 都用到手機儀表板。</p>
-        <h3>使用步驟</h3>
-        <ol>
-          <li>範例選「27. 儀表板入門：開關 LED、看按鈕」，填入 Wi-Fi 名稱和密碼，按「上傳並執行」。</li>
-          <li>網站會先把儀表板工具 <code>dash.py</code> 存到板子的 <code>/lib</code>，監控窗會顯示「已把手機儀表板工具 dash.py 存到板子的 /lib」。板子上已經是同一個版本時會跳過，不會拖慢上傳。</li>
-          <li>板子連上 MQTT 伺服器後，監控窗上方會出現手機儀表板的網址和 QR code。用手機相機掃描，就會打開<a href="./dashboard.html" target="_blank" rel="noopener">手機儀表板頁</a>，主題名稱也會自動填好。</li>
-          <li>也可以自己打開手機儀表板頁（「設定與說明」裡也有連結），輸入監控窗顯示的主題名稱，再按「連線」。</li>
-        </ol>
-        <h3>元件寫法</h3>
-        <p>先用 <code>board = dash.Dashboard(TOPIC_NAME, SSID, PASSWORD)</code> 建立儀表板，再建立元件，最後呼叫 <code>board.start()</code> 連線。迴圈裡每次都要呼叫 <code>board.check()</code>，它會收手機的操作、送出新的值，斷線時也會自動重連。</p>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th scope="col">元件</th><th scope="col">程式寫法</th><th scope="col">手機上的樣子</th><th scope="col">怎麼用</th></tr></thead>
-            <tbody>
-              <tr><td>數值</td><td><code>board.value("濕度", unit="%")</code></td><td>大字數字加單位</td><td><code>.set(數字或文字)</code></td></tr>
-              <tr><td>儀表</td><td><code>board.gauge("溫度", min=0, max=50, unit="°C", color="red")</code></td><td>半圓形儀表，顏色有 green、red、yellow、blue</td><td><code>.set(數字)</code></td></tr>
-              <tr><td>折線圖</td><td><code>board.chart("濕度變化", unit="%")</code></td><td>最近 60 個值的折線，左邊標出最高、最低值和單位，下方標出手機收到的時間</td><td><code>.set(數字)</code>，每次是一個點</td></tr>
-              <tr><td>指示燈</td><td><code>board.led("警報", color="red")</code></td><td>亮或暗的圓燈，顏色有 green、red、yellow、blue</td><td><code>.set(True)</code> 亮、<code>.set(False)</code> 暗</td></tr>
-              <tr><td>文字</td><td><code>board.text("狀態")</code></td><td>一行文字</td><td><code>.set("文字")</code></td></tr>
-              <tr><td>開關</td><td><code>board.switch("LED")</code></td><td>開關</td><td><code>.value</code> 是 True 或 False，板子也能用 <code>.set()</code> 改</td></tr>
-              <tr><td>按鈕</td><td><code>board.button("響鈴")</code></td><td>大按鈕</td><td>按過時 <code>.pressed()</code> 回傳一次 True</td></tr>
-              <tr><td>滑桿</td><td><code>board.slider("亮度", min=0, max=100)</code></td><td>可以拖拉的滑桿，數值是整數</td><td><code>.value</code> 是目前的數字，板子也能用 <code>.set()</code> 改</td></tr>
-              <tr><td>提醒</td><td><code>board.alert("門鈴")</code></td><td>跳出提醒、發出聲音，Android 也會震動</td><td><code>.send("有人按門鈴！")</code></td></tr>
-              <tr><td>色彩選擇</td><td><code>board.color("燈色")</code></td><td>色盤</td><td><code>.value</code> 是（紅, 綠, 藍），各 0～255</td></tr>
-              <tr><td>方向鍵</td><td><code>board.pad("方向")</code></td><td>上下左右四個鍵，按住才動、放開就停</td><td><code>.value</code> 是 <code>"up"</code>、<code>"down"</code>、<code>"left"</code>、<code>"right"</code>，放開時是 <code>""</code></td></tr>
-              <tr><td>選單</td><td><code>board.select("模式", ["關", "亮", "閃爍"])</code></td><td>一排選項按鈕</td><td><code>.value</code> 是選到的文字</td></tr>
-              <tr><td>文字輸入</td><td><code>board.input("訊息")</code></td><td>輸入框和「送出」</td><td><code>.value</code> 是文字，有新文字時 <code>.changed()</code> 回傳一次 True</td></tr>
-              <tr><td>數字設定</td><td><code>board.number("濕度門檻", value=70, min=30, max=95, step=5, unit="%")</code></td><td>數字和 − ＋ 按鈕，也能直接輸入</td><td><code>.value</code> 是數字，手機改了時 <code>.changed()</code> 回傳一次 True，板子也能用 <code>.set()</code> 改</td></tr>
-              <tr><td>紀錄表</td><td><code>board.log("溫濕度紀錄", ["溫度", "濕度"])</code></td><td>表格，最新的一列在最上面，可以下載 CSV</td><td><code>.add(溫度, 濕度)</code> 新增一列，時間由手機加上</td></tr>
-              <tr><td>搖桿</td><td><code>board.joystick("搖桿")</code></td><td>圓形搖桿，放開就回到中間</td><td><code>.x</code> 是左右、<code>.y</code> 是前後，都是 -100～100</td></tr>
-              <tr><td>手機傾斜</td><td><code>board.tilt("傾斜")</code></td><td>「開始傾斜控制」按鈕和目前的傾斜位置</td><td><code>.x</code> 是左右、<code>.y</code> 是前後，都是 -100～100；<code>.on</code> 表示有沒有開啟</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <p class="tip"><strong>不用擔心送太快：</strong>同一個元件最快每 0.5 秒送一次，迴圈裡一直呼叫 <code>.set()</code> 也不會塞爆公用伺服器，手機看到的永遠是最新的值。開關、滑桿和數字設定的值會保留在伺服器上，板子重新開機後會回到最後的狀態。一個儀表板最多 30 個元件。</p>
-        <p><strong>方向鍵、搖桿和手機傾斜的安全設計：</strong>按住方向鍵或搖桿時，手機每 0.4 秒重送一次；手機傾斜開啟時每 0.2 秒送一次。板子超過 1 秒沒收到、或是斷線，方向鍵的 <code>.value</code> 會自動變回 <code>""</code>，搖桿和傾斜的 <code>.x</code>、<code>.y</code> 會回到 0。手機切到別的畫面時也會自動放開。所以手機當機、沒電或離開 Wi-Fi，遙控車都會停下來。第一次測試時，先把車子架高，讓輪子懸空。</p>
-        <p><strong>手機傾斜：</strong>手機只在 https 網址上提供傾斜感測器，所以要用正式網站，或掃描 QR code 打開的網址。iPhone 第一次按「開始傾斜控制」時會詢問能不能使用動作感測器，請選「允許」。手機平放是 0，傾斜 45 度就是最大。請直拿手機，橫拿時左右和前後會對調。電腦通常沒有傾斜感測器。</p>
-        <p><strong>紀錄表：</strong>紀錄只存在手機頁上，手機頁打開時才收得到，最多保留最近 1000 筆（每 5 秒一筆約可記 83 分鐘）；記滿時筆數會變成紅字提醒，之後最舊的會被刪除。重新整理或關掉就會清空，記得先按「下載 CSV」。CSV 的前兩欄是手機收到的日期和時間（時間到秒），Excel 和 Google 試算表都能直接打開。要長時間記錄、手機不用一直開著時，請用 <a href="#google-sheets">Google 試算表</a>。</p>
-        <p><strong>板子資訊：</strong>手機儀表板頁會在「開發板：在線」下面顯示板子的 Wi-Fi 訊號、已執行時間和剩餘記憶體，每 10 秒更新，不用寫程式。訊號 -60 dBm 以上是強，-70 dBm 以下是弱，弱的時候操作可能會延遲。剩餘記憶體一直變少時，表示程式裡可能有東西一直累積。板子的 IP 位址不會送出。</p>
-        <p><strong>提醒的聲音：</strong>瀏覽器規定網頁要先被點過一次才能出聲音，所以手機儀表板的提醒卡片上有「開啟提醒聲音」按鈕，打開頁面後先按一下。提醒不會保留在伺服器上，手機晚一點才打開時，不會收到以前的提醒。</p>
-        <p><strong>請 Gemini 寫儀表板程式：</strong>「Gemini 提示詞」選單的「寫手機儀表板程式」會附上全部元件的寫法，見 <a href="#gemini">Gemini 提示詞</a>。</p>
-        <p><strong>主題名稱和 MQTT Topic：</strong>以主題名稱 <code>dash-1</code> 為例，所有資料都在 <code>esp32-mp-class/dash-1/dash/</code> 底下：<code>layout</code> 是畫面上有哪些元件、<code>state</code> 是板子在不在線、<code>info</code> 是板子資訊、<code>out/…</code> 是板子送出的值、<code>in/…</code> 是手機的操作。</p>
-        <p><strong>使用自己的 MQTT 伺服器：</strong>打開手機儀表板頁的「進階」填入伺服器設定，程式改成 <code>dash.Dashboard(TOPIC_NAME, SSID, PASSWORD, broker="伺服器位址", port=1883, user="帳號", mqtt_password="密碼")</code>。</p>
-        <p><strong>關於 dash.py：</strong>不要直接修改板子上的 <code>/lib/dash.py</code>，下次上傳時網站會換回原本的版本。不用這個網站上傳時（例如用 Thonny），可以在<a href="#files">板上檔案</a>打開 <code>/lib</code> 下載 <code>dash.py</code>，再放到另一塊板子上。手機儀表板頁不需要 Web Serial，手機和電腦的瀏覽器都能開，但還沒在每一種手機上實測。</p>
-        <p class="tip warn"><strong>板子連不上時：</strong>學校防火牆擋 1883 連接埠時，監控窗會一直出現「連線失敗，5 秒後重試」，可以改用手機熱點。手機儀表板頁顯示「開發板：離線」或「沒有回應」時，請確認板子上的程式正在執行，而且兩邊的主題名稱一樣。</p>
-      </section>
-
-      <section id="google-sheets">
-        <h2>把感測器資料存到 Google 試算表</h2>
-        <p>範例「DHT11 資料存到 Google 試算表」每分鐘會把日期、時間、溫度和濕度新增成一列。Google Apps Script 是免費服務，但要先設定一次。</p>
-        <ol>
-          <li>到 Google 試算表建立新檔案，在第一列的 A1～D1 輸入標題：<strong>日期、時間、溫度、濕度</strong>。日期和時間分成兩欄，時間才會顯示到秒。</li>
-          <li>點選「擴充功能」→「Apps Script」，把原本的內容換成下面的程式後儲存：
-            <pre class="code-block" tabindex="0">function doGet(e) {
-  var temp = Number(e.parameter.temp);
-  var hum = Number(e.parameter.hum);
-  if (isNaN(temp) || isNaN(hum)) {
-    return ContentService.createTextOutput("bad data");
-  }
-  var book = SpreadsheetApp.getActiveSpreadsheet();
-  var zone = book.getSpreadsheetTimeZone();
-  var now = new Date();
-  book.getSheets()[0].appendRow([
-    Utilities.formatDate(now, zone, "yyyy-MM-dd"),
-    Utilities.formatDate(now, zone, "HH:mm:ss"),
-    temp,
-    hum
-  ]);
-  return ContentService.createTextOutput("ok");
-}</pre>
-          </li>
-          <li>點選「部署」→「新增部署作業」，類型選「網頁應用程式」。執行身分選「我」，存取權選「<strong>所有人</strong>」，再依畫面完成授權。</li>
-          <li>複製部署後的網址，結尾是 <code>/exec</code>。先在瀏覽器網址列的網址後面加上 <code>?temp=25&amp;hum=60</code> 開啟，畫面顯示 <code>ok</code>、試算表多一列，就代表設定正確。測試完可以刪除這一列。</li>
-          <li>範例選「DHT11 資料存到 Google 試算表」，填入 Wi-Fi 名稱、密碼和 <code>SCRIPT_URL</code>，按「上傳並執行」。每次連到 Google 要花幾秒，所以每一列的間隔會比 <code>SEND_SECONDS</code> 多幾秒。</li>
-        </ol>
-        <p class="tip warn"><strong>網址等於試算表的寫入權限。</strong>知道網址的人都能新增資料，不要投影或分享。不小心外洩時，請到「部署」→「管理部署作業」封存這個部署，再建立新的部署。</p>
-        <p>學校的 Google 帳號可能不允許把存取權設成「所有人」，這時請改用個人帳號。之後修改 Apps Script，要在「管理部署作業」選編輯並發布新版本，才會生效。</p>
-      </section>
-
-      <section id="privacy">
-        <h2>隱私與安全</h2>
-        <ul>
-          <li><strong>程式碼：</strong>網站不會把程式碼上傳到伺服器。程式碼只存在這個瀏覽器和你的開發板上。GitHub 只提供網站檔案，可能記錄 IP 這類連線資訊，但收不到你的程式碼。</li>
-          <li><strong>瀏覽統計：</strong>網站用 <a href="https://www.goatcounter.com/" target="_blank" rel="noopener">GoatCounter</a> 統計頁面瀏覽人次，頁尾顯示的是編輯器頁面的累計人次。每次開啟頁面時，只會送出頁面路徑、頁面標題和來源網站，GoatCounter 也會收到瀏覽器必然帶上的 IP 和瀏覽器資訊，用來估算不重複的訪客。統計不使用 Cookie，也不會送出程式碼、Wi-Fi 密碼、序列埠內容或 MQTT 主題名稱。</li>
-          <li><strong>Wi-Fi 密碼：</strong>密碼寫在程式裡，所以會以明文存在瀏覽器和開發板的 <code>main.py</code>。網站也會在這個瀏覽器記住最後用的 Wi-Fi 名稱和密碼，載入範例時自動填入。使用共用電腦或借出開發板前，請先刪除密碼，做法見下方「共用電腦與開發板」。</li>
-          <li><strong>貼給 Gemini 前：</strong>「解說程式」、「複製給 Gemini」和「改寫成 MicroPython」會自動隱藏常見的 Wi-Fi、帳號密碼、Token 和 Apps Script 網址寫法，但不保證全部偵測得到。自己全選複製程式時不會隱藏，請先刪除密碼。</li>
-          <li><strong>截圖和投影：</strong>編輯器會顯示密碼，投影或分享畫面前請先遮住。上課建議使用專用 Wi-Fi 或手機熱點。</li>
-          <li><strong>語音控制和手機儀表板：</strong>資料會經過公用 MQTT 伺服器，沒有加密保護和權限控管，知道主題名稱的人都能看到和控制。只適合 LED 這類低風險實驗，不要控制插座或門鎖，也不要在主題名稱填入個人資料。</li>
-          <li><strong>語音辨識：</strong>語音由瀏覽器和其語音服務辨識，通常需要連網。</li>
-          <li><strong>Telegram Bot Token：</strong>Token 等於機器人的密碼，拿到的人可以冒用機器人，不要投影或分享。不小心外洩時，請到 @BotFather 傳 <code>/revoke</code> 換一組。範例不驗證伺服器憑證，不要用來控制重要設備。</li>
-        </ul>
-
-        <h3 id="shared-computer">共用電腦與開發板</h3>
-        <p class="tip warn"><strong>關閉網頁不會清除程式碼。</strong>程式碼和裡面的 Wi-Fi 密碼會留在瀏覽器，下一個用同一台電腦、同一個瀏覽器帳號的人打開網站就看得到。</p>
-        <p>離開電腦或交還開發板前，請照下面做：</p>
-        <ol>
-          <li><strong>想留下程式：</strong>先刪除程式裡的 Wi-Fi 名稱、密碼、MQTT 帳號密碼、Bot Token 和 Apps Script 網址，再按「下載 main.py」。下載的檔案不會自動隱藏這些資料。</li>
-          <li><strong>清除瀏覽器：</strong>刪除編輯器裡的全部內容。編輯器會自動儲存，所以舊內容會一起被取代，網站記住的 Wi-Fi 名稱和密碼也會一起清除。</li>
-          <li><strong>清除開發板：</strong>上傳不含密碼的程式，會覆蓋板子上的 <code>main.py</code>；其他含有密碼的檔案可以在<a href="#files">板上檔案</a>刪除。要清除板子上所有檔案，請重新安裝韌體。</li>
-        </ol>
-        <p>電腦教室的還原卡通常會在重新開機後清除瀏覽器資料，但重新開機前，下一位使用者還是看得到。開發板不受還原卡影響，資料會一直留在板子上。</p>
-      </section>
-
-      <section id="faq">
-        <h2>常見問題</h2>
-        <details><summary>安裝韌體時出現 Serial data stream stopped</summary><p>這時通常還沒開始清除，板子沒有損壞，會繼續執行原本的程式。請重新整理網頁、拔掉再插回 USB 線，重新連接後再裝一次，實測的 CH340 板就是這樣裝好的。還是失敗時，改插電腦本體的 USB 孔、換一條 USB 線，或按住 IO0 鍵、按一下 EN 鍵、放開 IO0 鍵後再安裝。</p></details>
-        <details><summary>晶片選錯了，上傳後板子會壞掉嗎？</summary><p>選單選錯不會影響韌體，安裝時網站會自己偵測晶片。上傳的程式也不會改動韌體，但腳位可能不對。ESP32 選成 S2、S3 或 C3 時，範例可能用到 GPIO 6–11，板子可能當機或一直重新啟動。這種情況只要重新選對晶片和範例後上傳；上傳不了時，請按住 IO0 鍵重新安裝韌體。真正可能損壞板子的是接線，例如把 5V 接到 GPIO、電源短路，或腳位輸出時直接接到電源或 GND。</p></details>
-        <details><summary>可以用 ESP32-CAM 拍照嗎？</summary><p>目前不行。MicroPython 官方韌體沒有相機模組，要改用第三方編譯的韌體才能拍照，網站沒有內建。</p></details>
-        <details><summary>ESP32-S2、S3、C3 安裝韌體時連不上，或裝完沒有反應</summary><p>USB 直接接晶片的板子，重新啟動時序列埠會暫時消失。連不上時，請按住 BOOT 鍵、按一下 RST 鍵、放開 BOOT 鍵，再重新按「連接開發板」並安裝。裝完後按一下 RST 鍵，等 2 秒再連接。板子有兩個 USB 孔時，可以改接標示 UART 或 COM 的那一個。</p></details>
-        <details><summary>按「連接開發板」後，清單裡沒有序列埠</summary><p>先換一條確定能傳輸資料的 USB 線，有些線只能充電。接著確認已安裝對應的驅動程式，並重新插拔開發板。</p></details>
-        <details><summary>連接失敗，或顯示序列埠被佔用</summary><p>關閉 Arduino IDE 和其他分頁裡的本網站，一次只能有一個程式使用序列埠。</p></details>
-        <details><summary>顯示「沒有偵測到 MicroPython」</summary><p>第一次使用，或燒錄過 Arduino 程式時都會這樣。按「安裝韌體」即可，不用另外下載韌體。</p></details>
-        <details><summary>安裝韌體時一直連不上</summary><p>網站會自動重新連接，最多試 10 次，每一次都會寫在監控窗。10 次都失敗時，請按住板子上的 IO0（BOOT）鍵再按「安裝韌體」，開始寫入後就可以放開。有些板子的自動重置電路不太穩，按住 IO0 是最可靠的做法。回報問題時，請一起提供監控窗裡「連線紀錄」下面的內容。</p></details>
-        <details><summary>顯示「這塊板子是 ESP32-xx，目前只支援 ESP32、ESP32-S2、S3 和 C3」</summary><p>這塊板子的晶片不在支援範圍內，內建韌體不能用。請改用這四種晶片的開發板。</p></details>
-        <details><summary>監控窗出現紅色的「程式發生錯誤」</summary><p>按「複製給 Gemini」，把錯誤訊息和程式碼一起貼給 Gemini 修正，再把新程式貼回來上傳。</p></details>
-        <details><summary>看不懂範例或 Gemini 給的程式</summary><p>按「Gemini 提示詞」→「解說整份程式」，貼給 Gemini，它會分段解說並標出行號。只看不懂其中幾行，就先選取那幾行再打開選單，見 <a href="#gemini">Gemini 提示詞</a>。</p></details>
-        <details><summary>顯示 Wi-Fi 連線失敗</summary><p>確認名稱和密碼完全正確（包含大小寫），並確認是 2.4GHz 網路。</p></details>
-        <details><summary>手機打不開 192.168.x.x 的網頁</summary><p>確認手機和開發板連同一個 Wi-Fi，也關閉手機的行動數據試試。校園網路可能禁止裝置互連，可以改用手機熱點，或語音控制頁（MQTT）。</p></details>
-        <details><summary>沒有跳出麥克風權限，語音不能用</summary><p>確認開啟的是 HTTPS 的語音控制頁，不是 <code>http://192.168.x.x</code>。如果之前拒絕過，請到瀏覽器的網站設定改成允許。</p></details>
-        <details><summary>語音控制頁顯示「開發板沒有回應」或「離線」</summary><p>確認開發板程式正在執行、監控窗顯示已連上 MQTT 伺服器，以及頁面和程式裡的主題名稱完全相同。校園網路可能會擋 1883 連接埠，可以改用手機熱點測試。</p></details>
-        <details><summary>語音控制頁顯示「MQTT 帳號或密碼不正確」</summary><p>確認帳號密碼和伺服器設定相同，以及這個帳號有權限使用 <code>esp32-mp-class/</code> 開頭的 Topic。密碼不會儲存，重新整理後要再輸入一次。</p></details>
-        <details><summary>Google 試算表範例顯示「Google 沒有回傳 ok」</summary><p>通常是部署時存取權沒有選「所有人」，或學校帳號不允許。請先用瀏覽器的無痕視窗開啟網址測試，應該要顯示 <code>ok</code>。資料沒有增加時，也請確認網址結尾是 <code>/exec</code>。</p></details>
-        <details><summary>按下「停止」後，程式之後還會自動執行嗎？</summary><p>會。「停止」只中斷目前的執行，<code>main.py</code> 還在板子上，下次通電或重新啟動時會再次執行。「停止」不是暫停，沒辦法從停下來的地方接著跑；要馬上再執行，按監控窗上方的「重新啟動」，程式會從頭開始。用「執行（不存檔）」試跑的程式，則是再按一次「執行（不存檔）」。</p></details>
-        <details><summary>用「執行（不存檔）」試好了，怎麼讓它通電就自動執行？</summary><p>按「上傳並執行」，程式會存成 <code>main.py</code>。「執行（不存檔）」的程式只在記憶體裡，重新啟動或拔掉電源就會消失。</p></details>
       </section>
 
       <p class="help-bottom"><a class="home-link" href="./index.html"><span aria-hidden="true">←</span> 回程式編輯頁</a></p>

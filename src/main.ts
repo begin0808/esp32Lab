@@ -1083,7 +1083,7 @@ function loadExample(chosen: Example): void {
 function loadFromLearningPath(chosen: Example): void {
   loadExample(chosen);
   // The help link then reopens the help page at this step, so the student can carry on from there.
-  ui.helpLink.href = `./help.html#path-${chosen.id}`;
+  ui.helpLink.href = `./help-path.html#path-${chosen.id}`;
   systemMessage(t("已從學習路徑載入「{name}」。打開「設定與說明」→「使用說明」，會回到學習路徑的這一步。", { name: numberedName(chosen) }));
 }
 

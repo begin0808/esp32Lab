@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Boards and wiring | Help | ESP32 Lab MicroPython Edition</title>
+    <meta name="description" content="Supported ESP32 boards, wiring notes, parts and sensors, and the default wiring of every example." />
+    <script>
+      // Runs before the first paint so a saved style never flashes the default one.
+      try {
+        document.documentElement.dataset.style = localStorage.getItem("esp32-mp-style") || "mat";
+      } catch {}
+    </script>
+    <link rel="icon" href="/icons/logo.svg" type="image/svg+xml" />
+    <link rel="icon" href="/icons/logo-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/icons/logo-180.png" />
+    <link rel="stylesheet" href="/src/themes.css" />
+    <link rel="stylesheet" href="/src/help.css" />
+  </head>
+  <body>
+    <header class="help-top">
+      <div class="brand">
+        <img class="brand-logo" src="/icons/logo.svg" alt="" width="40" height="40" />
+        <div>
+          <h1>ESP32 Lab <span class="edition">MicroPython Edition</span> Help <span class="version" title="Version">v%VITE_APP_VERSION%</span></h1>
+          <p class="updated">Last updated: November 14, 2026</p>
+        </div>
+      </div>
+      <div class="help-actions">
+        <a id="home-link" class="home-link" href="./index.html"><span aria-hidden="true">←</span> Back to the editor</a>
+        <label class="style-picker">
+          Style
+          <select id="style-picker"></select>
+        </label>
+        <label class="style-picker language-picker">
+          語言 Language
+          <select id="language-picker"></select>
+        </label>
+      </div>
+    </header>
+
+    <main class="doc">
+      <nav class="help-pages" aria-label="Help pages">
+        <a href="./help.en.html">Help home</a>
+        <a href="./help-start.en.html">Quick start</a>
+        <a href="./help-path.en.html">Learning path</a>
+        <a href="./help-challenge.en.html">Challenge projects</a>
+        <a href="./help-tools.en.html">Editor tools</a>
+        <a href="./help-hardware.en.html" aria-current="page">Boards and wiring</a>
+        <a href="./help-iot.en.html">Phone and cloud</a>
+        <a href="./help-faq.en.html">Troubleshooting and safety</a>
+      </nav>
+      <nav class="toc" aria-label="On this page">
+        <a href="#boards">Supported boards</a>
+        <a href="#wiring">Wiring notes</a>
+        <a href="#parts">Parts and sensors</a>
+        <a href="#example-wiring">Wiring for each example</a>
+      </nav>
+      <section id="boards">
+        <h2>Supported boards</h2>
+        <p>The site includes MicroPython v1.29.0 firmware for the <strong>ESP32, ESP32-S2, S3 and C3</strong>, and picks the right one by detecting the chip during installation. The chip inside ESP32-S and ESP-WROOM-32 modules is an ESP32, which is different from the ESP32-S2 and S3. The flash must be at least 4 MB. With any other chip or too little flash, the site stops before erasing anything.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Board</th><th scope="col">USB chip</th><th scope="col">Status</th><th scope="col">Notes</th></tr></thead>
+            <tbody>
+              <tr><td>NodeMCU-32S (ESP-WROOM-32)</td><td>CP2102</td><td><span class="badge tested">Tested</span></td><td>Firmware install, upload, Wi-Fi and MQTT have been tested. See the <a href="./images/nodemcu-32s-pinout.png" target="_blank" rel="noopener">pinout</a>.</td></tr>
+              <tr><td>ESP32-S board</td><td>CH340</td><td><span class="badge tested">Tested</span></td><td>Firmware install, uploading the LED blink program and stopping it have been tested. This board's Wi-Fi has not. Its pin layout may differ from the pinout above, so check the markings on the board.</td></tr>
+              <tr><td>Other ESP32-WROOM-32 boards</td><td>Varies</td><td><span class="badge expected">Should work</span></td><td>Needs at least 4 MB of flash. Not every model has been tested.</td></tr>
+              <tr><td>ESP32-S2 boards</td><td>Built-in USB or varies</td><td><span class="badge expected">Not yet tested</span></td><td>Supported by the site, but not yet tested on a real board.</td></tr>
+              <tr><td>ESP32-S3 boards</td><td>Built-in USB or varies</td><td><span class="badge expected">Not yet tested</span></td><td>Supported by the site, but not yet tested on a real board. Versions with octal PSRAM (for example, models with R8) may not be able to use the PSRAM.</td></tr>
+              <tr><td>ESP32-C3 boards</td><td>Built-in USB or varies</td><td><span class="badge expected">Not yet tested</span></td><td>Supported by the site, but not yet tested on a real board. MicroPython says this firmware needs chip revision 3 or later; the monitor shows the revision during installation.</td></tr>
+              <tr><td>ESP32-CAM</td><td>None on the board; needs a base board or USB-to-serial module</td><td><span class="badge expected">No camera</span></td><td>The chip is an ESP32, so the firmware should install, but this has not been tested. The included firmware <strong>has no camera support and cannot use the onboard PSRAM</strong>, so it works only as a plain ESP32. Most examples use pins this board does not expose, so you will need to change them.</td></tr>
+              <tr><td>ESP32-C6, H2, C2, C5, P4 and others</td><td>Varies</td><td><span class="badge no">Not supported</span></td><td>The site has no firmware for these chips. Installation stops by itself without erasing the board.</td></tr>
+              <tr><td>ESP8266, Arduino UNO and others</td><td>Varies</td><td><span class="badge no">Not supported</span></td><td>These are not ESP32 boards, so the site cannot install firmware on them.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3 id="chips">How the ESP32 chips differ</h3>
+        <p>Boards sold as ESP32 can carry several different chips. For classes, the classic ESP32 is the best choice, because it has the most teaching material and online help. The other chips number their pins differently, so see the pin table under "Wiring notes".</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Chip</th><th scope="col">Cores</th><th scope="col">Memory (RAM)</th><th scope="col">Bluetooth</th><th scope="col">Best for</th><th scope="col">This site</th></tr></thead>
+            <tbody>
+              <tr><td>ESP32</td><td>Two, 240 MHz</td><td>520 KB</td><td>Classic Bluetooth and BLE</td><td>The most common, with the most teaching material and many pins</td><td><span class="badge tested">Tested</span></td></tr>
+              <tr><td>ESP32-S3</td><td>Two, 240 MHz</td><td>512 KB, plus optional PSRAM</td><td>BLE 5</td><td>The most pins and camera support, for more advanced projects</td><td><span class="badge expected">Not yet tested</span></td></tr>
+              <tr><td>ESP32-C3</td><td>One, 160 MHz (RISC-V)</td><td>400 KB</td><td>BLE 5</td><td>Cheap and small, with fewer pins</td><td><span class="badge expected">Not yet tested</span></td></tr>
+              <tr><td>ESP32-S2</td><td>One, 240 MHz</td><td>320 KB</td><td>None</td><td>Replaced by the S3 and now rare, so there is no need to look for one</td><td><span class="badge expected">Not yet tested</span></td></tr>
+              <tr><td>ESP32-C2 (ESP8684)</td><td>One, 120 MHz (RISC-V)</td><td>272 KB</td><td>BLE 5</td><td>The cheapest, meant to replace the ESP8266, with the least memory</td><td><span class="badge no">Not supported</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <ul>
+          <li><strong>S3 model names:</strong> N16R8, for example, means 16 MB of flash and 8 MB of octal PSRAM. Octal PSRAM uses GPIO 35–37, so do not connect parts to those pins. If the board has two USB-C ports, try the one marked COM or UART first.</li>
+          <li><strong>Boards with CAM in the name:</strong> this site's firmware has no camera support, so they work only as plain boards.</li>
+          <li><strong>C3, S2 and S3 boards:</strong> some have no USB-to-serial chip and use the chip's own USB instead, so no driver is needed.</li>
+        </ul>
+        <h3>Can I use an Arduino UNO?</h3>
+        <p><strong>No.</strong> This site only has MicroPython firmware for the ESP32 family, and the classic UNO R3 has too little memory to run MicroPython. ESP32 Lab also has an Arduino edition, but "Arduino" there means the Arduino framework you write code with (<code>setup()</code>, <code>digitalWrite()</code> and so on), not the Arduino board, so it does not support the UNO either.</p>
+        <h3>Boards supported by the two editions</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Board</th><th scope="col">MicroPython edition (this site)</th><th scope="col">Arduino edition</th></tr></thead>
+            <tbody>
+              <tr><td>Classic ESP32 (such as NodeMCU-32S)</td><td><span class="badge tested">Tested</span></td><td><span class="badge tested">Tested</span></td></tr>
+              <tr><td>ESP32-S2, S3, C3</td><td><span class="badge expected">Not yet tested</span></td><td><span class="badge no">Not supported</span></td></tr>
+              <tr><td>ESP32-C6 and other ESP32 chips</td><td><span class="badge no">Not supported</span></td><td><span class="badge no">Not supported</span></td></tr>
+              <tr><td>ESP8266, Arduino UNO</td><td><span class="badge no">Not supported</span></td><td><span class="badge no">Not supported</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>The Arduino edition compiles on a cloud server, so for now it is open only to the teachers and students at the author's school and is not public.</p>
+      </section>
+      <section id="wiring">
+        <h2>Wiring notes</h2>
+        <p>The pin table below is for the <strong>ESP32 (including ESP32-S and ESP-WROOM-32 modules)</strong>. For other chips, see the table at the end of this section.</p>
+        <p class="tip warn"><strong>Unplug the USB cable before wiring or changing wires.</strong> A wrong voltage or a short circuit can destroy the board.</p>
+        <ul>
+          <li><strong>GPIO pins only accept 3.3V:</strong> do not connect 5V signals straight to a GPIO.</li>
+          <li><strong>Do not drive high-current parts directly:</strong> motors, long LED strips and the like need an external supply or driver module. With an external supply, connect its GND to the ESP32's.</li>
+          <li><strong>Check the pin numbers:</strong> numbers in programs are GPIO numbers, so compare them with the markings on the board or the <a href="./images/nodemcu-32s-pinout.png" target="_blank" rel="noopener">pinout</a>.</li>
+        </ul>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Pins</th><th scope="col">Advice</th><th scope="col">Why</th></tr></thead>
+            <tbody>
+              <tr><td>GPIO 6–11</td><td><span class="badge no">Do not use</span></td><td>Connected to the internal flash, so wiring them can stop the board working. GPIO 9 and 10, marked RX1 and TX1 on the pinout, are included.</td></tr>
+              <tr><td>GPIO 34, 35, 36, 39</td><td><span class="badge expected">Input only</span></td><td>They cannot output, and have no internal pull-up or pull-down.</td></tr>
+              <tr><td>GPIO 25–27, GPIO 0, 2, 4, 12–15</td><td><span class="badge expected">No analog with Wi-Fi</span></td><td>These are ADC2 pins, which cannot read analog values while Wi-Fi is on. Use GPIO 32–39 for analog input.</td></tr>
+              <tr><td>GPIO 0, 2, 5, 12, 15</td><td><span class="badge expected">Use with care</span></td><td>Their levels at power-up affect booting. If GPIO 12 is high at power-up, the board may not start.</td></tr>
+              <tr><td>GPIO 1, 3</td><td><span class="badge expected">Avoid</span></td><td>Used by the USB serial port, so other parts here interfere with uploading and the monitor.</td></tr>
+              <tr><td>GPIO 4, 13, 16–19, 21–23, 25–27, 32, 33</td><td><span class="badge tested">Good first choice</span></td><td>Least likely to conflict for general digital input and output (GPIO 21 and 22 are often used for I2C).</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Pins on the ESP32-S2, S3 and C3</h3>
+        <p>These chips number their pins differently from the ESP32, so <strong>the pinout above does not apply</strong>. Check the markings on your board. This table shows the pins used by default when you choose an example.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Use</th><th scope="col">S2, S3</th><th scope="col">C3</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">LED</th><td>GPIO 18</td><td>GPIO 4</td></tr>
+              <tr><th scope="row">Button</th><td>GPIO 17</td><td>GPIO 5</td></tr>
+              <tr><th scope="row">Analog input (photoresistor, potentiometer)</th><td>GPIO 1</td><td>GPIO 3</td></tr>
+              <tr><th scope="row">DHT11, DS18B20</th><td>GPIO 4</td><td>GPIO 5</td></tr>
+              <tr><th scope="row">I2C (SDA, SCL)</th><td>GPIO 8, 9</td><td>GPIO 6, 7</td></tr>
+              <tr><th scope="row">Buzzer</th><td>GPIO 14</td><td>GPIO 6</td></tr>
+              <tr><th scope="row">Servo</th><td>GPIO 13</td><td>GPIO 6</td></tr>
+              <tr><th scope="row">WS2812</th><td>GPIO 16</td><td>GPIO 6</td></tr>
+              <tr><th scope="row">Used by USB; do not connect parts</th><td>GPIO 19, 20</td><td>GPIO 18, 19</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section id="parts">
+        <h2>Parts and sensors</h2>
+        <p><strong>This list is not a limit.</strong> Parts not listed here can also be used, as long as MicroPython can control them. Tell Gemini the <strong>full model and wiring pins</strong>, and follow the notes below when wiring.</p>
+        <ul class="legend">
+          <li><span class="badge tested">Tested</span>Tested successfully on a real board.</li>
+          <li><span class="badge example">Example</span>The site has a built-in example. Its program has run on simulated hardware, but not yet with the real part.</li>
+          <li><span class="badge firmware">Firmware</span>The firmware has what is needed, so you can program it directly, but there is no dedicated example and it has not been tested.</li>
+        </ul>
+
+        <p class="tip"><strong>The OLED, LCD and MAX7219 need nothing extra installed.</strong> The firmware has no driver for these three parts, so their examples include the driver in the same <code>main.py</code>. Just choose the example and upload it. This has nothing to do with the CP210x and CH340 USB drivers on your computer.</p>
+
+        <h3>Output parts</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Part</th><th scope="col">Status</th><th scope="col">Control</th><th scope="col">Notes</th></tr></thead>
+            <tbody>
+              <tr><td>LED</td><td><span class="badge tested">Tested</span></td><td><code>Pin</code></td><td>Use a series resistor (such as 220Ω). Long leg to GPIO, short leg to GND.</td></tr>
+              <tr><td>Active buzzer</td><td><span class="badge example">Example</span></td><td><code>Pin</code></td><td>Sounds when powered, so it can only switch on and off. Higher-current parts need a module or transistor.</td></tr>
+              <tr><td>Passive buzzer</td><td><span class="badge example">Example</span></td><td><code>PWM</code></td><td>Needs a frequency to sound, and can play different pitches. Check whether it is active or passive before buying.</td></tr>
+              <tr><td>SG90 servo</td><td><span class="badge example">Example</span></td><td><code>PWM</code> (50 Hz)</td><td>Use an external 5V supply sharing GND with the ESP32. Do not power it from the board's 3V3.</td></tr>
+              <tr><td>Relay module</td><td><span class="badge firmware">Firmware</span></td><td><code>Pin</code></td><td>Check that the module accepts 3.3V signals. <strong>Do not connect mains power in class experiments.</strong></td></tr>
+              <tr><td>WS2812 RGB LEDs, strips, matrices</td><td><span class="badge example">Example</span></td><td><code>neopixel</code></td><td>Many LEDs draw a lot of current, so use an external supply sharing GND.</td></tr>
+              <tr><td>MAX7219 LED matrix</td><td><span class="badge example">Example</span></td><td><code>Pin</code></td><td>Usually powered at 5V, where the ESP32's 3.3V signals may be unreliable. Test it first.</td></tr>
+              <tr><td>Bare 8×8 LED matrix</td><td><span class="badge firmware">Firmware</span></td><td><code>Pin</code></td><td>Needs many pins and a scanning program. Beginners should use a module with a driver chip instead.</td></tr>
+              <tr><td>SSD1306 OLED</td><td><span class="badge example">Example</span></td><td><code>I2C</code></td><td>Usually SDA to GPIO 21 and SCL to GPIO 22.</td></tr>
+              <tr><td>I2C LCD 1602</td><td><span class="badge example">Example</span></td><td><code>I2C</code></td><td>Many modules run on 5V, and their I2C lines may be pulled up to 5V. Check the voltage before wiring.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Sensors and inputs</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Part</th><th scope="col">Status</th><th scope="col">Control</th><th scope="col">Notes</th></tr></thead>
+            <tbody>
+              <tr><td>DHT11 temperature and humidity</td><td><span class="badge example">Example</span></td><td><code>dht</code></td><td>VCC to 3V3. Read at least 1 second apart.</td></tr>
+              <tr><td>DHT22 temperature and humidity</td><td><span class="badge firmware">Firmware</span></td><td><code>dht</code></td><td>Use <code>dht.DHT22</code> in the program. Read at least 2 seconds apart.</td></tr>
+              <tr><td>Photoresistor</td><td><span class="badge example">Example</span></td><td><code>ADC</code></td><td>Use <strong>GPIO 32–39</strong>. A bare part needs a divider resistor (such as 10kΩ); power modules from 3V3.</td></tr>
+              <tr><td>Potentiometer</td><td><span class="badge example">Example</span></td><td><code>ADC</code></td><td>Also on GPIO 32–39, with the ends on 3V3 and GND.</td></tr>
+              <tr><td>HC-SR501 motion sensor</td><td><span class="badge example">Example</span></td><td><code>Pin</code></td><td>Usually powered at 5V, with an output of about 3.3V. May give false readings for about a minute after power-up.</td></tr>
+              <tr><td>Button</td><td><span class="badge example">Example</span></td><td><code>Pin</code></td><td>You can use the internal <code>Pin.PULL_UP</code>. GPIO 34–39 have no internal pull-up.</td></tr>
+              <tr><td>DS18B20 temperature</td><td><span class="badge example">Example</span></td><td><code>onewire</code>, <code>ds18x20</code></td><td>Needs a 4.7kΩ pull-up between DATA and 3V3; modules usually include one.</td></tr>
+              <tr><td>HC-SR04 ultrasonic</td><td><span class="badge example">Example</span></td><td><code>Pin</code>, <code>time_pulse_us</code></td><td>Echo is often 5V, and <strong>must be divided down to 3.3V</strong> before it reaches a GPIO.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Tips for asking Gemini</h3>
+        <ul>
+          <li><strong>State the model and pins:</strong> for example, "MAX7219 8×8 LED matrix, DIN on GPIO 23, CLK on GPIO 18, CS on GPIO 5".</li>
+          <li><strong>When a module is missing:</strong> an <code>ImportError</code> means the program uses a module the firmware lacks. Ask Gemini to "put this part's driver in the same main.py as the main program", or upload the module's file to the board with <a href="./help-tools.en.html#files">Board files</a>.</li>
+          <li><strong>Name the language:</strong> ask for MicroPython v1.29.0, not Arduino C++. The site's "Gemini prompts" → "Write a new program" already includes these requirements.</li>
+        </ul>
+      </section>
+      <section id="example-wiring">
+        <h2>Wiring for each example</h2>
+        <p>This table shows the default wiring for the ESP32 (including ESP32-S and ESP-WROOM-32 modules). If you choose S2, S3 or C3 in the editor's "Chip" menu before choosing an example, the program and its wiring notes switch to pins that suit that chip. The site also sets the chip menu for you when you connect a board.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Example</th><th scope="col">What it does</th><th scope="col">Default wiring</th><th scope="col">Wi-Fi</th></tr></thead>
+            <tbody>
+              <tr><td><a href="./help-path.en.html#path-blink">1. Blink an LED</a></td><td>Toggles the LED once a second</td><td>Onboard LED (GPIO 2)</td><td>Not needed</td></tr>
+              <tr><td><a href="./help-path.en.html#path-button_led">2. Button-controlled LED</a></td><td>Each press toggles the LED</td><td>Button GPIO 19, LED GPIO 18</td><td>Not needed</td></tr>
+              <tr><td><a href="./help-path.en.html#path-breathing_led">3. Breathing LED (PWM)</a></td><td>The LED slowly brightens and dims</td><td>LED GPIO 18</td><td>Not needed</td></tr>
+              <tr><td><a href="./help-path.en.html#path-knob_led">4. Potentiometer LED dimmer</a></td><td>Turn the knob to set the LED's brightness</td><td>Knob GPIO 34, LED GPIO 18</td><td>Not needed</td></tr>
+              <tr><td><a href="./help-path.en.html#path-buzzer_song">5. Twinkle Twinkle on a passive buzzer</a></td><td>Plays a tune using different frequencies</td><td>Buzzer GPIO 25</td><td>Not needed</td></tr>
+              <tr><td><a href="./help-path.en.html#path-servo_sweep">6. SG90 servo sweep</a></td><td>Sweeps between 0 and 180 degrees</td><td>Signal GPIO 13, external 5V supply</td><td>Not needed</td></tr>
+              <tr><td><a href="./help-path.en.html#path-light_sensor">7. Automatic night light (photoresistor)</a></td><td>The LED turns on when it gets dark</td><td>Photoresistor GPIO 34, LED GPIO 18</td><td>Not needed</td></tr>
+              <tr><td><a href="./help-path.en.html#path-pir_alarm">8. Motion alarm (HC-SR501)</a></td><td>The buzzer sounds and the LED lights when someone is detected</td><td>OUT GPIO 27, buzzer GPIO 25, LED GPIO 18</td><td>Not needed</td></tr>
+              <tr><td><a href="./help-path.en.html#path-ultrasonic">9. Ultrasonic distance (HC-SR04)</a></td><td>Shows the distance in the monitor</td><td>Trig GPIO 26, Echo through a divider to GPIO 33</td><td>Not needed</td></tr>
+              <tr><td><a href="./help-path.en.html#path-dht11_serial">10. DHT11 temperature and humidity (monitor)</a></td><td>Shows temperature and humidity every 2 seconds</td><td>DATA GPIO 4</td><td>Not needed</td></tr>
+              <tr><td><a href="./help-path.en.html#path-ds18b20">11. DS18B20 thermometer</a></td><td>Shows the temperature every 2 seconds</td><td>DATA GPIO 4</td><td>Not needed</td></tr>
+              <tr><td><a href="./help-path.en.html#path-ws2812_rainbow">12. WS2812 RGB LED rainbow</a></td><td>Rainbow colours flow along the strip</td><td>DIN GPIO 16</td><td>Not needed</td></tr>
+              <tr><td><a href="./help-path.en.html#path-oled_ssd1306">13. SSD1306 OLED display</a></td><td>Shows text and seconds since boot</td><td>SDA GPIO 21, SCL GPIO 22</td><td>Not needed</td></tr>
+              <tr><td><a href="./help-path.en.html#path-lcd1602_i2c">14. I2C LCD 1602 display</a></td><td>Shows text and seconds since boot</td><td>SDA GPIO 21, SCL GPIO 22</td><td>Not needed</td></tr>
+              <tr><td><a href="./help-path.en.html#path-max7219_matrix">15. MAX7219 LED matrix</a></td><td>Alternates between a smiley and a heart</td><td>DIN GPIO 23, CLK GPIO 18, CS GPIO 5</td><td>Not needed</td></tr>
+              <tr><td><a href="./help-path.en.html#path-web_led">16. Phone-controlled LED (same Wi-Fi)</a></td><td>Control the LED from buttons or text commands on a phone web page</td><td>Wired LED on GPIO 18</td><td>Phone and board on the same Wi-Fi</td></tr>
+              <tr><td><a href="./help-path.en.html#path-mqtt_led">17. Voice-controlled LED (MQTT)</a></td><td>Say "on", "off" or "blink" on the voice control page</td><td>Wired LED on GPIO 18</td><td>Board and phone both online</td></tr>
+              <tr><td><a href="./help-path.en.html#path-dht11_alarm">18. DHT11 humidity alarm</a></td><td>A phone web page updates every 2 seconds and alarms when humidity is over 50%</td><td>DHT11 DATA on GPIO 4</td><td>Phone and board on the same Wi-Fi</td></tr>
+              <tr><td><a href="./help-path.en.html#path-telegram_led">19. Telegram bot LED</a></td><td>Send /on, /off or /status to control the LED; the button notifies your phone</td><td>LED GPIO 18, button GPIO 19</td><td>Board online</td></tr>
+              <tr><td><a href="./help-path.en.html#path-sheets_dht11">20. Log DHT11 data to Google Sheets</a></td><td>Adds a row of temperature and humidity every minute; see <a href="./help-iot.en.html#google-sheets">Google Sheets</a></td><td>DATA GPIO 4</td><td>Board online</td></tr>
+              <tr><td><a href="./help-path.en.html#path-i2c_scan">21. I2C scan (find device addresses)</a></td><td>Lists the addresses and likely models of the devices on I2C; try it first when an OLED or LCD does not respond</td><td>SDA GPIO 21, SCL GPIO 22</td><td>Not needed</td></tr>
+              <tr><td><a href="./help-path.en.html#path-button_irq">22. Button interrupt (IRQ)</a></td><td>Notes each press at once, so none are missed though the program looks only every 2 seconds</td><td>As example 2: button GPIO 19, LED GPIO 18</td><td>Not needed</td></tr>
+              <tr><td><a href="./help-path.en.html#path-timer_blink">23. Timer blinks the LED by itself</a></td><td>A timer blinks the LED every 0.5 seconds while the program counts</td><td>LED GPIO 18</td><td>Not needed</td></tr>
+              <tr><td><a href="./help-path.en.html#path-deep_sleep">24. Deep sleep with timed wake-ups</a></td><td>Wakes, blinks the LED, counts the wake-ups, then sleeps 10 seconds</td><td>Onboard LED (GPIO 2)</td><td>Not needed</td></tr>
+              <tr><td><a href="./help-path.en.html#path-espnow_led">25. ESP-NOW between boards</a></td><td>Press the button on any board and every board's LED toggles</td><td>Every board as example 2</td><td>Not needed; boards talk directly</td></tr>
+              <tr><td><a href="./help-path.en.html#path-asyncio_tasks">26. asyncio: three things at once</a></td><td>Blinks the LED, watches the button and reports the running time, all at once</td><td>As example 2: button GPIO 19, LED GPIO 18</td><td>Not needed</td></tr>
+              <tr><td><a href="./help-path.en.html#path-dash_intro">27. Dashboard basics: LED switch and button</a></td><td>A switch on the phone dashboard controls the LED, a lamp shows the button, and a number counts the presses</td><td>As example 2: button GPIO 19, LED GPIO 18</td><td>Board and phone both need the internet</td></tr>
+              <tr><td><a href="./help-path.en.html#path-dash_dht11">28. DHT11 dashboard</a></td><td>See temperature and humidity gauges and a humidity chart with times on a phone; the status line warns above 30°C</td><td>DATA GPIO 4</td><td>Board and phone both need the internet</td></tr>
+              <tr><td><a href="./help-path.en.html#path-dash_knob">29. Knob and phone slider both dim an LED</a></td><td>Turning the knob or dragging the phone's slider sets the LED's brightness, and turning the knob moves the phone's slider too; a gauge shows the knob, and a "Full brightness" button moves the slider to 100%</td><td>Knob GPIO 34, LED GPIO 18</td><td>Board and phone both need the internet</td></tr>
+              <tr><td><a href="./help-path.en.html#path-dash_color">30. Pick a colour for an RGB LED</a></td><td>Choose a colour on the phone and the WS2812 strip changes to it; a slider sets the brightness</td><td>DIN GPIO 16</td><td>Board and phone both need the internet</td></tr>
+              <tr><td><a href="./help-path.en.html#path-dash_car">31. Phone-controlled car</a></td><td>Hold a direction key on the phone and the car drives forward, back or turns; let go and it stops, and it also stops if the phone drops off</td><td>L298N or L9110S: IN1–IN4 to GPIO 18, 19, 21, 22</td><td>Board and phone both need the internet</td></tr>
+              <tr><td><a href="./help-path.en.html#path-dash_mode">32. Menu switches LED modes</a></td><td>A menu on the phone switches between off, on, blink and breathe; a gauge shows the brightness</td><td>LED GPIO 18</td><td>Board and phone both need the internet</td></tr>
+              <tr><td><a href="./help-path.en.html#path-dash_oled">33. Send text to the OLED</a></td><td>Type English on the phone and the OLED shows it; a "Clear screen" button empties it</td><td>SDA GPIO 21, SCL GPIO 22</td><td>Board and phone both need the internet</td></tr>
+              <tr><td><a href="./help-path.en.html#path-dash_doorbell">34. Doorbell alert on the phone</a></td><td>Press the board's button and the phone pops up an alert with a sound; press "Reply" on the phone and the LED blinks for 3 s</td><td>As example 2: button GPIO 19, LED GPIO 18</td><td>Board and phone both need the internet</td></tr>
+              <tr><td><a href="./help-path.en.html#path-dash_threshold">35. Set a humidity limit from the phone</a></td><td>Set a humidity limit on the phone; the LED lights when the humidity goes over it</td><td>DHT11 DATA GPIO 4, LED GPIO 18</td><td>Board and phone both need the internet</td></tr>
+              <tr><td><a href="./help-path.en.html#path-dash_log">36. Temperature and humidity log</a></td><td>Records the temperature and humidity as a row at regular times; download the CSV on the phone</td><td>DATA GPIO 4</td><td>Board and phone both need the internet</td></tr>
+              <tr><td><a href="./help-path.en.html#path-dash_level">37. Phone spirit level</a></td><td>Tilt the phone and the ball on the OLED rolls to the lower side; it shows LEVEL! when flat</td><td>SDA GPIO 21, SCL GPIO 22</td><td>Board and phone both need the internet</td></tr>
+              <tr><td><a href="./help-path.en.html#path-dash_joycar">38. Phone joystick car</a></td><td>Push the phone's joystick to drive: further is faster, let go to stop; it stops by itself if the phone disconnects</td><td>As example 31: IN1–IN4 to GPIO 18, 19, 21 and 22</td><td>Board and phone both need the internet</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="tip"><strong>Advanced examples (21–26):</strong> 22, 23, 25 and 26 all use the wiring of example 2, so one setup covers them all. The interrupt and timer examples turn their interrupt or timer off when you press "Stop"; otherwise the LED would keep changing after the program stopped. ESP-NOW needs two or more boards, each running the same program. Use "Upload and run" for deep sleep; after waking, the board gives you 5 seconds to press "Stop". Boards with built-in USB (S2, S3, C3) drop the connection while asleep; connect again after they wake.</p>
+      </section>
+      <nav class="page-turn" aria-label="Previous and next page">
+        <a rel="prev" href="./help-tools.en.html"><span aria-hidden="true">←</span> Editor tools</a>
+        <a rel="next" href="./help-iot.en.html">Phone and cloud <span aria-hidden="true">→</span></a>
+      </nav>
+
+      <p class="help-bottom"><a class="home-link" href="./index.html"><span aria-hidden="true">←</span> Back to the editor</a></p>
+    </main>
+
+    <footer class="footer">
+      <div class="copyright">
+        <span>© 2026 <a href="https://begin0808.github.io/studio0808/" target="_blank" rel="noopener">Studio0808</a>. All rights reserved.</span>
+        <span class="contact-note">Suggestions and bug reports are welcome</span>
+        <a class="contact-link" href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=begin0808@gmail.com" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>Email me
+        </a>
+        <a class="contact-link" href="https://www.facebook.com/begin.li.1/" target="_blank" rel="noopener" aria-label="Facebook">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="#1877f2" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
+        </a>
+        <span id="visit-count" class="visit-count" hidden></span>
+      </div>
+    </footer>
+
+    <button id="to-top" class="to-top" type="button" hidden><span aria-hidden="true">↑</span> Back to top</button>
+
+    <script type="module" src="/src/help.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>手機與雲端｜使用說明｜ESP32 Lab MicroPython 版</title>
+    <meta name="description" content="用手機、語音和 Telegram 控制 ESP32，手機儀表板，以及把感測器資料存到 Google 試算表。" />
+    <script>
+      // Runs before the first paint so a saved style never flashes the default one.
+      try {
+        document.documentElement.dataset.style = localStorage.getItem("esp32-mp-style") || "mat";
+      } catch {}
+    </script>
+    <script>
+      // The English help page is its own file, so it is opened before anything is drawn.
+      (function () {
+        var saved = "";
+        try {
+          saved = localStorage.getItem("esp32-mp-lang") || "";
+        } catch {}
+        if (!/^zh/i.test(saved || navigator.language)) location.replace("./help-iot.en.html" + location.hash);
+      })();
+    </script>
+    <link rel="icon" href="/icons/logo.svg" type="image/svg+xml" />
+    <link rel="icon" href="/icons/logo-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/icons/logo-180.png" />
+    <link rel="stylesheet" href="/src/themes.css" />
+    <link rel="stylesheet" href="/src/help.css" />
+  </head>
+  <body>
+    <header class="help-top">
+      <div class="brand">
+        <img class="brand-logo" src="/icons/logo.svg" alt="" width="40" height="40" />
+        <div>
+          <h1>ESP32 Lab <span class="edition">MicroPython 版</span> 使用說明 <span class="version" title="版本">v%VITE_APP_VERSION%</span></h1>
+          <p class="updated">內容更新：2026 年 11 月 14 日</p>
+        </div>
+      </div>
+      <div class="help-actions">
+        <a id="home-link" class="home-link" href="./index.html"><span aria-hidden="true">←</span> 回程式編輯頁</a>
+        <label class="style-picker">
+          風格
+          <select id="style-picker"></select>
+        </label>
+        <label class="style-picker language-picker">
+          語言 Language
+          <select id="language-picker"></select>
+        </label>
+      </div>
+    </header>
+
+    <main class="doc">
+      <nav class="help-pages" aria-label="說明頁面">
+        <a href="./help.html">說明首頁</a>
+        <a href="./help-start.html">快速上手</a>
+        <a href="./help-path.html">學習路徑</a>
+        <a href="./help-challenge.html">挑戰專題</a>
+        <a href="./help-tools.html">編輯器功能</a>
+        <a href="./help-hardware.html">硬體與接線</a>
+        <a href="./help-iot.html" aria-current="page">手機與雲端</a>
+        <a href="./help-faq.html">問題排解與安全</a>
+      </nav>
+      <nav class="toc" aria-label="本頁目錄">
+        <a href="#voice">手機與語音控制</a>
+        <a href="#dashboard">手機儀表板</a>
+        <a href="#google-sheets">Google 試算表</a>
+      </nav>
+      <section id="voice">
+        <h2>手機與語音控制</h2>
+        <p>網站有兩種手機網頁控制方式，也可以用本章最後的 Telegram 機器人控制。想在手機上同時看好幾個數值、用開關和滑桿控制板子，請看<a href="#dashboard">手機儀表板</a>。</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col"></th><th scope="col">開發板上的網頁</th><th scope="col">語音控制頁（MQTT）</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">範例</th><td>手機控制 LED、DHT11 溫濕度警報</td><td>語音控制 LED（MQTT）</td></tr>
+              <tr><th scope="row">網址</th><td><code>http://192.168.x.x</code>（監控窗會顯示）</td><td><a href="./voice.html" target="_blank" rel="noopener">語音控制頁</a></td></tr>
+              <tr><th scope="row">麥克風語音</th><td>不能用，瀏覽器不允許 <code>http://</code> 網址使用麥克風</td><td>可以用（HTTPS）</td></tr>
+              <tr><th scope="row">網路需求</th><td>手機和板子連同一個 Wi-Fi，不一定要能上網</td><td>板子和手機都要能上網，不必同一個 Wi-Fi</td></tr>
+              <tr><th scope="row">校園網路影響</th><td>禁止裝置互連時會打不開</td><td>防火牆擋 1883 連接埠時，板子會連不上</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>語音控制步驟</h3>
+        <ol>
+          <li>範例選「語音控制 LED（MQTT）」，填入 Wi-Fi 名稱和密碼，按「上傳並執行」。</li>
+          <li>監控窗顯示「已連上 MQTT 伺服器」後，記下 <strong>MQTT 主題名稱</strong>。</li>
+          <li>開啟<a href="./voice.html" target="_blank" rel="noopener">語音控制頁</a>，輸入主題名稱後按「連線」。</li>
+          <li>按語音按鈕，允許使用麥克風，然後說「開燈」、「關燈」或「閃爍」。</li>
+        </ol>
+        <p>語音不能用時，可以按開燈、關燈按鈕，或在文字指令欄用手機鍵盤的麥克風輸入。Windows 電腦也可以按 <kbd>Win</kbd> + <kbd>H</kbd> 語音輸入。</p>
+        <p><strong>主題名稱和 MQTT Topic：</strong>你輸入的名稱會組成兩個 Topic。以 <code>led-1</code> 為例，指令走 <code>esp32-mp-class/led-1/command</code>，開發板回報走 <code>esp32-mp-class/led-1/state</code>，其他 MQTT 工具也可以訂閱或發布這兩個 Topic。</p>
+        <p><strong>使用自己的 MQTT 伺服器：</strong>打開語音控制頁的「進階」，填入伺服器位址、WSS 連接埠、路徑、帳號和密碼；程式裡的 <code>BROKER</code>、<code>MQTT_PORT</code>、<code>MQTT_USER</code>、<code>MQTT_PASSWORD</code> 也要改成同一台。語音控制頁不會儲存密碼，重新整理後要再輸入一次。開發板預設走不加密的 1883 連接埠，帳號密碼可能被同網路的人看到，請使用這台伺服器專用的密碼。</p>
+
+        <h3 id="telegram">Telegram 機器人</h3>
+        <ol>
+          <li>在 Telegram 搜尋 <strong>@BotFather</strong>，傳 <code>/newbot</code>，依指示取名後會拿到 <strong>Bot Token</strong>。</li>
+          <li>範例選「Telegram 機器人控制 LED」，填入 Wi-Fi 名稱、密碼和 <code>BOT_TOKEN</code>，按「上傳並執行」。</li>
+          <li>傳任一則訊息給你的機器人，監控窗會顯示 <strong>CHAT_ID</strong>。把號碼填進程式，再上傳一次。</li>
+          <li>傳 <code>/on</code>、<code>/off</code> 或 <code>/status</code> 控制 LED；按下按鈕時，手機會收到通知。</li>
+        </ol>
+        <p>板子約每 2 秒查一次新訊息，反應會有幾秒延遲。只有 <code>CHAT_ID</code> 指定的聊天室能控制板子，開機前累積的舊指令不會執行。校園網路封鎖 Telegram 時，板子會連不上，可以改用手機熱點。</p>
+
+        <p class="tip warn"><strong>Wi-Fi 只支援 2.4GHz。</strong>ESP32 連不上 5GHz 網路。</p>
+        <p class="tip">填過一次 Wi-Fi 名稱和密碼後，網站會記住最後用的那一組，之後載入其他範例時自動填入，不用再打一次。要換 Wi-Fi，直接改程式裡的 <code>SSID</code> 和 <code>PASSWORD</code>。</p>
+      </section>
+      <section id="dashboard">
+        <h2>手機儀表板</h2>
+        <p>手機儀表板可以在手機上看感測器的數值，也能用開關、按鈕和滑桿控制開發板。<strong>畫面由開發板的程式決定</strong>：程式寫了 <code>board.gauge("溫度")</code>，手機上就會出現溫度儀表，不用在手機上另外設定。資料經過 MQTT 伺服器，所以板子和手機不必連同一個 Wi-Fi，但都要能上網。範例 27–38 都用到手機儀表板。</p>
+        <h3>使用步驟</h3>
+        <ol>
+          <li>範例選「27. 儀表板入門：開關 LED、看按鈕」，填入 Wi-Fi 名稱和密碼，按「上傳並執行」。</li>
+          <li>網站會先把儀表板工具 <code>dash.py</code> 存到板子的 <code>/lib</code>，監控窗會顯示「已把手機儀表板工具 dash.py 存到板子的 /lib」。板子上已經是同一個版本時會跳過，不會拖慢上傳。</li>
+          <li>板子連上 MQTT 伺服器後，監控窗上方會出現手機儀表板的網址和 QR code。用手機相機掃描，就會打開<a href="./dashboard.html" target="_blank" rel="noopener">手機儀表板頁</a>，主題名稱也會自動填好。</li>
+          <li>也可以自己打開手機儀表板頁（「設定與說明」裡也有連結），輸入監控窗顯示的主題名稱，再按「連線」。</li>
+        </ol>
+        <h3>元件寫法</h3>
+        <p>先用 <code>board = dash.Dashboard(TOPIC_NAME, SSID, PASSWORD)</code> 建立儀表板，再建立元件，最後呼叫 <code>board.start()</code> 連線。迴圈裡每次都要呼叫 <code>board.check()</code>，它會收手機的操作、送出新的值，斷線時也會自動重連。</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">元件</th><th scope="col">程式寫法</th><th scope="col">手機上的樣子</th><th scope="col">怎麼用</th></tr></thead>
+            <tbody>
+              <tr><td>數值</td><td><code>board.value("濕度", unit="%")</code></td><td>大字數字加單位</td><td><code>.set(數字或文字)</code></td></tr>
+              <tr><td>儀表</td><td><code>board.gauge("溫度", min=0, max=50, unit="°C", color="red")</code></td><td>半圓形儀表，顏色有 green、red、yellow、blue</td><td><code>.set(數字)</code></td></tr>
+              <tr><td>折線圖</td><td><code>board.chart("濕度變化", unit="%")</code></td><td>最近 60 個值的折線，左邊標出最高、最低值和單位，下方標出手機收到的時間</td><td><code>.set(數字)</code>，每次是一個點</td></tr>
+              <tr><td>指示燈</td><td><code>board.led("警報", color="red")</code></td><td>亮或暗的圓燈，顏色有 green、red、yellow、blue</td><td><code>.set(True)</code> 亮、<code>.set(False)</code> 暗</td></tr>
+              <tr><td>文字</td><td><code>board.text("狀態")</code></td><td>一行文字</td><td><code>.set("文字")</code></td></tr>
+              <tr><td>開關</td><td><code>board.switch("LED")</code></td><td>開關</td><td><code>.value</code> 是 True 或 False，板子也能用 <code>.set()</code> 改</td></tr>
+              <tr><td>按鈕</td><td><code>board.button("響鈴")</code></td><td>大按鈕</td><td>按過時 <code>.pressed()</code> 回傳一次 True</td></tr>
+              <tr><td>滑桿</td><td><code>board.slider("亮度", min=0, max=100)</code></td><td>可以拖拉的滑桿，數值是整數</td><td><code>.value</code> 是目前的數字，板子也能用 <code>.set()</code> 改</td></tr>
+              <tr><td>提醒</td><td><code>board.alert("門鈴")</code></td><td>跳出提醒、發出聲音，Android 也會震動</td><td><code>.send("有人按門鈴！")</code></td></tr>
+              <tr><td>色彩選擇</td><td><code>board.color("燈色")</code></td><td>色盤</td><td><code>.value</code> 是（紅, 綠, 藍），各 0～255</td></tr>
+              <tr><td>方向鍵</td><td><code>board.pad("方向")</code></td><td>上下左右四個鍵，按住才動、放開就停</td><td><code>.value</code> 是 <code>"up"</code>、<code>"down"</code>、<code>"left"</code>、<code>"right"</code>，放開時是 <code>""</code></td></tr>
+              <tr><td>選單</td><td><code>board.select("模式", ["關", "亮", "閃爍"])</code></td><td>一排選項按鈕</td><td><code>.value</code> 是選到的文字</td></tr>
+              <tr><td>文字輸入</td><td><code>board.input("訊息")</code></td><td>輸入框和「送出」</td><td><code>.value</code> 是文字，有新文字時 <code>.changed()</code> 回傳一次 True</td></tr>
+              <tr><td>數字設定</td><td><code>board.number("濕度門檻", value=70, min=30, max=95, step=5, unit="%")</code></td><td>數字和 − ＋ 按鈕，也能直接輸入</td><td><code>.value</code> 是數字，手機改了時 <code>.changed()</code> 回傳一次 True，板子也能用 <code>.set()</code> 改</td></tr>
+              <tr><td>紀錄表</td><td><code>board.log("溫濕度紀錄", ["溫度", "濕度"])</code></td><td>表格，最新的一列在最上面，可以下載 CSV</td><td><code>.add(溫度, 濕度)</code> 新增一列，時間由手機加上</td></tr>
+              <tr><td>搖桿</td><td><code>board.joystick("搖桿")</code></td><td>圓形搖桿，放開就回到中間</td><td><code>.x</code> 是左右、<code>.y</code> 是前後，都是 -100～100</td></tr>
+              <tr><td>手機傾斜</td><td><code>board.tilt("傾斜")</code></td><td>「開始傾斜控制」按鈕和目前的傾斜位置</td><td><code>.x</code> 是左右、<code>.y</code> 是前後，都是 -100～100；<code>.on</code> 表示有沒有開啟</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="tip"><strong>不用擔心送太快：</strong>同一個元件最快每 0.5 秒送一次，迴圈裡一直呼叫 <code>.set()</code> 也不會塞爆公用伺服器，手機看到的永遠是最新的值。開關、滑桿和數字設定的值會保留在伺服器上，板子重新開機後會回到最後的狀態。一個儀表板最多 30 個元件。</p>
+        <p><strong>方向鍵、搖桿和手機傾斜的安全設計：</strong>按住方向鍵或搖桿時，手機每 0.4 秒重送一次；手機傾斜開啟時每 0.2 秒送一次。板子超過 1 秒沒收到、或是斷線，方向鍵的 <code>.value</code> 會自動變回 <code>""</code>，搖桿和傾斜的 <code>.x</code>、<code>.y</code> 會回到 0。手機切到別的畫面時也會自動放開。所以手機當機、沒電或離開 Wi-Fi，遙控車都會停下來。第一次測試時，先把車子架高，讓輪子懸空。</p>
+        <p><strong>手機傾斜：</strong>手機只在 https 網址上提供傾斜感測器，所以要用正式網站，或掃描 QR code 打開的網址。iPhone 第一次按「開始傾斜控制」時會詢問能不能使用動作感測器，請選「允許」。手機平放是 0，傾斜 45 度就是最大。請直拿手機，橫拿時左右和前後會對調。電腦通常沒有傾斜感測器。</p>
+        <p><strong>紀錄表：</strong>紀錄只存在手機頁上，手機頁打開時才收得到，最多保留最近 1000 筆（每 5 秒一筆約可記 83 分鐘）；記滿時筆數會變成紅字提醒，之後最舊的會被刪除。重新整理或關掉就會清空，記得先按「下載 CSV」。CSV 的前兩欄是手機收到的日期和時間（時間到秒），Excel 和 Google 試算表都能直接打開。要長時間記錄、手機不用一直開著時，請用 <a href="#google-sheets">Google 試算表</a>。</p>
+        <p><strong>板子資訊：</strong>手機儀表板頁會在「開發板：在線」下面顯示板子的 Wi-Fi 訊號、已執行時間和剩餘記憶體，每 10 秒更新，不用寫程式。訊號 -60 dBm 以上是強，-70 dBm 以下是弱，弱的時候操作可能會延遲。剩餘記憶體一直變少時，表示程式裡可能有東西一直累積。板子的 IP 位址不會送出。</p>
+        <p><strong>提醒的聲音：</strong>瀏覽器規定網頁要先被點過一次才能出聲音，所以手機儀表板的提醒卡片上有「開啟提醒聲音」按鈕，打開頁面後先按一下。提醒不會保留在伺服器上，手機晚一點才打開時，不會收到以前的提醒。</p>
+        <p><strong>請 Gemini 寫儀表板程式：</strong>「Gemini 提示詞」選單的「寫手機儀表板程式」會附上全部元件的寫法，見 <a href="./help-tools.html#gemini">Gemini 提示詞</a>。</p>
+        <p><strong>主題名稱和 MQTT Topic：</strong>以主題名稱 <code>dash-1</code> 為例，所有資料都在 <code>esp32-mp-class/dash-1/dash/</code> 底下：<code>layout</code> 是畫面上有哪些元件、<code>state</code> 是板子在不在線、<code>info</code> 是板子資訊、<code>out/…</code> 是板子送出的值、<code>in/…</code> 是手機的操作。</p>
+        <p><strong>使用自己的 MQTT 伺服器：</strong>打開手機儀表板頁的「進階」填入伺服器設定，程式改成 <code>dash.Dashboard(TOPIC_NAME, SSID, PASSWORD, broker="伺服器位址", port=1883, user="帳號", mqtt_password="密碼")</code>。</p>
+        <p><strong>關於 dash.py：</strong>不要直接修改板子上的 <code>/lib/dash.py</code>，下次上傳時網站會換回原本的版本。不用這個網站上傳時（例如用 Thonny），可以在<a href="./help-tools.html#files">板上檔案</a>打開 <code>/lib</code> 下載 <code>dash.py</code>，再放到另一塊板子上。手機儀表板頁不需要 Web Serial，手機和電腦的瀏覽器都能開，但還沒在每一種手機上實測。</p>
+        <p class="tip warn"><strong>板子連不上時：</strong>學校防火牆擋 1883 連接埠時，監控窗會一直出現「連線失敗，5 秒後重試」，可以改用手機熱點。手機儀表板頁顯示「開發板：離線」或「沒有回應」時，請確認板子上的程式正在執行，而且兩邊的主題名稱一樣。</p>
+      </section>
+      <section id="google-sheets">
+        <h2>把感測器資料存到 Google 試算表</h2>
+        <p>範例「DHT11 資料存到 Google 試算表」每分鐘會把日期、時間、溫度和濕度新增成一列。Google Apps Script 是免費服務，但要先設定一次。</p>
+        <ol>
+          <li>到 Google 試算表建立新檔案，在第一列的 A1～D1 輸入標題：<strong>日期、時間、溫度、濕度</strong>。日期和時間分成兩欄，時間才會顯示到秒。</li>
+          <li>點選「擴充功能」→「Apps Script」，把原本的內容換成下面的程式後儲存：
+            <pre class="code-block" tabindex="0">function doGet(e) {
+  var temp = Number(e.parameter.temp);
+  var hum = Number(e.parameter.hum);
+  if (isNaN(temp) || isNaN(hum)) {
+    return ContentService.createTextOutput("bad data");
+  }
+  var book = SpreadsheetApp.getActiveSpreadsheet();
+  var zone = book.getSpreadsheetTimeZone();
+  var now = new Date();
+  book.getSheets()[0].appendRow([
+    Utilities.formatDate(now, zone, "yyyy-MM-dd"),
+    Utilities.formatDate(now, zone, "HH:mm:ss"),
+    temp,
+    hum
+  ]);
+  return ContentService.createTextOutput("ok");
+}</pre>
+          </li>
+          <li>點選「部署」→「新增部署作業」，類型選「網頁應用程式」。執行身分選「我」，存取權選「<strong>所有人</strong>」，再依畫面完成授權。</li>
+          <li>複製部署後的網址，結尾是 <code>/exec</code>。先在瀏覽器網址列的網址後面加上 <code>?temp=25&amp;hum=60</code> 開啟，畫面顯示 <code>ok</code>、試算表多一列，就代表設定正確。測試完可以刪除這一列。</li>
+          <li>範例選「DHT11 資料存到 Google 試算表」，填入 Wi-Fi 名稱、密碼和 <code>SCRIPT_URL</code>，按「上傳並執行」。每次連到 Google 要花幾秒，所以每一列的間隔會比 <code>SEND_SECONDS</code> 多幾秒。</li>
+        </ol>
+        <p class="tip warn"><strong>網址等於試算表的寫入權限。</strong>知道網址的人都能新增資料，不要投影或分享。不小心外洩時，請到「部署」→「管理部署作業」封存這個部署，再建立新的部署。</p>
+        <p>學校的 Google 帳號可能不允許把存取權設成「所有人」，這時請改用個人帳號。之後修改 Apps Script，要在「管理部署作業」選編輯並發布新版本，才會生效。</p>
+      </section>
+      <nav class="page-turn" aria-label="上一頁和下一頁">
+        <a rel="prev" href="./help-hardware.html"><span aria-hidden="true">←</span> 硬體與接線</a>
+        <a rel="next" href="./help-faq.html">問題排解與安全 <span aria-hidden="true">→</span></a>
+      </nav>
+
+      <p class="help-bottom"><a class="home-link" href="./index.html"><span aria-hidden="true">←</span> 回程式編輯頁</a></p>
+    </main>
+
+    <footer class="footer">
+      <div class="copyright">
+        <span>© 2026 <a href="https://begin0808.github.io/studio0808/" target="_blank" rel="noopener">Studio0808 智造實驗室</a>. All rights reserved.</span>
+        <span class="contact-note">如有建議或報錯，歡迎來信</span>
+        <a class="contact-link" href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=begin0808@gmail.com" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>寫信給我
+        </a>
+        <a class="contact-link" href="https://www.facebook.com/begin.li.1/" target="_blank" rel="noopener" aria-label="Facebook">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="#1877f2" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
+        </a>
+        <span id="visit-count" class="visit-count" hidden></span>
+      </div>
+    </footer>
+
+    <button id="to-top" class="to-top" type="button" hidden><span aria-hidden="true">↑</span> 回到頂端</button>
+
+    <script type="module" src="/src/help.ts"></script>
+  </body>
+</html>

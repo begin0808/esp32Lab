@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>快速上手｜使用說明｜ESP32 Lab MicroPython 版</title>
+    <meta name="description" content="第一次使用 ESP32 Lab MicroPython 版：連接開發板、安裝韌體、上傳和執行程式，以及支援的瀏覽器。" />
+    <script>
+      // Runs before the first paint so a saved style never flashes the default one.
+      try {
+        document.documentElement.dataset.style = localStorage.getItem("esp32-mp-style") || "mat";
+      } catch {}
+    </script>
+    <script>
+      // The English help page is its own file, so it is opened before anything is drawn.
+      (function () {
+        var saved = "";
+        try {
+          saved = localStorage.getItem("esp32-mp-lang") || "";
+        } catch {}
+        if (!/^zh/i.test(saved || navigator.language)) location.replace("./help-start.en.html" + location.hash);
+      })();
+    </script>
+    <link rel="icon" href="/icons/logo.svg" type="image/svg+xml" />
+    <link rel="icon" href="/icons/logo-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/icons/logo-180.png" />
+    <link rel="stylesheet" href="/src/themes.css" />
+    <link rel="stylesheet" href="/src/help.css" />
+  </head>
+  <body>
+    <header class="help-top">
+      <div class="brand">
+        <img class="brand-logo" src="/icons/logo.svg" alt="" width="40" height="40" />
+        <div>
+          <h1>ESP32 Lab <span class="edition">MicroPython 版</span> 使用說明 <span class="version" title="版本">v%VITE_APP_VERSION%</span></h1>
+          <p class="updated">內容更新：2026 年 11 月 14 日</p>
+        </div>
+      </div>
+      <div class="help-actions">
+        <a id="home-link" class="home-link" href="./index.html"><span aria-hidden="true">←</span> 回程式編輯頁</a>
+        <label class="style-picker">
+          風格
+          <select id="style-picker"></select>
+        </label>
+        <label class="style-picker language-picker">
+          語言 Language
+          <select id="language-picker"></select>
+        </label>
+      </div>
+    </header>
+
+    <main class="doc">
+      <nav class="help-pages" aria-label="說明頁面">
+        <a href="./help.html">說明首頁</a>
+        <a href="./help-start.html" aria-current="page">快速上手</a>
+        <a href="./help-path.html">學習路徑</a>
+        <a href="./help-challenge.html">挑戰專題</a>
+        <a href="./help-tools.html">編輯器功能</a>
+        <a href="./help-hardware.html">硬體與接線</a>
+        <a href="./help-iot.html">手機與雲端</a>
+        <a href="./help-faq.html">問題排解與安全</a>
+      </nav>
+      <nav class="toc" aria-label="本頁目錄">
+        <a href="#start">開始使用</a>
+        <a href="#run">執行（不存檔）</a>
+        <a href="#browsers">支援的瀏覽器</a>
+        <a href="#languages">MicroPython 與 Arduino</a>
+      </nav>
+      <section id="start">
+        <h2>開始使用</h2>
+        <p>這個網站不用安裝 Arduino IDE，也不需要設定開發環境。請用<strong>電腦版 Chrome 或 Edge</strong> 開啟，用能傳輸資料的 USB 線接上開發板。</p>
+        <ol>
+          <li><strong>安裝驅動程式：</strong>電腦找不到開發板時才需要；USB 直接接 S2、S3、C3 晶片的板子通常不用裝。板子上的 USB 晶片是 CP2102 就裝 <a href="https://www.silabs.com/software-and-tools/usb-to-uart-bridge-vcp-drivers?tab=downloads" target="_blank" rel="noopener">CP210x 驅動</a>，是 CH340 就裝 <a href="https://www.wch-ic.com/downloads/CH341SER_EXE.html" target="_blank" rel="noopener">CH340 驅動</a>。編輯器右上角的「設定與說明」也有這些連結，以及腳位圖、語音控制頁、手機儀表板頁、語言、風格和字體設定。</li>
+          <li><strong>連接開發板：</strong>先關閉 Arduino IDE 這類會佔用序列埠的程式，再按「連接開發板」，選擇跳出的序列埠。</li>
+          <li><strong>安裝韌體：</strong>第一次使用，或燒錄過 Arduino 程式時才需要。按「安裝韌體」後，<strong>板子上原有的程式和檔案都會被清除</strong>，安裝期間不要拔 USB 線。USB 直接接晶片的板子，裝完要按一下 RST 鍵並重新連接。</li>
+          <li><strong>準備程式：</strong>選內建範例，或按「Gemini 提示詞」→「寫新程式」，填入接線和功能後貼給 Gemini，再把產生的 MicroPython 程式貼回編輯器。</li>
+          <li><strong>上傳並執行：</strong>按「上傳並執行」，程式會存成板子上的 <code>main.py</code>，之後通電就會自動執行。監控窗第一行會顯示程式大小和上傳花了幾秒，接著是程式的輸出和錯誤訊息。</li>
+          <li><strong>只是試試看：</strong>按「執行（不存檔）」或 <kbd>F5</kbd>，程式會直接在板子的記憶體裡執行，不會存成 <code>main.py</code>，見<a href="#run">執行（不存檔）</a>。</li>
+        </ol>
+      </section>
+      <section id="run">
+        <h2>執行（不存檔）和上傳並執行</h2>
+        <p>「執行（不存檔）」會先停止目前的程式、清空上一次留下的變數，再把編輯器裡的程式送到板子的記憶體直接執行，<strong>不會存成 <code>main.py</code></strong>。連接開發板時，也可以按 <kbd>F5</kbd>；沒有連接時，<kbd>F5</kbd> 照樣是重新整理網頁。</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col"></th><th scope="col">執行（不存檔）</th><th scope="col">上傳並執行</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">速度</th><td>比較快，不用寫檔也不用重新開機</td><td>稍慢</td></tr>
+              <tr><th scope="row">重新啟動或拔掉電源後</th><td>程式消失，板子回到原本的 <code>main.py</code></td><td>程式留在板子上，通電就自動執行</td></tr>
+              <tr><th scope="row">適合</th><td>試東西、改參數、找錯誤</td><td>完成的作品，或要離開電腦執行</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>程式寫壞了也不用擔心：按「重新啟動」或拔掉電源，板子就會執行原本的 <code>main.py</code>。試好之後，再按「上傳並執行」存到板子上。程式讓板子重新開機時（例如深度睡眠或 <code>machine.reset()</code>）也一樣，醒來後執行的是板子上的 <code>main.py</code>，監控窗會提示。</p>
+        <h3>程式結束後查看變數</h3>
+        <p>程式結束或按「停止」之後，<strong>變數還留在板子上</strong>，可以在監控窗下方的 REPL 輸入變數名稱，看最後的值。例如：</p>
+        <pre class="code-block" tabindex="0">total = 0
+for i in range(1, 11):
+    total = total + i</pre>
+        <p>執行完在 REPL 輸入 <code>total</code>，會看到 <code>55</code>；輸入 <code>i</code> 會看到 <code>10</code>。找錯誤時，這比到處加 <code>print</code> 方便。用「上傳並執行」時板子會重新開機，所以要用「執行（不存檔）」才能這樣看。</p>
+        <p class="tip">錯誤訊息裡的 <code>File "&lt;stdin&gt;", line 3</code> 指的是編輯器第 3 行，和 <code>main.py</code> 的行號一樣。「複製給 Gemini」照樣可以用。</p>
+      </section>
+      <section id="browsers">
+        <h2>支援的瀏覽器</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">裝置與瀏覽器</th><th scope="col">編輯器（USB 上傳）</th><th scope="col">語音控制頁</th></tr></thead>
+            <tbody>
+              <tr><td>電腦版 Chrome、Edge</td><td>可以使用</td><td>Chrome 已實測，Edge 的語音尚未實測</td></tr>
+              <tr><td>Chromebook 的 Chrome</td><td><span class="badge tested">已實測</span> 學校的 Chromebook 接 ESP32-S 開發板，連接、安裝韌體、上傳程式都正常</td><td>尚未實測</td></tr>
+              <tr><td>Android 手機 Chrome</td><td>請改用電腦</td><td>頁面可開啟，語音辨識尚未實測</td></tr>
+              <tr><td>iPhone Safari</td><td>不能使用</td><td>尚未實測，語音不能用時請改用文字指令</td></tr>
+              <tr><td>電腦版 Firefox、Safari</td><td>不能使用（沒有 Web Serial）</td><td>尚未實測</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Chromebook 只有 Type-C 孔時，用 Type-C 轉 USB-A 轉接頭接原本的 USB 線就可以，也可以改用 USB-C 轉 Micro USB 傳輸線。學校統一管理的 Chromebook 如果按「連接開發板」後沒有出現序列埠，可能是管理政策關閉了這個功能，請資訊組在 Google 管理控制台開放。</p>
+      </section>
+      <section id="languages">
+        <h2>MicroPython 與 Arduino 的差異</h2>
+        <p>兩者都能控制 ESP32，沒有哪一個絕對比較好。本網站選擇 MicroPython，是因為不用安裝軟體，改完程式幾秒就能看到結果，錯誤訊息也容易看懂，適合課堂和快速實驗。</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col"></th><th scope="col">MicroPython（本網站）</th><th scope="col">Arduino C++</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">語言</th><td>Python，語法簡短，容易入門</td><td>C++，要宣告型別，語法較嚴格</td></tr>
+              <tr><th scope="row">開發環境</th><td>開啟瀏覽器就能使用，要先安裝一次韌體</td><td>要安裝 Arduino IDE 和開發板套件，電腦還原後要重裝</td></tr>
+              <tr><th scope="row">修改後上傳</th><td>不用編譯，通常幾秒完成</td><td>每次都要編譯再燒錄，等待時間較長</td></tr>
+              <tr><th scope="row">找錯誤</th><td>錯誤訊息會指出行號，也可以在監控窗直接輸入指令測試</td><td>編譯時能先抓到語法錯誤，執行時的問題多半靠序列埠輸出追查</td></tr>
+              <tr><th scope="row">執行速度</th><td>較慢，一般感測和控制通常夠用</td><td>快很多，適合大量運算和高速處理</td></tr>
+              <tr><th scope="row">記憶體</th><td>直譯器本身會佔用空間，可用的較少</td><td>可用的較多，比較適合大型程式</td></tr>
+              <tr><th scope="row">時間精準度</th><td>記憶體回收可能造成短暫停頓，不適合要求精準時序的工作</td><td>時間控制較精準</td></tr>
+              <tr><th scope="row">函式庫</th><td>常用功能已內建，其他模組可能要自己找程式碼</td><td>數量很多，大部分模組都找得到</td></tr>
+              <tr><th scope="row">適合用途</th><td>入門教學、搭配 AI 寫程式、感測器和物聯網實驗</td><td>相機影像、高速訊號處理、大型或要長期穩定運作的專案</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>同一塊板子可以換來換去，只是一次只能用一種：用 Arduino IDE 燒錄後，MicroPython 和板子上的檔案會被覆蓋；想換回來，再到本網站按「安裝韌體」即可。</p>
+      </section>
+      <nav class="page-turn" aria-label="上一頁和下一頁">
+        <a rel="prev" href="./help.html"><span aria-hidden="true">←</span> 說明首頁</a>
+        <a rel="next" href="./help-path.html">學習路徑 <span aria-hidden="true">→</span></a>
+      </nav>
+
+      <p class="help-bottom"><a class="home-link" href="./index.html"><span aria-hidden="true">←</span> 回程式編輯頁</a></p>
+    </main>
+
+    <footer class="footer">
+      <div class="copyright">
+        <span>© 2026 <a href="https://begin0808.github.io/studio0808/" target="_blank" rel="noopener">Studio0808 智造實驗室</a>. All rights reserved.</span>
+        <span class="contact-note">如有建議或報錯，歡迎來信</span>
+        <a class="contact-link" href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=begin0808@gmail.com" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>寫信給我
+        </a>
+        <a class="contact-link" href="https://www.facebook.com/begin.li.1/" target="_blank" rel="noopener" aria-label="Facebook">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="#1877f2" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
+        </a>
+        <span id="visit-count" class="visit-count" hidden></span>
+      </div>
+    </footer>
+
+    <button id="to-top" class="to-top" type="button" hidden><span aria-hidden="true">↑</span> 回到頂端</button>
+
+    <script type="module" src="/src/help.ts"></script>
+  </body>
+</html>

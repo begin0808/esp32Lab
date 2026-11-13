@@ -103,6 +103,67 @@ body {
   font-weight: 600;
 }
 
+/* Every help page lists all of them, with the one being read filled in. */
+.help-pages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 16px;
+}
+
+.help-pages a {
+  padding: 3px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--link);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.help-pages a[aria-current="page"] {
+  border-color: var(--solid-bg);
+  background: var(--solid-bg);
+  color: var(--solid-text);
+}
+
+.help-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.help-card {
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.help-card h3 {
+  margin: 0 0 6px;
+}
+
+.doc .help-card p,
+.doc .help-card ul {
+  margin: 0 0 6px;
+}
+
+.doc .help-card li {
+  margin-bottom: 2px;
+}
+
+.page-turn {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 12px 20px;
+  font-weight: 700;
+}
+
+.page-turn a[rel="next"] {
+  margin-left: auto;
+}
+
 h2 {
   margin: 0 -20px 16px;
   padding: 10px 20px;

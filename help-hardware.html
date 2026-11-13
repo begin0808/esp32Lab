@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>硬體與接線｜使用說明｜ESP32 Lab MicroPython 版</title>
+    <meta name="description" content="支援的 ESP32 開發板、接線注意事項、電子元件與感測器，以及每個範例的預設接線。" />
+    <script>
+      // Runs before the first paint so a saved style never flashes the default one.
+      try {
+        document.documentElement.dataset.style = localStorage.getItem("esp32-mp-style") || "mat";
+      } catch {}
+    </script>
+    <script>
+      // The English help page is its own file, so it is opened before anything is drawn.
+      (function () {
+        var saved = "";
+        try {
+          saved = localStorage.getItem("esp32-mp-lang") || "";
+        } catch {}
+        if (!/^zh/i.test(saved || navigator.language)) location.replace("./help-hardware.en.html" + location.hash);
+      })();
+    </script>
+    <link rel="icon" href="/icons/logo.svg" type="image/svg+xml" />
+    <link rel="icon" href="/icons/logo-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/icons/logo-180.png" />
+    <link rel="stylesheet" href="/src/themes.css" />
+    <link rel="stylesheet" href="/src/help.css" />
+  </head>
+  <body>
+    <header class="help-top">
+      <div class="brand">
+        <img class="brand-logo" src="/icons/logo.svg" alt="" width="40" height="40" />
+        <div>
+          <h1>ESP32 Lab <span class="edition">MicroPython 版</span> 使用說明 <span class="version" title="版本">v%VITE_APP_VERSION%</span></h1>
+          <p class="updated">內容更新：2026 年 11 月 14 日</p>
+        </div>
+      </div>
+      <div class="help-actions">
+        <a id="home-link" class="home-link" href="./index.html"><span aria-hidden="true">←</span> 回程式編輯頁</a>
+        <label class="style-picker">
+          風格
+          <select id="style-picker"></select>
+        </label>
+        <label class="style-picker language-picker">
+          語言 Language
+          <select id="language-picker"></select>
+        </label>
+      </div>
+    </header>
+
+    <main class="doc">
+      <nav class="help-pages" aria-label="說明頁面">
+        <a href="./help.html">說明首頁</a>
+        <a href="./help-start.html">快速上手</a>
+        <a href="./help-path.html">學習路徑</a>
+        <a href="./help-challenge.html">挑戰專題</a>
+        <a href="./help-tools.html">編輯器功能</a>
+        <a href="./help-hardware.html" aria-current="page">硬體與接線</a>
+        <a href="./help-iot.html">手機與雲端</a>
+        <a href="./help-faq.html">問題排解與安全</a>
+      </nav>
+      <nav class="toc" aria-label="本頁目錄">
+        <a href="#boards">支援的開發板</a>
+        <a href="#wiring">接線注意事項</a>
+        <a href="#parts">電子元件與感測器</a>
+        <a href="#example-wiring">範例接線一覽</a>
+      </nav>
+      <section id="boards">
+        <h2>支援的開發板</h2>
+        <p>網站內建 MicroPython v1.29.0 的 <strong>ESP32、ESP32-S2、S3 和 C3</strong> 韌體，安裝時會自動偵測晶片並選擇對應版本。ESP32-S、ESP-WROOM-32 模組裡的晶片是 ESP32，和 ESP32-S2、S3 是不同的晶片。快閃記憶體至少要 4 MB。其他晶片或容量不足時，網站會在清除資料前停止安裝。</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">開發板</th><th scope="col">USB 晶片</th><th scope="col">狀態</th><th scope="col">說明</th></tr></thead>
+            <tbody>
+              <tr><td>NodeMCU-32S（ESP-WROOM-32）</td><td>CP2102</td><td><span class="badge tested">已實測</span></td><td>已實測安裝韌體、上傳程式、Wi-Fi 和 MQTT。可參考<a href="./images/nodemcu-32s-pinout.png" target="_blank" rel="noopener">腳位圖</a>。</td></tr>
+              <tr><td>ESP32-S 開發板</td><td>CH340</td><td><span class="badge tested">已實測</span></td><td>已實測安裝韌體、上傳 LED 閃爍程式和停止程式，這塊板子的 Wi-Fi 尚未實測。腳位排列可能和上面的腳位圖不同，請對照板子上的標示。</td></tr>
+              <tr><td>其他 ESP32-WROOM-32 開發板</td><td>依板子而定</td><td><span class="badge expected">應可使用</span></td><td>快閃記憶體要有 4 MB 以上。尚未逐款實測。</td></tr>
+              <tr><td>ESP32-S2 開發板</td><td>內建 USB 或依板子而定</td><td><span class="badge expected">待實測</span></td><td>網站已支援，但還沒接實體板子測試。</td></tr>
+              <tr><td>ESP32-S3 開發板</td><td>內建 USB 或依板子而定</td><td><span class="badge expected">待實測</span></td><td>網站已支援，但還沒接實體板子測試。使用八線 PSRAM 的版本（例如型號含 R8）可能用不到 PSRAM。</td></tr>
+              <tr><td>ESP32-C3 開發板</td><td>內建 USB 或依板子而定</td><td><span class="badge expected">待實測</span></td><td>網站已支援，但還沒接實體板子測試。MicroPython 官方說明此韌體適用晶片版本 3 以上，安裝時監控窗會顯示版本。</td></tr>
+              <tr><td>ESP32-CAM</td><td>板子本身沒有 USB，要接底板或 USB 轉序列埠模組</td><td><span class="badge expected">相機不能用</span></td><td>晶片是 ESP32，韌體應可安裝，但尚未實測。內建韌體<strong>沒有相機功能，也用不到板上的 PSRAM</strong>，只能當一般 ESP32 使用。多數範例使用的腳位沒有引出，要自行改腳位。</td></tr>
+              <tr><td>ESP32-C6、H2、C2、C5、P4 等</td><td>依板子而定</td><td><span class="badge no">不支援</span></td><td>網站沒有內建這些晶片的韌體，安裝時會自動停止，不會清除板子。</td></tr>
+              <tr><td>ESP8266、Arduino UNO 等</td><td>依板子而定</td><td><span class="badge no">不支援</span></td><td>不是 ESP32，網站無法安裝韌體。</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3 id="chips">各種 ESP32 晶片的差異</h3>
+        <p>市面上叫 ESP32 的開發板，上面的晶片有好幾種。上課建議用傳統的 ESP32，教材和網路上的資料最多。其他晶片的腳位編號不同，請看「接線注意事項」的腳位表。</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">晶片</th><th scope="col">核心</th><th scope="col">記憶體（RAM）</th><th scope="col">藍牙</th><th scope="col">特色</th><th scope="col">本站</th></tr></thead>
+            <tbody>
+              <tr><td>ESP32</td><td>雙核心 240 MHz</td><td>520 KB</td><td>傳統藍牙和 BLE</td><td>最普遍，教材最多，腳位多</td><td><span class="badge tested">已實測</span></td></tr>
+              <tr><td>ESP32-S3</td><td>雙核心 240 MHz</td><td>512 KB，可外加 PSRAM</td><td>BLE 5</td><td>腳位最多，可接相機，適合進階使用</td><td><span class="badge expected">待實測</span></td></tr>
+              <tr><td>ESP32-C3</td><td>單核心 160 MHz（RISC-V）</td><td>400 KB</td><td>BLE 5</td><td>便宜小巧，腳位較少</td><td><span class="badge expected">待實測</span></td></tr>
+              <tr><td>ESP32-S2</td><td>單核心 240 MHz</td><td>320 KB</td><td>沒有藍牙</td><td>已被 S3 取代，市面上少見，不必特地找</td><td><span class="badge expected">待實測</span></td></tr>
+              <tr><td>ESP32-C2（ESP8684）</td><td>單核心 120 MHz（RISC-V）</td><td>272 KB</td><td>BLE 5</td><td>最便宜，用來取代 ESP8266，記憶體最小</td><td><span class="badge no">不支援</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <ul>
+          <li><strong>S3 開發板的型號：</strong>例如 N16R8，表示 16 MB 快閃記憶體和 8 MB 八線 PSRAM。八線 PSRAM 會占用 GPIO 35–37，這三支腳不要接元件。板子有兩個 Type-C 孔時，先接標示 COM 或 UART 的那個。</li>
+          <li><strong>名稱有 CAM 的開發板：</strong>本站的韌體沒有相機功能，只能當一般開發板使用。</li>
+          <li><strong>C3、S2、S3 開發板：</strong>有些沒有 USB 轉序列晶片，直接用晶片內建的 USB，不用裝驅動。</li>
+        </ul>
+        <h3>可以用 Arduino UNO 嗎？</h3>
+        <p><strong>不行。</strong>本站只有 ESP32 系列的 MicroPython 韌體，而傳統的 UNO R3 記憶體太小，跑不動 MicroPython。ESP32 Lab 另有 Arduino 版，但那裡的 Arduino 指的是寫程式用的 Arduino 框架（<code>setup()</code>、<code>digitalWrite()</code> 等），不是 Arduino 這塊開發板，所以同樣不支援 UNO。</p>
+        <h3>兩個版本支援的開發板</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">開發板</th><th scope="col">MicroPython 版（本站）</th><th scope="col">Arduino 版</th></tr></thead>
+            <tbody>
+              <tr><td>傳統 ESP32（例如 NodeMCU-32S）</td><td><span class="badge tested">已實測</span></td><td><span class="badge tested">已實測</span></td></tr>
+              <tr><td>ESP32-S2、S3、C3</td><td><span class="badge expected">待實測</span></td><td><span class="badge no">不支援</span></td></tr>
+              <tr><td>ESP32-C6 等其他 ESP32 晶片</td><td><span class="badge no">不支援</span></td><td><span class="badge no">不支援</span></td></tr>
+              <tr><td>ESP8266、Arduino UNO</td><td><span class="badge no">不支援</span></td><td><span class="badge no">不支援</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Arduino 版要用雲端主機編譯，目前只開放作者任教學校的師生使用，沒有對外公開。</p>
+      </section>
+      <section id="wiring">
+        <h2>接線注意事項</h2>
+        <p>下面的腳位表適用於 <strong>ESP32（包含 ESP32-S、ESP-WROOM-32 模組）</strong>，其他晶片請看本章最後的表格。</p>
+        <p class="tip warn"><strong>接線或改線前，請先拔掉 USB 線。</strong>接錯電壓或短路可能會燒毀開發板。</p>
+        <ul>
+          <li><strong>GPIO 只能接受 3.3V：</strong>不要把 5V 訊號直接接到 GPIO。</li>
+          <li><strong>不要直接驅動大電流元件：</strong>馬達、長燈條等要用外部電源或驅動模組。使用外部電源時，GND 要和 ESP32 接在一起。</li>
+          <li><strong>確認腳位編號：</strong>程式裡的編號是 GPIO 編號，請對照板子標示或<a href="./images/nodemcu-32s-pinout.png" target="_blank" rel="noopener">腳位圖</a>。</li>
+        </ul>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">腳位</th><th scope="col">建議</th><th scope="col">原因</th></tr></thead>
+            <tbody>
+              <tr><td>GPIO 6–11</td><td><span class="badge no">不要使用</span></td><td>連接內部快閃記憶體，接線可能讓板子無法運作。腳位圖上的 GPIO 9、10 標示 RX1、TX1，也不要使用。</td></tr>
+              <tr><td>GPIO 34、35、36、39</td><td><span class="badge expected">只能輸入</span></td><td>不能輸出，也沒有內部上拉或下拉電阻。</td></tr>
+              <tr><td>GPIO 25–27、GPIO 0、2、4、12–15</td><td><span class="badge expected">類比輸入避開</span></td><td>這些是 ADC2 腳位，Wi-Fi 開啟時不能讀類比值。需要類比輸入請改用 GPIO 32–39。</td></tr>
+              <tr><td>GPIO 0、2、5、12、15</td><td><span class="badge expected">小心使用</span></td><td>開機時的電位會影響啟動。尤其 GPIO 12 開機時若被拉高，板子可能無法啟動。</td></tr>
+              <tr><td>GPIO 1、3</td><td><span class="badge expected">避開</span></td><td>USB 序列埠使用，接其他元件會影響上傳和監控窗。</td></tr>
+              <tr><td>GPIO 4、13、16–19、21–23、25–27、32、33</td><td><span class="badge tested">一般優先選用</span></td><td>用於一般數位輸入和輸出比較不會衝突（GPIO 21、22 常用於 I2C）。</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>ESP32-S2、S3、C3 的腳位</h3>
+        <p>這些晶片的腳位編號和 ESP32 不同，<strong>上面的腳位圖不適用</strong>，請對照你的板子標示。下表是選範例時預設使用的腳位。</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">用途</th><th scope="col">S2、S3</th><th scope="col">C3</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">LED</th><td>GPIO 18</td><td>GPIO 4</td></tr>
+              <tr><th scope="row">按鈕</th><td>GPIO 17</td><td>GPIO 5</td></tr>
+              <tr><th scope="row">類比輸入（光敏電阻、可變電阻）</th><td>GPIO 1</td><td>GPIO 3</td></tr>
+              <tr><th scope="row">DHT11、DS18B20</th><td>GPIO 4</td><td>GPIO 5</td></tr>
+              <tr><th scope="row">I2C（SDA、SCL）</th><td>GPIO 8、9</td><td>GPIO 6、7</td></tr>
+              <tr><th scope="row">蜂鳴器</th><td>GPIO 14</td><td>GPIO 6</td></tr>
+              <tr><th scope="row">伺服馬達</th><td>GPIO 13</td><td>GPIO 6</td></tr>
+              <tr><th scope="row">WS2812</th><td>GPIO 16</td><td>GPIO 6</td></tr>
+              <tr><th scope="row">USB 使用，不要接元件</th><td>GPIO 19、20</td><td>GPIO 18、19</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section id="parts">
+        <h2>電子元件與感測器</h2>
+        <p><strong>下表不是限制清單。</strong>只要能用 MicroPython 控制，表上沒有的元件也可以使用。請把<strong>完整型號和接線腳位</strong>告訴 Gemini，再依下面的注意事項接線。</p>
+        <ul class="legend">
+          <li><span class="badge tested">已實測</span>已接上實體開發板測試成功。</li>
+          <li><span class="badge example">有範例</span>網站有內建範例，程式已用模擬硬體執行過，但還沒接實體元件測試。</li>
+          <li><span class="badge firmware">韌體支援</span>韌體有所需功能，可以直接寫程式，但沒有專屬範例，也還沒實測。</li>
+        </ul>
+
+        <p class="tip"><strong>OLED、LCD 和 MAX7219 不用另外安裝任何東西。</strong>韌體沒有內建這三種元件的控制程式，所以內建範例把控制程式和主程式寫在同一份 <code>main.py</code>，選範例後直接上傳即可。這和電腦上的 CP210x、CH340 USB 驅動程式無關。</p>
+
+        <h3>輸出元件</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">元件</th><th scope="col">狀態</th><th scope="col">控制方式</th><th scope="col">注意事項</th></tr></thead>
+            <tbody>
+              <tr><td>LED</td><td><span class="badge tested">已實測</span></td><td><code>Pin</code></td><td>要串聯限流電阻（例如 220Ω），長腳接 GPIO，短腳接 GND。</td></tr>
+              <tr><td>有源蜂鳴器</td><td><span class="badge example">有範例</span></td><td><code>Pin</code></td><td>通電就響，只能開關。電流較大的元件要用模組或電晶體驅動。</td></tr>
+              <tr><td>無源蜂鳴器</td><td><span class="badge example">有範例</span></td><td><code>PWM</code></td><td>要送頻率才會響，可以發出不同音高。買之前先確認是有源還是無源。</td></tr>
+              <tr><td>SG90 伺服馬達</td><td><span class="badge example">有範例</span></td><td><code>PWM</code>（50 Hz）</td><td>請用外部 5V 供電，並和 ESP32 共地，不要從開發板 3V3 取電。</td></tr>
+              <tr><td>繼電器模組</td><td><span class="badge firmware">韌體支援</span></td><td><code>Pin</code></td><td>先確認模組能接受 3.3V 訊號。<strong>課堂實驗不要接市電。</strong></td></tr>
+              <tr><td>WS2812 全彩 LED、燈條、點矩陣</td><td><span class="badge example">有範例</span></td><td><code>neopixel</code></td><td>燈數多時電流很大，要用外部電源並共地。</td></tr>
+              <tr><td>MAX7219 LED 點矩陣</td><td><span class="badge example">有範例</span></td><td><code>Pin</code></td><td>通常用 5V 供電，ESP32 的 3.3V 訊號可能不穩定，要實測。</td></tr>
+              <tr><td>裸 8×8 LED 點矩陣</td><td><span class="badge firmware">韌體支援</span></td><td><code>Pin</code></td><td>需要很多腳位和掃描程式，不建議初學者使用，改用有驅動晶片的模組。</td></tr>
+              <tr><td>SSD1306 OLED</td><td><span class="badge example">有範例</span></td><td><code>I2C</code></td><td>常見接法是 SDA 接 GPIO 21、SCL 接 GPIO 22。</td></tr>
+              <tr><td>I2C LCD 1602</td><td><span class="badge example">有範例</span></td><td><code>I2C</code></td><td>許多模組用 5V 供電，I2C 訊號可能被上拉到 5V，接線前要先確認電壓。</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>感測器與輸入元件</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">元件</th><th scope="col">狀態</th><th scope="col">控制方式</th><th scope="col">注意事項</th></tr></thead>
+            <tbody>
+              <tr><td>DHT11 溫濕度</td><td><span class="badge example">有範例</span></td><td><code>dht</code></td><td>VCC 接 3V3，讀取間隔至少 1 秒。</td></tr>
+              <tr><td>DHT22 溫濕度</td><td><span class="badge firmware">韌體支援</span></td><td><code>dht</code></td><td>程式改用 <code>dht.DHT22</code>，讀取間隔至少 2 秒。</td></tr>
+              <tr><td>光敏電阻</td><td><span class="badge example">有範例</span></td><td><code>ADC</code></td><td>請接 <strong>GPIO 32–39</strong>。裸元件要搭配電阻分壓（例如 10kΩ），模組請用 3V3 供電。</td></tr>
+              <tr><td>可變電阻</td><td><span class="badge example">有範例</span></td><td><code>ADC</code></td><td>同樣接 GPIO 32–39，兩端接 3V3 和 GND。</td></tr>
+              <tr><td>HC-SR501 人體紅外線</td><td><span class="badge example">有範例</span></td><td><code>Pin</code></td><td>通常用 5V 供電，訊號輸出約 3.3V。通電後約 1 分鐘內可能誤判。</td></tr>
+              <tr><td>按鈕</td><td><span class="badge example">有範例</span></td><td><code>Pin</code></td><td>可用內部上拉 <code>Pin.PULL_UP</code>。GPIO 34–39 沒有內部上拉。</td></tr>
+              <tr><td>DS18B20 溫度</td><td><span class="badge example">有範例</span></td><td><code>onewire</code>、<code>ds18x20</code></td><td>DATA 和 3V3 之間要接 4.7kΩ 上拉電阻，模組通常已內建。</td></tr>
+              <tr><td>HC-SR04 超音波</td><td><span class="badge example">有範例</span></td><td><code>Pin</code>、<code>time_pulse_us</code></td><td>Echo 輸出常是 5V，<strong>要先分壓成 3.3V</strong> 才能接 GPIO。</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>請 Gemini 寫程式的訣竅</h3>
+        <ul>
+          <li><strong>寫清楚型號和腳位：</strong>例如「MAX7219 8×8 點矩陣，DIN 接 GPIO 23，CLK 接 GPIO 18，CS 接 GPIO 5」。</li>
+          <li><strong>缺少模組時：</strong>如果執行時出現 <code>ImportError</code>，代表程式用了韌體沒有的模組。可以請 Gemini「把這個元件的控制程式和主程式寫在同一份 main.py」，或用<a href="./help-tools.html#files">板上檔案</a>把那個模組的檔案上傳到板子。</li>
+          <li><strong>指定語言：</strong>說明要 MicroPython v1.29.0，不要 Arduino C++。網站的「Gemini 提示詞」→「寫新程式」已經包含這些要求。</li>
+        </ul>
+      </section>
+      <section id="example-wiring">
+        <h2>範例接線一覽</h2>
+        <p>下表是 ESP32（包含 ESP32-S、ESP-WROOM-32 模組）的預設接線。在編輯器的「晶片」選單選擇 S2、S3 或 C3 後再選範例，程式和開頭的接線說明會自動換成該晶片適用的腳位。連接開發板時，網站也會自動切換晶片選單。</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">範例</th><th scope="col">功能</th><th scope="col">預設接線</th><th scope="col">需要 Wi-Fi</th></tr></thead>
+            <tbody>
+              <tr><td><a href="./help-path.html#path-blink">1. LED 閃爍</a></td><td>LED 每秒切換一次</td><td>板載 LED（GPIO 2）</td><td>不需要</td></tr>
+              <tr><td><a href="./help-path.html#path-button_led">2. 按鈕開關 LED</a></td><td>每按一次切換亮暗</td><td>按鈕 GPIO 19、LED GPIO 18</td><td>不需要</td></tr>
+              <tr><td><a href="./help-path.html#path-breathing_led">3. 呼吸燈（PWM）</a></td><td>LED 慢慢變亮再變暗</td><td>LED GPIO 18</td><td>不需要</td></tr>
+              <tr><td><a href="./help-path.html#path-knob_led">4. 可變電阻調亮度</a></td><td>轉旋鈕調整 LED 亮度</td><td>旋鈕 GPIO 34、LED GPIO 18</td><td>不需要</td></tr>
+              <tr><td><a href="./help-path.html#path-buzzer_song">5. 無源蜂鳴器播放小星星</a></td><td>用不同頻率播放旋律</td><td>蜂鳴器 GPIO 25</td><td>不需要</td></tr>
+              <tr><td><a href="./help-path.html#path-servo_sweep">6. SG90 伺服馬達來回轉動</a></td><td>在 0 到 180 度之間掃動</td><td>訊號 GPIO 13，外部 5V 供電</td><td>不需要</td></tr>
+              <tr><td><a href="./help-path.html#path-light_sensor">7. 光敏電阻自動夜燈</a></td><td>環境變暗時 LED 自動點亮</td><td>光敏電阻 GPIO 34、LED GPIO 18</td><td>不需要</td></tr>
+              <tr><td><a href="./help-path.html#path-pir_alarm">8. 人體紅外線警報（HC-SR501）</a></td><td>偵測到人時蜂鳴器響、LED 亮</td><td>OUT GPIO 27、蜂鳴器 GPIO 25、LED GPIO 18</td><td>不需要</td></tr>
+              <tr><td><a href="./help-path.html#path-ultrasonic">9. 超音波測距（HC-SR04）</a></td><td>在監控窗顯示距離</td><td>Trig GPIO 26，Echo 分壓後接 GPIO 33</td><td>不需要</td></tr>
+              <tr><td><a href="./help-path.html#path-dht11_serial">10. DHT11 溫濕度（監控窗）</a></td><td>每 2 秒顯示溫度和濕度</td><td>DATA GPIO 4</td><td>不需要</td></tr>
+              <tr><td><a href="./help-path.html#path-ds18b20">11. DS18B20 溫度計</a></td><td>每 2 秒顯示溫度</td><td>DATA GPIO 4</td><td>不需要</td></tr>
+              <tr><td><a href="./help-path.html#path-ws2812_rainbow">12. WS2812 全彩 LED 彩虹</a></td><td>彩虹顏色沿燈條流動</td><td>DIN GPIO 16</td><td>不需要</td></tr>
+              <tr><td><a href="./help-path.html#path-oled_ssd1306">13. SSD1306 OLED 顯示器</a></td><td>顯示文字和開機秒數</td><td>SDA GPIO 21、SCL GPIO 22</td><td>不需要</td></tr>
+              <tr><td><a href="./help-path.html#path-lcd1602_i2c">14. I2C LCD 1602 顯示器</a></td><td>顯示文字和開機秒數</td><td>SDA GPIO 21、SCL GPIO 22</td><td>不需要</td></tr>
+              <tr><td><a href="./help-path.html#path-max7219_matrix">15. MAX7219 點矩陣</a></td><td>輪流顯示笑臉和愛心</td><td>DIN GPIO 23、CLK GPIO 18、CS GPIO 5</td><td>不需要</td></tr>
+              <tr><td><a href="./help-path.html#path-web_led">16. 手機控制 LED（同一個 Wi-Fi）</a></td><td>手機網頁按鈕或文字指令控制 LED</td><td>外接 LED 接 GPIO 18</td><td>手機和板子要同一個 Wi-Fi</td></tr>
+              <tr><td><a href="./help-path.html#path-mqtt_led">17. 語音控制 LED（MQTT）</a></td><td>用語音控制頁說「開燈」、「關燈」、「閃爍」</td><td>外接 LED 接 GPIO 18</td><td>板子和手機都要能上網</td></tr>
+              <tr><td><a href="./help-path.html#path-dht11_alarm">18. DHT11 溫濕度警報</a></td><td>手機網頁每 2 秒更新，濕度超過 50% 發出警報</td><td>DHT11 DATA 接 GPIO 4</td><td>手機和板子要同一個 Wi-Fi</td></tr>
+              <tr><td><a href="./help-path.html#path-telegram_led">19. Telegram 機器人控制 LED</a></td><td>傳 /on、/off、/status 控制 LED，按按鈕時通知手機</td><td>LED GPIO 18、按鈕 GPIO 19</td><td>板子要能上網</td></tr>
+              <tr><td><a href="./help-path.html#path-sheets_dht11">20. DHT11 資料存到 Google 試算表</a></td><td>每分鐘把溫度和濕度新增成一列，步驟見 <a href="./help-iot.html#google-sheets">Google 試算表</a></td><td>DATA GPIO 4</td><td>板子要能上網</td></tr>
+              <tr><td><a href="./help-path.html#path-i2c_scan">21. I2C 掃描（找出裝置位址）</a></td><td>列出接在 I2C 上的裝置位址和可能的型號，OLED、LCD 沒反應時先用它檢查</td><td>SDA GPIO 21、SCL GPIO 22</td><td>不需要</td></tr>
+              <tr><td><a href="./help-path.html#path-button_irq">22. 按鈕中斷（IRQ）</a></td><td>按鈕一按下就記錄，主程式每 2 秒才看一次也不會漏掉</td><td>同範例 2：按鈕 GPIO 19、LED GPIO 18</td><td>不需要</td></tr>
+              <tr><td><a href="./help-path.html#path-timer_blink">23. 計時器讓 LED 自己閃（Timer）</a></td><td>計時器讓 LED 每 0.5 秒閃一次，主程式同時計數</td><td>LED GPIO 18</td><td>不需要</td></tr>
+              <tr><td><a href="./help-path.html#path-deep_sleep">24. 深度睡眠定時醒來</a></td><td>醒來閃一下 LED、記下第幾次醒來，再睡 10 秒</td><td>板載 LED（GPIO 2）</td><td>不需要</td></tr>
+              <tr><td><a href="./help-path.html#path-espnow_led">25. ESP-NOW 多塊板子互傳</a></td><td>按任一塊板子的按鈕，所有板子的 LED 一起切換</td><td>每塊板子都同範例 2</td><td>不需要，板子之間直接傳</td></tr>
+              <tr><td><a href="./help-path.html#path-asyncio_tasks">26. asyncio 同時做三件事</a></td><td>LED 閃爍、監看按鈕、每 2 秒報告執行時間同時進行</td><td>同範例 2：按鈕 GPIO 19、LED GPIO 18</td><td>不需要</td></tr>
+              <tr><td><a href="./help-path.html#path-dash_intro">27. 儀表板入門：開關 LED、看按鈕</a></td><td>手機儀表板的開關控制 LED，指示燈顯示按鈕有沒有按下，數字顯示按了幾下</td><td>同範例 2：按鈕 GPIO 19、LED GPIO 18</td><td>板子和手機都要能上網</td></tr>
+              <tr><td><a href="./help-path.html#path-dash_dht11">28. DHT11 溫濕度儀表板</a></td><td>手機上看溫度和濕度儀表、標有時間的濕度變化圖，溫度超過 30°C 時狀態文字會提醒</td><td>DATA GPIO 4</td><td>板子和手機都要能上網</td></tr>
+              <tr><td><a href="./help-path.html#path-dash_knob">29. 旋鈕和手機滑桿一起調 LED 亮度</a></td><td>轉旋鈕或拉手機滑桿都能調 LED 亮度，轉旋鈕時手機的滑桿也會跟著動；儀表顯示旋鈕位置，「全亮」按鈕讓滑桿跳到 100%</td><td>旋鈕 GPIO 34、LED GPIO 18</td><td>板子和手機都要能上網</td></tr>
+              <tr><td><a href="./help-path.html#path-dash_color">30. 手機選顏色點亮全彩 LED</a></td><td>手機色盤選顏色，WS2812 燈條跟著變色，滑桿調亮度</td><td>DIN GPIO 16</td><td>板子和手機都要能上網</td></tr>
+              <tr><td><a href="./help-path.html#path-dash_car">31. 手機方向鍵遙控車</a></td><td>按住手機的方向鍵，車子前進、後退或轉彎，放開就停；手機斷線時自動停車</td><td>L298N 或 L9110S：IN1–IN4 接 GPIO 18、19、21、22</td><td>板子和手機都要能上網</td></tr>
+              <tr><td><a href="./help-path.html#path-dash_mode">32. 選單切換 LED 模式</a></td><td>手機選單切換關、亮、閃爍、呼吸燈，儀表顯示目前亮度</td><td>LED GPIO 18</td><td>板子和手機都要能上網</td></tr>
+              <tr><td><a href="./help-path.html#path-dash_oled">33. 手機傳文字到 OLED</a></td><td>在手機輸入英文，OLED 顯示出來；「清除畫面」按鈕清空</td><td>SDA GPIO 21、SCL GPIO 22</td><td>板子和手機都要能上網</td></tr>
+              <tr><td><a href="./help-path.html#path-dash_doorbell">34. 按鈕門鈴通知手機</a></td><td>按下板子的按鈕，手機跳出提醒並發出聲音；手機按「回應」，LED 閃 3 秒</td><td>同範例 2：按鈕 GPIO 19、LED GPIO 18</td><td>板子和手機都要能上網</td></tr>
+              <tr><td><a href="./help-path.html#path-dash_threshold">35. 手機調整濕度門檻</a></td><td>手機上設定濕度門檻，濕度超過門檻時 LED 亮起</td><td>DHT11 DATA GPIO 4、LED GPIO 18</td><td>板子和手機都要能上網</td></tr>
+              <tr><td><a href="./help-path.html#path-dash_log">36. 溫濕度紀錄表</a></td><td>每隔一段時間把溫度和濕度記成一列，在手機下載 CSV</td><td>DATA GPIO 4</td><td>板子和手機都要能上網</td></tr>
+              <tr><td><a href="./help-path.html#path-dash_level">37. 手機水平儀</a></td><td>傾斜手機，OLED 上的小球往低的那一邊滾，放平時顯示 LEVEL!</td><td>SDA GPIO 21、SCL GPIO 22</td><td>板子和手機都要能上網</td></tr>
+              <tr><td><a href="./help-path.html#path-dash_joycar">38. 手機搖桿遙控車</a></td><td>推手機搖桿開車，推得越遠越快，放開就停；手機斷線時自動停車</td><td>同範例 31：IN1–IN4 接 GPIO 18、19、21、22</td><td>板子和手機都要能上網</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="tip"><strong>進階技巧範例（21–26）：</strong>22、23、25、26 都沿用範例 2 的接線，接好一次就能全部試。中斷和計時器的範例按「停止」時會關掉中斷和計時器，不然程式停了 LED 還會繼續動。ESP-NOW 要兩塊以上的板子，每塊都上傳同一份程式。深度睡眠請用「上傳並執行」，板子醒來後有 5 秒可以按「停止」；USB 直接接晶片的板子（S2、S3、C3）睡著時會斷線，醒來後要重新連接。</p>
+      </section>
+      <nav class="page-turn" aria-label="上一頁和下一頁">
+        <a rel="prev" href="./help-tools.html"><span aria-hidden="true">←</span> 編輯器功能</a>
+        <a rel="next" href="./help-iot.html">手機與雲端 <span aria-hidden="true">→</span></a>
+      </nav>
+
+      <p class="help-bottom"><a class="home-link" href="./index.html"><span aria-hidden="true">←</span> 回程式編輯頁</a></p>
+    </main>
+
+    <footer class="footer">
+      <div class="copyright">
+        <span>© 2026 <a href="https://begin0808.github.io/studio0808/" target="_blank" rel="noopener">Studio0808 智造實驗室</a>. All rights reserved.</span>
+        <span class="contact-note">如有建議或報錯，歡迎來信</span>
+        <a class="contact-link" href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=begin0808@gmail.com" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>寫信給我
+        </a>
+        <a class="contact-link" href="https://www.facebook.com/begin.li.1/" target="_blank" rel="noopener" aria-label="Facebook">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="#1877f2" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
+        </a>
+        <span id="visit-count" class="visit-count" hidden></span>
+      </div>
+    </footer>
+
+    <button id="to-top" class="to-top" type="button" hidden><span aria-hidden="true">↑</span> 回到頂端</button>
+
+    <script type="module" src="/src/help.ts"></script>
+  </body>
+</html>

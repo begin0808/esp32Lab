@@ -473,10 +473,11 @@ function saveLanguage(next: Lang): void {
   }
 }
 
-/** The help page is a separate file for each language; every other page reloads and translates itself. */
+/** Each help page is a separate file for each language; every other page reloads and translates itself. */
 function openInLanguage(next: Lang): void {
   const url = new URL(location.href);
-  url.pathname = next === "en" ? url.pathname.replace(/\/help\.html$/, "/help.en.html") : url.pathname.replace(/\/help\.en\.html$/, "/help.html");
+  url.pathname =
+    next === "en" ? url.pathname.replace(/\/(help(?:-[a-z]+)?)\.html$/, "/$1.en.html") : url.pathname.replace(/\/(help(?:-[a-z]+)?)\.en\.html$/, "/$1.html");
   if (url.href === location.href) location.reload();
   else location.href = url.href;
 }

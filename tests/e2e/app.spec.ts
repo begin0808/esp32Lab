@@ -574,6 +574,8 @@ for (const path of ["/", "/voice.html", "/dashboard.html", "/help.html"]) {
 }
 
 const STYLE_IDS = ["mat", "blocks"];
+// The help home page and its topic pages, in reading order.
+const HELP_PATHS = ["/help.html", "/help-start.html", "/help-path.html", "/help-challenge.html", "/help-tools.html", "/help-hardware.html", "/help-iot.html", "/help-faq.html"];
 
 /** WCAG contrast of two computed "rgb(r, g, b)" colours. */
 function contrast(first: string, second: string): number {
@@ -768,6 +770,9 @@ test.describe("learning path", () => {
     await openSettings(page);
     const [help] = await Promise.all([context.waitForEvent("page"), page.locator("#help-link").click()]);
     await help.waitForLoadState();
+    // Moving to another help page in the same tab keeps the editor that opened it.
+    await help.locator(".help-pages").getByRole("link", { name: "學習路徑" }).click();
+    await expect(help).toHaveURL(/\/help-path\.html$/);
     let asked = "";
     help.on("dialog", (dialog) => {
       asked = dialog.message();
@@ -780,7 +785,7 @@ test.describe("learning path", () => {
     await expect(page.locator("#editor .cm-content")).toContainText("BUTTON_PIN = 19");
     await expect(page.locator("#monitor")).toContainText("已從學習路徑載入「2. 按鈕開關 LED」");
     // The help link now reopens the help page at the step just loaded.
-    await expect(page.locator("#help-link")).toHaveAttribute("href", "./help.html#path-button_led");
+    await expect(page.locator("#help-link")).toHaveAttribute("href", "./help-path.html#path-button_led");
   });
 
   test("keeps the editor's program and the help page when the student says no", async ({ page, context }) => {
@@ -789,6 +794,7 @@ test.describe("learning path", () => {
     await openSettings(page);
     const [help] = await Promise.all([context.waitForEvent("page"), page.locator("#help-link").click()]);
     await help.waitForLoadState();
+    await help.locator(".help-pages").getByRole("link", { name: "學習路徑" }).click();
     help.on("dialog", (dialog) => dialog.dismiss());
     await help.locator("#path-blink .example-link").click();
     await expect(help.locator("#path")).toBeVisible();
@@ -797,7 +803,7 @@ test.describe("learning path", () => {
   });
 
   test("a help page opened on its own opens the editor with the example", async ({ page }) => {
-    await page.goto("/help.html");
+    await page.goto("/help-path.html");
     await page.locator("#path-timer_blink .example-link").click();
     await expect(page.locator("#editor .cm-content")).toContainText("Timer(0)");
     await expect(page.locator("#monitor")).toContainText("已從學習路徑載入「23. 計時器讓 LED 自己閃（Timer）」");
@@ -828,13 +834,15 @@ test.describe("learning path", () => {
 
   test("the English help page loads the English example", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("esp32-mp-lang", "en"));
-    await page.goto("/help.en.html");
+    await page.goto("/help-path.en.html");
     await page.locator("#path-blink .example-link").click();
     await expect(page.locator("#editor .cm-content")).toContainText('print("LED:", "on" if led.value() else "off")');
   });
 
   test("highlights the step the editor came back to", async ({ page }) => {
+    // The editor's older links name help.html, which now sends the step on to the learning path page.
     await page.goto("/help.html#path-ds18b20");
+    await expect(page).toHaveURL(/\/help-path\.html#path-ds18b20$/);
     await expect(page.locator("#path-ds18b20")).toBeInViewport();
     const background = await page.locator("#path-ds18b20").evaluate((step) => getComputedStyle(step).backgroundColor);
     const plain = await page.locator("#path-blink").evaluate((step) => getComputedStyle(step).backgroundColor);
@@ -848,28 +856,47 @@ test("voice page links to the help page", async ({ page }) => {
 });
 
 for (const id of STYLE_IDS) {
-  test(`help page reads well in style ${id}`, async ({ page, request }) => {
+  test(`help pages read well in style ${id}`, async ({ page, request }) => {
     await page.addInitScript((style) => localStorage.setItem("esp32-mp-style", style), id);
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto("/help.html");
-    await expect(page.locator("html")).toHaveAttribute("data-style", id);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+    const checked = new Set<string>();
+    for (const path of HELP_PATHS) {
+      await page.goto(path);
+      await expect(page.locator("html")).toHaveAttribute("data-style", id);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), path).toBe(false);
 
-    for (const anchor of await page.locator(".toc a").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("href")!))) {
-      await expect(page.locator(anchor)).toHaveCount(1);
-    }
-    for (const badge of await page.locator(".badge").all()) {
-      const colors = await badge.evaluate((node) => {
-        const style = getComputedStyle(node);
-        return [style.color, style.backgroundColor];
-      });
-      expect(contrast(colors[0], colors[1])).toBeGreaterThanOrEqual(4.5);
-    }
-    for (const href of await page.locator('.doc a[href^="./"]').evaluateAll((nodes) => nodes.map((node) => (node as HTMLAnchorElement).href))) {
-      expect((await request.get(href)).ok(), href).toBe(true);
+      for (const anchor of await page.locator(".toc a").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("href")!))) {
+        await expect(page.locator(anchor)).toHaveCount(1);
+      }
+      for (const badge of await page.locator(".badge").all()) {
+        const colors = await badge.evaluate((node) => {
+          const style = getComputedStyle(node);
+          return [style.color, style.backgroundColor];
+        });
+        expect(contrast(colors[0], colors[1])).toBeGreaterThanOrEqual(4.5);
+      }
+      for (const href of await page.locator('.doc a[href^="./"]').evaluateAll((nodes) => nodes.map((node) => (node as HTMLAnchorElement).href.split("#")[0]))) {
+        if (checked.has(href)) continue;
+        checked.add(href);
+        expect((await request.get(href)).ok(), href).toBe(true);
+      }
     }
   });
 }
+
+test("every help page lists all of them, marks the one being read, and leads on to the next", async ({ page }) => {
+  for (const [index, path] of HELP_PATHS.entries()) {
+    await page.goto(path);
+    const links = page.locator(".help-pages a");
+    expect(await links.evaluateAll((nodes) => nodes.map((node) => new URL((node as HTMLAnchorElement).href).pathname))).toEqual(HELP_PATHS);
+    await expect(page.locator('.help-pages a[aria-current="page"]')).toHaveCount(1);
+    await expect(links.nth(index)).toHaveAttribute("aria-current", "page");
+    if (index === 0) continue;
+    await expect(page.locator('.page-turn a[rel="prev"]')).toHaveAttribute("href", `.${HELP_PATHS[index - 1]}`);
+    if (index + 1 < HELP_PATHS.length) await expect(page.locator('.page-turn a[rel="next"]')).toHaveAttribute("href", `.${HELP_PATHS[index + 1]}`);
+    else await expect(page.locator('.page-turn a[rel="next"]')).toHaveCount(0);
+  }
+});
 
 test("offers every example, grouped, and loads the wiring notes into the editor", async ({ page }) => {
   await page.goto("/");
@@ -1525,7 +1552,7 @@ function chineseLeftOnPage(page: Page) {
 test.describe("in an English browser", () => {
   test.use({ locale: "en-US" });
 
-  for (const path of ["/", "/voice.html", "/dashboard.html", "/help.html"]) {
+  for (const path of ["/", "/voice.html", "/dashboard.html", ...HELP_PATHS]) {
     test(`${path} shows no Chinese`, async ({ page }) => {
       await page.goto(path);
       await expect(page.locator("html")).toHaveAttribute("lang", "en");
@@ -1535,14 +1562,16 @@ test.describe("in an English browser", () => {
     });
   }
 
-  test("opens the English help page and keeps the section asked for", async ({ page }) => {
+  test("opens the English help page and keeps the section asked for, on the page that now holds it", async ({ page }) => {
     await page.goto("/help.html#faq");
-    await expect(page).toHaveURL(/help\.en\.html#faq$/);
+    await expect(page).toHaveURL(/\/help-faq\.en\.html#faq$/);
     await expect(page).toHaveTitle(/Help/);
+    await page.goto("/help-iot.html#dashboard");
+    await expect(page).toHaveURL(/\/help-iot\.en\.html#dashboard$/);
   });
 
   test("the help pages have a back-to-top button once they are scrolled down", async ({ page }) => {
-    for (const [lang, path, name] of [["zh-Hant", "/help.html", "回到頂端"], ["en", "/help.en.html", "Back to top"]]) {
+    for (const [lang, path, name] of [["zh-Hant", "/help-iot.html", "回到頂端"], ["en", "/help-iot.en.html", "Back to top"]]) {
       await page.goto("/help.en.html");
       await page.evaluate((next) => localStorage.setItem("esp32-mp-lang", next), lang);
       await page.goto(path);
@@ -1559,7 +1588,7 @@ test.describe("in an English browser", () => {
 
   test("the help pages' code boxes copy all of their code", async ({ page, context }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-    for (const [lang, path, copy, copied] of [["zh-Hant", "/help.html", "複製", "已複製"], ["en", "/help.en.html", "Copy", "Copied"]]) {
+    for (const [lang, path, copy, copied] of [["zh-Hant", "/help-iot.html", "複製", "已複製"], ["en", "/help-iot.en.html", "Copy", "Copied"]]) {
       await page.goto("/help.en.html");
       await page.evaluate((next) => localStorage.setItem("esp32-mp-lang", next), lang);
       await page.goto(path);
@@ -1576,18 +1605,26 @@ test.describe("in an English browser", () => {
     }
   });
 
-  test("the English help page has the same sections and links as the Chinese one", async ({ page, request }) => {
+  test("the English help pages have the same sections and links as the Chinese ones", async ({ page, request }) => {
     const outline = () => page.evaluate(() => [...document.querySelectorAll(".toc a, section[id], h3[id]")].map((node) => node.getAttribute("href") ?? node.id));
     const rows = () => page.locator(".doc tbody tr").count();
-    await page.goto("/help.en.html");
-    const [english, englishRows] = [await outline(), await rows()];
-    for (const href of await page.locator('.doc a[href^="./"]').evaluateAll((nodes) => nodes.map((node) => (node as HTMLAnchorElement).href))) {
-      expect((await request.get(href)).ok(), href).toBe(true);
+    const checked = new Set<string>();
+    for (const path of HELP_PATHS) {
+      await page.goto(path.replace(/\.html$/, ".en.html"));
+      await page.evaluate(() => localStorage.removeItem("esp32-mp-lang"));
+      await page.reload();
+      const [english, englishRows] = [await outline(), await rows()];
+      for (const href of await page.locator('.doc a[href^="./"]').evaluateAll((nodes) => nodes.map((node) => (node as HTMLAnchorElement).href.split("#")[0]))) {
+        if (checked.has(href)) continue;
+        checked.add(href);
+        expect((await request.get(href)).ok(), href).toBe(true);
+      }
+      await page.evaluate(() => localStorage.setItem("esp32-mp-lang", "zh-Hant"));
+      await page.goto(path);
+      expect(new URL(page.url()).pathname).toBe(path);
+      expect(await outline(), path).toEqual(english);
+      expect(await rows(), path).toBe(englishRows);
     }
-    await page.evaluate(() => localStorage.setItem("esp32-mp-lang", "zh-Hant"));
-    await page.goto("/help.html");
-    expect(await outline()).toEqual(english);
-    expect(await rows()).toBe(englishRows);
   });
 
   test("connects, uploads and reports in English", async ({ page }) => {
@@ -1726,6 +1763,12 @@ test.describe("choosing a language", () => {
     await page.locator("#language-picker").selectOption("zh-Hant");
     await expect(page).toHaveURL(/\/help\.html$/);
     await expect(page.locator("h1")).toContainText("使用說明");
+    // A topic page switches to the same topic in the other language.
+    await page.goto("/help-iot.html#dashboard");
+    await page.locator("#language-picker").selectOption("en");
+    await expect(page).toHaveURL(/\/help-iot\.en\.html#dashboard$/);
+    await page.locator("#language-picker").selectOption("zh-Hant");
+    await expect(page).toHaveURL(/\/help-iot\.html#dashboard$/);
     await page.goto("/");
     await expect(page.locator("#connect")).toHaveText("連接開發板");
   });
@@ -1986,7 +2029,7 @@ test.describe("REPL", () => {
     await page.goto("/");
     const [help] = await Promise.all([context.waitForEvent("page"), page.locator("#repl-help").click()]);
     await help.waitForLoadState();
-    await expect(help).toHaveURL(/help\.html#repl$/);
+    await expect(help).toHaveURL(/help-tools\.html#repl$/);
     await expect(help.locator("#repl h2")).toContainText("REPL");
     await expect(help.locator("#repl h2")).toBeInViewport();
   });
@@ -2015,7 +2058,7 @@ test.describe("REPL", () => {
     test("opens the English tutorial", async ({ page, context }) => {
       await page.goto("/");
       const [help] = await Promise.all([context.waitForEvent("page"), page.locator("#repl-help").click()]);
-      await expect(help).toHaveURL(/help\.en\.html#repl$/);
+      await expect(help).toHaveURL(/help-tools\.en\.html#repl$/);
       await expect(help.locator("#repl h2")).toContainText("REPL");
     await expect(help.locator("#repl h2")).toBeInViewport();
     });
@@ -2035,7 +2078,7 @@ test.describe("edition name", () => {
   test("shows the version from package.json on the editor and both help pages", async ({ page }) => {
     const { version } = JSON.parse(readFileSync("package.json", "utf8")) as { version: string };
     const shown = `v${version.replace(/\.0$/, "")}`;
-    for (const path of ["/", "/help.html", "/help.en.html"]) {
+    for (const path of ["/", ...HELP_PATHS, "/help-faq.en.html"]) {
       await page.goto(path);
       await expect(page.locator("h1 .version"), path).toHaveText(shown);
     }

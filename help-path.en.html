@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Learning path | Help | ESP32 Lab MicroPython Edition</title>
+    <meta name="description" content="The ESP32 Lab examples in three levels, each step with a small task to try changing it." />
+    <script>
+      // Runs before the first paint so a saved style never flashes the default one.
+      try {
+        document.documentElement.dataset.style = localStorage.getItem("esp32-mp-style") || "mat";
+      } catch {}
+    </script>
+    <link rel="icon" href="/icons/logo.svg" type="image/svg+xml" />
+    <link rel="icon" href="/icons/logo-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/icons/logo-180.png" />
+    <link rel="stylesheet" href="/src/themes.css" />
+    <link rel="stylesheet" href="/src/help.css" />
+  </head>
+  <body>
+    <header class="help-top">
+      <div class="brand">
+        <img class="brand-logo" src="/icons/logo.svg" alt="" width="40" height="40" />
+        <div>
+          <h1>ESP32 Lab <span class="edition">MicroPython Edition</span> Help <span class="version" title="Version">v%VITE_APP_VERSION%</span></h1>
+          <p class="updated">Last updated: November 14, 2026</p>
+        </div>
+      </div>
+      <div class="help-actions">
+        <a id="home-link" class="home-link" href="./index.html"><span aria-hidden="true">←</span> Back to the editor</a>
+        <label class="style-picker">
+          Style
+          <select id="style-picker"></select>
+        </label>
+        <label class="style-picker language-picker">
+          語言 Language
+          <select id="language-picker"></select>
+        </label>
+      </div>
+    </header>
+
+    <main class="doc">
+      <nav class="help-pages" aria-label="Help pages">
+        <a href="./help.en.html">Help home</a>
+        <a href="./help-start.en.html">Quick start</a>
+        <a href="./help-path.en.html" aria-current="page">Learning path</a>
+        <a href="./help-challenge.en.html">Challenge projects</a>
+        <a href="./help-tools.en.html">Editor tools</a>
+        <a href="./help-hardware.en.html">Boards and wiring</a>
+        <a href="./help-iot.en.html">Phone and cloud</a>
+        <a href="./help-faq.en.html">Troubleshooting and safety</a>
+      </nav>
+      <nav class="toc" aria-label="On this page">
+        <a href="#path-beginner">Beginner</a>
+        <a href="#path-intermediate">Intermediate</a>
+        <a href="#path-advanced">Advanced</a>
+      </nav>
+      <section id="path">
+        <h2>Learning path</h2>
+        <p>The 38 examples are arranged in three levels: beginner, intermediate and advanced. Work through them in order to learn step by step. <strong>Click an example's name to load it into the editor</strong>; you are asked first whether to replace the current program. Each step has a "Try changing it" task with no single right answer. If a change breaks the program, just load the example again. When you do not understand a program, use the explain option in <a href="./help-tools.en.html#gemini">Gemini prompts</a> to have Gemini explain it.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Level</th><th scope="col">Examples</th><th scope="col">Suggested time</th><th scope="col">By the end you can</th></tr></thead>
+            <tbody>
+              <tr><td><a href="#path-beginner">Beginner</a></td><td>1–5</td><td>About 4 lessons</td><td>Upload and run programs, read the monitor and error notes, and control LEDs and a buzzer</td></tr>
+              <tr><td><a href="#path-intermediate">Intermediate</a></td><td>6–15, 21</td><td>About 8 lessons</td><td>Read many kinds of sensors, watch their values on a chart, and show results on displays and lights</td></tr>
+              <tr><td><a href="#path-advanced">Advanced</a></td><td>16–20, 22–38</td><td>About 12 lessons (30–38 as parts and time allow)</td><td>Make a program do several things at once, connect to phones and online services, read and control the board from a phone dashboard, and build battery-saving or multi-board projects</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="tip"><strong>For teachers:</strong> the suggested times assume 50-minute lessons, including wiring and the "Try changing it" tasks, but not students' own projects. The first lesson also needs time to install the driver and firmware, so you may want to install the firmware on the boards before class. The intermediate level has many sensors; if you are short of parts, give each group a different sensor and have them share what they learned.</p>
+
+        <h3 id="path-beginner">Beginner: make LEDs and a buzzer come alive</h3>
+        <ul>
+          <li><strong>By the end you can:</strong> connect the board, upload and run programs, and read the monitor's output and error notes; control LEDs and a buzzer with digital input and output, PWM and analog readings.</li>
+          <li><strong>Suggested time:</strong> about 4 lessons.</li>
+          <li><strong>Parts:</strong> an ESP32 board and a USB data cable, a breadboard, jumper wires, an LED, a 220Ω resistor, a push button, a 10kΩ potentiometer and a passive buzzer.</li>
+          <li><strong>Site features used:</strong> <a href="./help-start.en.html#start">Upload and run</a>, <a href="./help-start.en.html#run">Run (no save)</a>, the monitor and error notes, and <a href="./help-tools.en.html#repl">the REPL</a>.</li>
+        </ul>
+        <ul class="path-steps">
+          <li id="path-blink"><a class="example-link" href="./index.html?example=blink">1. Blink an LED</a>: control a pin with <code>Pin.OUT</code>, repeat forever with <code>while True</code>, and pause with <code>time.sleep</code>. Also compare "Run (no save)" with "Upload and run".<span class="path-try"><strong>Try changing it:</strong> make the interval 0.2 seconds, then make a rhythm of "on for 0.2 seconds, off for 1 second".</span></li>
+          <li id="path-button_led"><a class="example-link" href="./index.html?example=button_led">2. Button-controlled LED</a>: read a button with <code>Pin.IN</code> and <code>Pin.PULL_UP</code>, and compare two readings in a row to catch the moment it is pressed.<span class="path-try"><strong>Try changing it:</strong> make the LED light only while the button is held down.</span></li>
+          <li id="path-breathing_led"><a class="example-link" href="./index.html?example=breathing_led">3. Breathing LED (PWM)</a>: set the brightness with PWM's <code>duty_u16</code>, and change the value step by step with <code>for</code> and <code>range</code>.<span class="path-try"><strong>Try changing it:</strong> make the breathing half as fast, then stop it at 50% brightness.</span></li>
+          <li id="path-knob_led"><a class="example-link" href="./index.html?example=knob_led">4. Potentiometer LED dimmer</a>: read an analog voltage with <code>ADC</code> as a number from 0 to 65535, and pass it to PWM.<span class="path-try"><strong>Try changing it:</strong> reverse it, so turning the knob further makes the LED dimmer.</span></li>
+          <li id="path-buzzer_song"><a class="example-link" href="./index.html?example=buzzer_song">5. Twinkle Twinkle on a passive buzzer</a>: the frequency sets the pitch; a dictionary holds the note names and a list holds the tune.<span class="path-try"><strong>Try changing it:</strong> make <code>BEAT_MS</code> smaller to speed the song up, then change <code>SONG</code> to "Frère Jacques" (C D E C, C D E C, E F G, E F G).</span></li>
+        </ul>
+
+        <h3 id="path-intermediate">Intermediate: sensors and displays</h3>
+        <ul>
+          <li><strong>By the end you can:</strong> read light, motion, distance, temperature and humidity sensors and watch their values on a chart; show results on an OLED, an LCD and lights; and check wiring problems with an I2C scan.</li>
+          <li><strong>Suggested time:</strong> about 8 lessons.</li>
+          <li><strong>Parts:</strong> an SG90 servo and an external 5V supply, a photoresistor and a 10kΩ resistor, an HC-SR501, an active buzzer module, an HC-SR04 with 1kΩ and 2kΩ resistors for the divider, a DHT11, a DS18B20 (a bare sensor needs a 4.7kΩ resistor), an SSD1306 OLED or I2C LCD 1602, a WS2812 strip and a MAX7219 matrix.</li>
+          <li><strong>Site features used:</strong> <a href="./help-tools.en.html#plot">Charts and CSV</a>, <a href="./help-tools.en.html#files">Board files</a>, "Write a new program" in <a href="./help-tools.en.html#gemini">Gemini prompts</a>, and <a href="./help-hardware.en.html#wiring">Wiring notes</a>.</li>
+        </ul>
+        <ul class="path-steps">
+          <li id="path-servo_sweep"><a class="example-link" href="./index.html?example=servo_sweep">6. SG90 servo sweep</a>: set the angle by the width of a 50 Hz pulse, and write your own function, <code>set_angle</code>. The servo needs an external 5V supply.<span class="path-try"><strong>Try changing it:</strong> make it swing only between 45 and 135 degrees.</span></li>
+          <li id="path-light_sensor"><a class="example-link" href="./index.html?example=light_sensor">7. Automatic night light (photoresistor)</a>: read a sensor, then use a threshold to decide whether to turn the light on.<span class="path-try"><strong>Try changing it:</strong> open the chart to watch the light level, and find the <code>DARK_LEVEL</code> that suits your room.</span></li>
+          <li id="path-pir_alarm"><a class="example-link" href="./index.html?example=pir_alarm">8. Motion alarm (HC-SR501)</a>: print only when the state changes, so the monitor is not flooded.<span class="path-try"><strong>Try changing it:</strong> when someone is detected, make the buzzer beep on and off instead of sounding all the time.</span></li>
+          <li id="path-ultrasonic"><a class="example-link" href="./index.html?example=ultrasonic">9. Ultrasonic distance (HC-SR04)</a>: work out the distance from the echo's travel time; the 5V signal must go through a divider before it reaches the ESP32.<span class="path-try"><strong>Try changing it:</strong> print "Too close!" when the distance is under 10 cm, then add an LED or buzzer warning.</span></li>
+          <li id="path-dht11_serial"><a class="example-link" href="./index.html?example=dht11_serial">10. DHT11 temperature and humidity (monitor)</a>: import a sensor module, and handle failed readings with <code>try</code> and <code>except</code>.<span class="path-try"><strong>Try changing it:</strong> open the chart and breathe on the sensor to see how the humidity changes, then export a CSV and draw a chart in a spreadsheet.</span></li>
+          <li id="path-ds18b20"><a class="example-link" href="./index.html?example=ds18b20">11. DS18B20 thermometer</a>: 1-Wire communication, where one wire can carry several sensors.<span class="path-try"><strong>Try changing it:</strong> convert the temperature to Fahrenheit and print it next to Celsius.</span></li>
+          <li id="path-i2c_scan"><a class="example-link" href="./index.html?example=i2c_scan">21. I2C scan (find device addresses)</a>: I2C tells devices apart by address; before using a display, check that the board can find it.<span class="path-try"><strong>Try changing it:</strong> connect an OLED and an LCD to the same SDA and SCL, and see whether both addresses show up.</span></li>
+          <li id="path-oled_ssd1306"><a class="example-link" href="./index.html?example=oled_ssd1306">13. SSD1306 OLED display</a>: text and lines are drawn in memory first, and the screen changes only when <code>show()</code> is called.<span class="path-try"><strong>Try changing it:</strong> add a line with your name, then draw a border with <code>oled.rect()</code>.</span></li>
+          <li id="path-lcd1602_i2c"><a class="example-link" href="./index.html?example=lcd1602_i2c">14. I2C LCD 1602 display</a>: choose where text goes with <code>move_to(column, row)</code>.<span class="path-try"><strong>Try changing it:</strong> show the seconds as minutes and seconds, such as <code>01:05</code>.</span></li>
+          <li id="path-ws2812_rainbow"><a class="example-link" href="./index.html?example=ws2812_rainbow">12. WS2812 RGB LED rainbow</a>: a colour is three numbers (red, green, blue), and the strip changes only when <code>write()</code> is called.<span class="path-try"><strong>Try changing it:</strong> make the whole strip show red, green and blue in turn.</span></li>
+          <li id="path-max7219_matrix"><a class="example-link" href="./index.html?example=max7219_matrix">15. MAX7219 LED matrix</a>: draw an 8×8 picture with binary numbers made of 0s and 1s.<span class="path-try"><strong>Try changing it:</strong> design your own picture, such as an arrow, and add it to the slideshow.</span></li>
+        </ul>
+
+        <h3 id="path-advanced">Advanced: several things at once, and going online</h3>
+        <ul>
+          <li><strong>By the end you can:</strong> use interrupts, timers and asyncio to make a program handle several things at once; connect the board to phones and online services, and read and control it from a phone dashboard; and build battery-saving or multi-board projects.</li>
+          <li><strong>Suggested time:</strong> about 12 lessons.</li>
+          <li><strong>Parts:</strong> the button and LED from example 2, a DHT11, a 10kΩ potentiometer, a 2.4GHz Wi-Fi network and a phone. The optional examples 30–38 also need a WS2812 strip, an SSD1306 OLED, a motor driver and a small car. The Telegram example needs a Telegram account, the Google Sheets example needs a Google account, and ESP-NOW needs two or more boards.</li>
+          <li><strong>Site features used:</strong> the explain option in <a href="./help-tools.en.html#gemini">Gemini prompts</a>, <a href="./help-iot.en.html#voice">Phone and voice control</a>, <a href="./help-iot.en.html#dashboard">Phone dashboard</a>, <a href="./help-iot.en.html#google-sheets">Google Sheets</a>, and <a href="./help-faq.en.html#privacy">Privacy and safety</a> (take care when a program holds a Wi-Fi password).</li>
+        </ul>
+        <ul class="path-steps">
+          <li id="path-button_irq"><a class="example-link" href="./index.html?example=button_irq">22. Button interrupt (IRQ)</a>: the interrupt handler runs the moment the button is pressed and only sets a flag; <code>ticks_diff</code> filters out bounce.<span class="path-try"><strong>Try changing it:</strong> make the main loop wait 5 seconds, and check that no press is missed even when you press quickly several times.</span></li>
+          <li id="path-timer_blink"><a class="example-link" href="./index.html?example=timer_blink">23. Timer blinks the LED by itself</a>: a timer calls a function on a schedule while the main program does something else; <code>finally</code> cleans up.<span class="path-try"><strong>Try changing it:</strong> add a second timer that prints a message on the monitor every 3 seconds.</span></li>
+          <li id="path-asyncio_tasks"><a class="example-link" href="./index.html?example=asyncio_tasks">26. asyncio: three things at once</a>: asyncio means "asynchronous input/output": while one task waits, another runs. With <code>async def</code> and <code>await</code>, several tasks take turns running.<span class="path-try"><strong>Try changing it:</strong> add a fourth task that prints the free memory from <code>gc.mem_free()</code> every 5 seconds.</span></li>
+          <li id="path-web_led"><a class="example-link" href="./index.html?example=web_led">16. Phone-controlled LED (same Wi-Fi)</a>: join Wi-Fi, make the board a web server, and use asyncio to serve the page and blink at the same time.<span class="path-try"><strong>Try changing it:</strong> add a "fast blink" button to the page.</span></li>
+          <li id="path-dht11_alarm"><a class="example-link" href="./index.html?example=dht11_alarm">18. DHT11 humidity alarm</a>: the phone page asks the board for JSON data every 2 seconds.<span class="path-try"><strong>Try changing it:</strong> change the alarm threshold from 50% to a number that suits your room.</span></li>
+          <li id="path-mqtt_led"><a class="example-link" href="./index.html?example=mqtt_led">17. Voice-controlled LED (MQTT)</a>: send and receive messages across different networks through an online MQTT server.<span class="path-try"><strong>Try changing it:</strong> add a button that toggles the LED and reports the new state, so the voice control page updates too.</span></li>
+          <li id="path-dash_intro"><a class="example-link" href="./index.html?example=dash_intro">27. Dashboard basics: LED switch and button</a>: create widgets on the phone with <code>dash</code>, send values to the phone with <code>.set()</code>, and read the phone's switch with <code>.value</code>.<span class="path-try"><strong>Try changing it:</strong> add a <code>board.text("Message")</code> that says "Someone pressed it!" when the button is pressed.</span></li>
+          <li id="path-dash_dht11"><a class="example-link" href="./index.html?example=dash_dht11">28. DHT11 dashboard</a>: one value can go to a gauge and a chart at once, and <code>color=</code> picks a gauge's colour; the sensor is read every 3 seconds by checking the time, while <code>board.check()</code> keeps running. Breathing on the sensor changes the humidity the most.<span class="path-try"><strong>Try changing it:</strong> add a <code>board.led("Too hot", color="red")</code> that lights up above <code>HOT</code>.</span></li>
+          <li id="path-dash_knob"><a class="example-link" href="./index.html?example=dash_knob">29. Knob and phone slider both dim an LED</a>: the phone's slider and button control the board; when the knob turns, the board moves the phone's slider to match with <code>.set()</code>, and the last one moved wins.<span class="path-try"><strong>Try changing it:</strong> add an "Off" button that sets the slider to 0.</span></li>
+          <li id="path-dash_color"><a class="example-link" href="./index.html?example=dash_color">30. Pick a colour for an RGB LED</a>: the colour is (red, green, blue), three numbers from 0 to 255, used the same way as the strip in example 12.<span class="path-try"><strong>Try changing it:</strong> add a "Rainbow" switch that makes the strip change colour by itself.</span></li>
+          <li id="path-dash_car"><a class="example-link" href="./index.html?example=dash_car">31. Phone-controlled car</a>: two PWM pins set one motor's direction and speed; the direction keys move the car only while held, and the board stops the car if the phone drops off.<span class="path-try"><strong>Try changing it:</strong> make turns smoother by slowing one side instead of reversing it.</span></li>
+          <li id="path-dash_mode"><a class="example-link" href="./index.html?example=dash_mode">32. Menu switches LED modes</a>: work out the blinking and breathing brightness from <code>time.ticks_ms()</code> instead of waiting with <code>time.sleep</code>.<span class="path-try"><strong>Try changing it:</strong> add an "SOS" mode to the menu: three short, three long, three short.</span></li>
+          <li id="path-dash_oled"><a class="example-link" href="./index.html?example=dash_oled">33. Send text to the OLED</a>: <code>.changed()</code> updates the screen only for new text, and long text is cut into lines of 16 characters.<span class="path-try"><strong>Try changing it:</strong> show on the OLED's bottom line how many messages have arrived.</span></li>
+          <li id="path-dash_doorbell"><a class="example-link" href="./index.html?example=dash_doorbell">34. Doorbell alert on the phone</a>: an alert goes out only when it happens and is never kept; the phone and the board can call each other.<span class="path-try"><strong>Try changing it:</strong> use the motion sensor from example 8 instead, and tell the phone when someone walks past.</span></li>
+          <li id="path-dash_threshold"><a class="example-link" href="./index.html?example=dash_threshold">35. Set a humidity limit from the phone</a>: <code>board.number()</code> lets the phone set a limit, and <code>.changed()</code> tells the board it changed; the reading is compared with the newest limit every time round, so experiments need no code changes.<span class="path-try"><strong>Try changing it:</strong> add a temperature limit too, and light the LED only when both are exceeded.</span></li>
+          <li id="path-dash_log"><a class="example-link" href="./index.html?example=dash_log">36. Temperature and humidity log</a>: <code>board.log()</code> adds each reading as a row and the phone adds the time; a number setting sets how often.<span class="path-try"><strong>Try changing it:</strong> record for 10 minutes, download the CSV, and chart the humidity in a spreadsheet.</span></li>
+          <li id="path-dash_level"><a class="example-link" href="./index.html?example=dash_level">37. Phone spirit level</a>: <code>board.tilt()</code> reads the phone's tilt, with <code>tilt.x</code> and <code>tilt.y</code> from -100 to 100; the OLED is redrawn only when something changed, so it does not flicker.<span class="path-try"><strong>Try changing it:</strong> light the LED from example 2 when the phone is level.</span></li>
+          <li id="path-dash_joycar"><a class="example-link" href="./index.html?example=dash_joycar">38. Phone joystick car</a>: adding and subtracting the joystick's forward and turn amounts gives the speed of each wheel; near the centre the car stays still, so a shaky finger does not move it.<span class="path-try"><strong>Try changing it:</strong> drive with <code>board.tilt()</code> instead, by tilting the phone.</span></li>
+          <li id="path-telegram_led"><a class="example-link" href="./index.html?example=telegram_led">19. Telegram bot LED</a>: call an online API over HTTPS; the button's interrupt only sets a flag and leaves network work to the main program.<span class="path-try"><strong>Try changing it:</strong> add a <code>/blink</code> command that blinks the LED 5 times.</span></li>
+          <li id="path-sheets_dht11"><a class="example-link" href="./index.html?example=sheets_dht11">20. Log DHT11 data to Google Sheets</a>: put the readings in the address's parameters and send them to Apps Script, which writes them to the sheet.<span class="path-try"><strong>Try changing it:</strong> set <code>SEND_SECONDS</code> to 10 for testing, then draw a line chart in the sheet from the data collected.</span></li>
+          <li id="path-deep_sleep"><a class="example-link" href="./index.html?example=deep_sleep">24. Deep sleep with timed wake-ups</a>: the board uses almost no power while asleep, RTC memory keeps data during sleep, and waking up is like restarting.<span class="path-try"><strong>Try changing it:</strong> read the DHT11 once on each wake-up before sleeping again, to make a battery-saving temperature logger.</span></li>
+          <li id="path-espnow_led"><a class="example-link" href="./index.html?example=espnow_led">25. ESP-NOW between boards</a>: boards send messages straight to each other without a Wi-Fi router.<span class="path-try"><strong>Try changing it:</strong> send the number of presses instead, and have the receiving boards print it on the monitor.</span></li>
+        </ul>
+        <p>After the advanced level, pick a <a href="./help-challenge.en.html#challenge">challenge project</a> and combine several examples into a complete project of your own.</p>
+      </section>
+      <nav class="page-turn" aria-label="Previous and next page">
+        <a rel="prev" href="./help-start.en.html"><span aria-hidden="true">←</span> Quick start</a>
+        <a rel="next" href="./help-challenge.en.html">Challenge projects <span aria-hidden="true">→</span></a>
+      </nav>
+
+      <p class="help-bottom"><a class="home-link" href="./index.html"><span aria-hidden="true">←</span> Back to the editor</a></p>
+    </main>
+
+    <footer class="footer">
+      <div class="copyright">
+        <span>© 2026 <a href="https://begin0808.github.io/studio0808/" target="_blank" rel="noopener">Studio0808</a>. All rights reserved.</span>
+        <span class="contact-note">Suggestions and bug reports are welcome</span>
+        <a class="contact-link" href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=begin0808@gmail.com" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>Email me
+        </a>
+        <a class="contact-link" href="https://www.facebook.com/begin.li.1/" target="_blank" rel="noopener" aria-label="Facebook">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="#1877f2" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
+        </a>
+        <span id="visit-count" class="visit-count" hidden></span>
+      </div>
+    </footer>
+
+    <button id="to-top" class="to-top" type="button" hidden><span aria-hidden="true">↑</span> Back to top</button>
+
+    <script type="module" src="/src/help.ts"></script>
+  </body>
+</html>

@@ -1,8 +1,10 @@
-import { setupLanguagePicker, t, translatePage } from "./i18n";
+import { helpPageFor } from "./helppages";
+import { lang, setupLanguagePicker, t, translatePage } from "./i18n";
 import { setupExampleLinks, setupHomeLinks } from "./nav";
 import { setupStats } from "./stats";
 import { setupStylePicker } from "./theme";
 
+redirectToSectionPage();
 translatePage();
 setupStylePicker(document.getElementById("style-picker") as HTMLSelectElement);
 setupLanguagePicker(document.getElementById("language-picker") as HTMLSelectElement);
@@ -11,6 +13,14 @@ setupExampleLinks((name) => confirm(t("要用「{name}」取代目前的程式�
 setupStats();
 setupToTop(document.getElementById("to-top") as HTMLButtonElement | null);
 setupCopyButtons();
+
+/** An older link such as help.html#dashboard names a section that now lives on its own page, so it goes there. */
+function redirectToSectionPage(): void {
+  const id = decodeURIComponent(location.hash.slice(1));
+  if (!id || document.getElementById(id)) return;
+  const page = helpPageFor(id);
+  if (page) location.replace(`./${page}${lang === "en" ? ".en" : ""}.html${location.hash}`);
+}
 
 /** Each code box gets a button that copies all of it, so nobody misses the first or the last line. */
 function setupCopyButtons(): void {

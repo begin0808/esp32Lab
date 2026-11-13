@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Editor tools | Help | ESP32 Lab MicroPython Edition</title>
+    <meta name="description" content="The ESP32 Lab editor's Gemini prompts, REPL, charts and CSV, and board file manager." />
+    <script>
+      // Runs before the first paint so a saved style never flashes the default one.
+      try {
+        document.documentElement.dataset.style = localStorage.getItem("esp32-mp-style") || "mat";
+      } catch {}
+    </script>
+    <link rel="icon" href="/icons/logo.svg" type="image/svg+xml" />
+    <link rel="icon" href="/icons/logo-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/icons/logo-180.png" />
+    <link rel="stylesheet" href="/src/themes.css" />
+    <link rel="stylesheet" href="/src/help.css" />
+  </head>
+  <body>
+    <header class="help-top">
+      <div class="brand">
+        <img class="brand-logo" src="/icons/logo.svg" alt="" width="40" height="40" />
+        <div>
+          <h1>ESP32 Lab <span class="edition">MicroPython Edition</span> Help <span class="version" title="Version">v%VITE_APP_VERSION%</span></h1>
+          <p class="updated">Last updated: November 14, 2026</p>
+        </div>
+      </div>
+      <div class="help-actions">
+        <a id="home-link" class="home-link" href="./index.html"><span aria-hidden="true">←</span> Back to the editor</a>
+        <label class="style-picker">
+          Style
+          <select id="style-picker"></select>
+        </label>
+        <label class="style-picker language-picker">
+          語言 Language
+          <select id="language-picker"></select>
+        </label>
+      </div>
+    </header>
+
+    <main class="doc">
+      <nav class="help-pages" aria-label="Help pages">
+        <a href="./help.en.html">Help home</a>
+        <a href="./help-start.en.html">Quick start</a>
+        <a href="./help-path.en.html">Learning path</a>
+        <a href="./help-challenge.en.html">Challenge projects</a>
+        <a href="./help-tools.en.html" aria-current="page">Editor tools</a>
+        <a href="./help-hardware.en.html">Boards and wiring</a>
+        <a href="./help-iot.en.html">Phone and cloud</a>
+        <a href="./help-faq.en.html">Troubleshooting and safety</a>
+      </nav>
+      <nav class="toc" aria-label="On this page">
+        <a href="#gemini">Gemini prompts</a>
+        <a href="#repl">The REPL</a>
+        <a href="#plot">Charts and CSV</a>
+        <a href="#files">Board files</a>
+      </nav>
+      <section id="gemini">
+        <h2>Gemini prompts</h2>
+        <p>The site writes the prompts for the chip you chose; copy one and paste it into Gemini. The "Gemini prompts" menu above the editor has three items:</p>
+        <ul>
+          <li><strong>Write a new program:</strong> asks Gemini for one complete <code>main.py</code>. After pasting, replace the wiring and the description in brackets with your own, then send it.</li>
+          <li><strong>Write a phone dashboard program:</strong> like "Write a new program", but it includes how to use every widget of the <a href="./help-iot.en.html#dashboard">Phone dashboard</a> and its rules, so Gemini knows commands such as <code>board.gauge()</code>. When a program has <code>import dash</code>, "Explain the program" and "Copy for Gemini" add the same guide by themselves.</li>
+          <li><strong>Explain the program:</strong> for an example, or a program from Gemini, that you do not understand. Gemini says in plain words what the program does, which parts it needs and what the monitor will show, then explains it section by section. Each section names its line numbers, which match the numbers down the left of the editor.</li>
+        </ul>
+        <p>To ask about only a few lines, select them in the editor before opening the menu; the last item then reads "Explain the selection (lines 5–12)". The whole program goes too, so Gemini sees the context. With nothing selected, the whole program is explained.</p>
+        <p>Two more prompts appear when they are needed: when the program hits an error, "Copy for Gemini" on the error card sends the error message and asks for a fix; when you paste Arduino code, the button on the notice asks Gemini to rewrite it as MicroPython.</p>
+        <p class="tip">All of these prompts hide common forms of Wi-Fi passwords and tokens, but may not catch them all; see <a href="./help-faq.en.html#privacy">Privacy and safety</a>.</p>
+      </section>
+      <section id="repl">
+        <h2>Talking to the board with the REPL</h2>
+        <p>REPL stands for Read-Eval-Print Loop: it reads a command, runs it, prints the result, and repeats. With <code>main.py</code> you write a whole program and then upload it. The REPL works one line at a time, which suits checking wiring, trying commands and finding mistakes.</p>
+        <p class="tip">Commands you type here run on the board straight away, but <strong>are not saved to <code>main.py</code></strong>. Variables and the effects of commands are gone after a restart or an upload.</p>
+        <h3>Getting started</h3>
+        <ol>
+          <li>Press "Connect board". Connecting stops any running program, and the monitor shows the <code>&gt;&gt;&gt;</code> prompt.</li>
+          <li>If a program is running (for example, just after "Upload and run"), press "Stop" first.</li>
+          <li>Type a command in the box below the monitor and press <kbd>Enter</kbd>.</li>
+        </ol>
+        <h3>Try it</h3>
+        <p>Type these commands in order. The second group uses GPIO 2, the onboard LED of common ESP32 boards. For other chips or boards, use your own pin.</p>
+        <pre class="code-block" tabindex="0">1 + 1
+
+from machine import Pin
+led = Pin(2, Pin.OUT)
+led.value(1)
+led.value(0)
+
+import os
+os.listdir()</pre>
+        <h3>Useful commands</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Command</th><th scope="col">What it does</th></tr></thead>
+            <tbody>
+              <tr><td><code>help("modules")</code></td><td>Lists the modules in the firmware</td></tr>
+              <tr><td><code>import machine</code>, then <code>dir(machine)</code></td><td>Lists what a module contains</td></tr>
+              <tr><td><code>from machine import Pin</code>, then <code>Pin(19, Pin.IN, Pin.PULL_UP).value()</code></td><td>Reads a button pin, usually 0 when pressed</td></tr>
+              <tr><td><code>from machine import Pin, I2C</code>, then <code>I2C(0, scl=Pin(22), sda=Pin(21)).scan()</code></td><td>Scans for I2C devices, to check an OLED or LCD's wiring and address</td></tr>
+              <tr><td><code>import gc</code>, then <code>gc.mem_free()</code></td><td>Shows the free memory</td></tr>
+              <tr><td><code>print(open("main.py").read())</code></td><td>Shows the program on the board. It may contain a Wi-Fi password, so take care when projecting</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Keyboard shortcuts</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Keys</th><th scope="col">What they do</th></tr></thead>
+            <tbody>
+              <tr><td><kbd>Enter</kbd></td><td>Sends the command. After a line ending in a colon, it starts an indented new line</td></tr>
+              <tr><td><kbd>Shift</kbd> + <kbd>Enter</kbd></td><td>Starts a new line without sending</td></tr>
+              <tr><td><kbd>Ctrl</kbd> + <kbd>Enter</kbd></td><td>Sends straight away, whatever the text</td></tr>
+              <tr><td><kbd>↑</kbd>, <kbd>↓</kbd></td><td>Brings back earlier commands</td></tr>
+              <tr><td><kbd>Tab</kbd></td><td>Completes a name. When several fit, they are listed above the box. A module must be imported first: type <code>import machine</code>, then <code>machine.</code> and press Tab</td></tr>
+              <tr><td><kbd>Ctrl</kbd> + <kbd>C</kbd></td><td>Interrupts the running program, like "Stop". With text selected, it copies instead</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Typing several lines</h3>
+        <p>Type <code>for i in range(3):</code> and press <kbd>Enter</kbd>, and the box starts an indented new line. After the body, press <kbd>Enter</kbd> twice more (a blank line, then send) to run the whole block. You can also paste several lines and press "Send". The monitor shows <code>===</code>, which is the board's normal prompt while it receives several lines.</p>
+        <pre class="code-block" tabindex="0">for i in range(3):
+    print(i)</pre>
+        <p>Put longer programs in the editor on the left and use "Upload and run", so they are saved.</p>
+        <p class="tip warn"><strong>The REPL really controls the hardware.</strong> As in a program, wrong pin settings can still affect connected parts, so do not type file-deleting commands you do not understand. Earlier commands stay only in this tab's memory. They are cleared when you reload or change the language, and are never saved in the browser.</p>
+      </section>
+      <section id="plot">
+        <h2>Watching sensor values on a chart</h2>
+        <p>The top right of the monitor switches between "Text" and "Chart". On "Chart", the numbers your program prints are drawn as a line chart, which is good for watching a temperature change, a knob turn or a distance. Data keeps being recorded whichever view is shown, so nothing is missed when you switch back.</p>
+        <h3>How to print values that can be charted</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">The program prints</th><th scope="col">The chart shows</th></tr></thead>
+            <tbody>
+              <tr><td><code>print("temp:", t)</code></td><td>One line called "temp"</td></tr>
+              <tr><td><code>print("Temperature:", t, "°C  Humidity:", h, "%")</code></td><td>Two lines, "Temperature" and "Humidity". Units after a number are ignored</td></tr>
+              <tr><td><code>print(t, h)</code></td><td>When only numbers are printed, they are called "value1", "value2" in order</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <ul>
+          <li>The name is the one word before the colon (or equals sign), <strong>with no spaces</strong>. For example <code>room_temp:</code> works, but <code>room temp:</code> only takes <code>temp</code>.</li>
+          <li>Lines without numbers, error messages, <code>&gt;&gt;&gt;</code> command lines and the chip's own messages after a restart are not drawn. Up to 8 lines can be drawn.</li>
+          <li>Examples 4 "Potentiometer LED dimmer", 7 "Automatic night light (photoresistor)", 9 "Ultrasonic distance (HC-SR04)", 10 "DHT11 temperature and humidity (monitor)" and 11 "DS18B20 thermometer" can be charted without any changes. Their opening comments also suggest what to try, such as turning the knob, covering the photoresistor or breathing on the DHT11.</li>
+        </ul>
+        <h3>Try it</h3>
+        <p>You can try this without any parts. Upload the program below and switch to "Chart" to see two waves.</p>
+        <pre class="code-block" tabindex="0">import math, time
+
+i = 0
+while True:
+    print("sin:", math.sin(i / 50), "cos:", math.cos(i / 50))
+    i += 1
+    time.sleep(0.05)</pre>
+        <h3>The chart's buttons</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Button</th><th scope="col">What it does</th></tr></thead>
+            <tbody>
+              <tr><td>Show the last</td><td>Shows the last 10 seconds, 30 seconds, 1 minute, 5 minutes or 10 minutes. Right after recording starts, the chart begins at 0 seconds and fills the whole width</td></tr>
+              <tr><td>Pause / Resume</td><td>Freezes the picture so you can look closely. Data is still recorded</td></tr>
+              <tr><td>Legend</td><td>Shows each line's newest value. Click one to hide or show that line</td></tr>
+              <tr><td>Clear</td><td>On the chart view, clears only the chart data, after asking first</td></tr>
+              <tr><td>Export CSV</td><td>Downloads the recorded data as a CSV file</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Exporting CSV</h3>
+        <p>"Export CSV" downloads <code>esp32-data-date-time.csv</code>. The first column is the time in seconds since the first value, followed by one column per line. A value not printed on a row is left empty. Excel and Google Sheets open it with Chinese names intact, so you can make charts, take averages or write a lab report.</p>
+        <p class="tip">The site keeps up to the latest 100,000 rows. Beyond that the oldest are dropped, and a note appears above the chart. Data lives only in this tab and <strong>is cleared when the page is reloaded</strong>, so export long recordings. To keep data for longer, see <a href="./help-iot.en.html#google-sheets">Saving sensor data to Google Sheets</a>.</p>
+      </section>
+      <section id="files">
+        <h2>Managing the files on the board</h2>
+        <p>Once a board is connected, press "Board files" above the editor to see the files on the board, and to download, upload and delete them, without installing Thonny or mpremote.</p>
+        <p class="tip"><strong>Opening "Board files" stops the program running on the board.</strong> It stays stopped after you close the window; press "Restart" in the serial monitor to run <code>main.py</code> again.</p>
+        <h3>What you can do</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Action</th><th scope="col">What it does</th></tr></thead>
+            <tbody>
+              <tr><td>Click a folder name</td><td>Opens the folder, such as <code>lib</code>. Click the path above the list to go back up</td></tr>
+              <tr><td>Open in editor</td><td>Puts a text file of up to 100 KB (such as .py, .txt, .csv or .json) in the editor, after asking</td></tr>
+              <tr><td>Download</td><td>Saves the file to your computer</td></tr>
+              <tr><td>Delete</td><td>Asks first. A folder must be empty before it can be deleted</td></tr>
+              <tr><td>Upload from computer…</td><td>Uploads into the open folder. You can choose several files at once, or drag them into the window. It asks before replacing a file with the same name</td></tr>
+              <tr><td>Save editor as…</td><td>Saves the code in the editor under the name you type, such as <code>mylib.py</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>The top right of the window shows how much space the board has left. Uploads and downloads are checked with SHA-256, so a file that arrives damaged is caught; if an upload fails, the file already on the board is left as it was.</p>
+        <h3>Writing your own library</h3>
+        <ol>
+          <li>Write a function in the editor:
+            <pre class="code-block" tabindex="0">def hello(name):
+    print("Hello,", name)</pre>
+          </li>
+          <li>Press "Board files", then "Save editor as…", and type <code>mylib.py</code>.</li>
+          <li>Close the window, write the main program in the editor and press "Upload and run":
+            <pre class="code-block" tabindex="0">import mylib
+mylib.hello("ESP32")</pre>
+          </li>
+        </ol>
+        <p>A library for a part that you find online, such as <code>ssd1306.py</code> for an OLED, can also go on the board with "Upload from computer…", in the top folder or in <code>lib</code>, and then be imported with <code>import</code>.</p>
+        <p class="tip">After opening a file such as <code>lib/ssd1306.py</code> in the editor and changing it, <strong>save it back with "Save editor as…"</strong>. "Upload and run" would save it as <code>main.py</code>, replacing your main program.</p>
+      </section>
+      <nav class="page-turn" aria-label="Previous and next page">
+        <a rel="prev" href="./help-challenge.en.html"><span aria-hidden="true">←</span> Challenge projects</a>
+        <a rel="next" href="./help-hardware.en.html">Boards and wiring <span aria-hidden="true">→</span></a>
+      </nav>
+
+      <p class="help-bottom"><a class="home-link" href="./index.html"><span aria-hidden="true">←</span> Back to the editor</a></p>
+    </main>
+
+    <footer class="footer">
+      <div class="copyright">
+        <span>© 2026 <a href="https://begin0808.github.io/studio0808/" target="_blank" rel="noopener">Studio0808</a>. All rights reserved.</span>
+        <span class="contact-note">Suggestions and bug reports are welcome</span>
+        <a class="contact-link" href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=begin0808@gmail.com" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>Email me
+        </a>
+        <a class="contact-link" href="https://www.facebook.com/begin.li.1/" target="_blank" rel="noopener" aria-label="Facebook">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="#1877f2" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
+        </a>
+        <span id="visit-count" class="visit-count" hidden></span>
+      </div>
+    </footer>
+
+    <button id="to-top" class="to-top" type="button" hidden><span aria-hidden="true">↑</span> Back to top</button>
+
+    <script type="module" src="/src/help.ts"></script>
+  </body>
+</html>

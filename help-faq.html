@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>問題排解與安全｜使用說明｜ESP32 Lab MicroPython 版</title>
+    <meta name="description" content="ESP32 Lab 安裝、連線、執行程式和網路的常見問題，以及隱私與安全注意事項。" />
+    <script>
+      // Runs before the first paint so a saved style never flashes the default one.
+      try {
+        document.documentElement.dataset.style = localStorage.getItem("esp32-mp-style") || "mat";
+      } catch {}
+    </script>
+    <script>
+      // The English help page is its own file, so it is opened before anything is drawn.
+      (function () {
+        var saved = "";
+        try {
+          saved = localStorage.getItem("esp32-mp-lang") || "";
+        } catch {}
+        if (!/^zh/i.test(saved || navigator.language)) location.replace("./help-faq.en.html" + location.hash);
+      })();
+    </script>
+    <link rel="icon" href="/icons/logo.svg" type="image/svg+xml" />
+    <link rel="icon" href="/icons/logo-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/icons/logo-180.png" />
+    <link rel="stylesheet" href="/src/themes.css" />
+    <link rel="stylesheet" href="/src/help.css" />
+  </head>
+  <body>
+    <header class="help-top">
+      <div class="brand">
+        <img class="brand-logo" src="/icons/logo.svg" alt="" width="40" height="40" />
+        <div>
+          <h1>ESP32 Lab <span class="edition">MicroPython 版</span> 使用說明 <span class="version" title="版本">v%VITE_APP_VERSION%</span></h1>
+          <p class="updated">內容更新：2026 年 11 月 14 日</p>
+        </div>
+      </div>
+      <div class="help-actions">
+        <a id="home-link" class="home-link" href="./index.html"><span aria-hidden="true">←</span> 回程式編輯頁</a>
+        <label class="style-picker">
+          風格
+          <select id="style-picker"></select>
+        </label>
+        <label class="style-picker language-picker">
+          語言 Language
+          <select id="language-picker"></select>
+        </label>
+      </div>
+    </header>
+
+    <main class="doc">
+      <nav class="help-pages" aria-label="說明頁面">
+        <a href="./help.html">說明首頁</a>
+        <a href="./help-start.html">快速上手</a>
+        <a href="./help-path.html">學習路徑</a>
+        <a href="./help-challenge.html">挑戰專題</a>
+        <a href="./help-tools.html">編輯器功能</a>
+        <a href="./help-hardware.html">硬體與接線</a>
+        <a href="./help-iot.html">手機與雲端</a>
+        <a href="./help-faq.html" aria-current="page">問題排解與安全</a>
+      </nav>
+      <nav class="toc" aria-label="本頁目錄">
+        <a href="#faq">常見問題</a>
+        <a href="#privacy">隱私與安全</a>
+      </nav>
+      <section id="faq">
+        <h2>常見問題</h2>
+        <h3 id="faq-connect">安裝與連線</h3>
+        <details><summary>按「連接開發板」後，清單裡沒有序列埠</summary><p>先換一條確定能傳輸資料的 USB 線，有些線只能充電。接著確認已安裝對應的驅動程式，並重新插拔開發板。</p></details>
+        <details><summary>連接失敗，或顯示序列埠被佔用</summary><p>關閉 Arduino IDE 和其他分頁裡的本網站，一次只能有一個程式使用序列埠。</p></details>
+        <details><summary>顯示「沒有偵測到 MicroPython」</summary><p>第一次使用，或燒錄過 Arduino 程式時都會這樣。按「安裝韌體」即可，不用另外下載韌體。</p></details>
+        <details><summary>安裝韌體時一直連不上</summary><p>網站會自動重新連接，最多試 10 次，每一次都會寫在監控窗。10 次都失敗時，請按住板子上的 IO0（BOOT）鍵再按「安裝韌體」，開始寫入後就可以放開。有些板子的自動重置電路不太穩，按住 IO0 是最可靠的做法。回報問題時，請一起提供監控窗裡「連線紀錄」下面的內容。</p></details>
+        <details><summary>安裝韌體時出現 Serial data stream stopped</summary><p>這時通常還沒開始清除，板子沒有損壞，會繼續執行原本的程式。請重新整理網頁、拔掉再插回 USB 線，重新連接後再裝一次，實測的 CH340 板就是這樣裝好的。還是失敗時，改插電腦本體的 USB 孔、換一條 USB 線，或按住 IO0 鍵、按一下 EN 鍵、放開 IO0 鍵後再安裝。</p></details>
+        <details><summary>ESP32-S2、S3、C3 安裝韌體時連不上，或裝完沒有反應</summary><p>USB 直接接晶片的板子，重新啟動時序列埠會暫時消失。連不上時，請按住 BOOT 鍵、按一下 RST 鍵、放開 BOOT 鍵，再重新按「連接開發板」並安裝。裝完後按一下 RST 鍵，等 2 秒再連接。板子有兩個 USB 孔時，可以改接標示 UART 或 COM 的那一個。</p></details>
+        <details><summary>顯示「這塊板子是 ESP32-xx，目前只支援 ESP32、ESP32-S2、S3 和 C3」</summary><p>這塊板子的晶片不在支援範圍內，內建韌體不能用。請改用這四種晶片的開發板。</p></details>
+        <details><summary>晶片選錯了，上傳後板子會壞掉嗎？</summary><p>選單選錯不會影響韌體，安裝時網站會自己偵測晶片。上傳的程式也不會改動韌體，但腳位可能不對。ESP32 選成 S2、S3 或 C3 時，範例可能用到 GPIO 6–11，板子可能當機或一直重新啟動。這種情況只要重新選對晶片和範例後上傳；上傳不了時，請按住 IO0 鍵重新安裝韌體。真正可能損壞板子的是接線，例如把 5V 接到 GPIO、電源短路，或腳位輸出時直接接到電源或 GND。</p></details>
+        <h3 id="faq-run">執行程式</h3>
+        <details><summary>監控窗出現紅色的「程式發生錯誤」</summary><p>按「複製給 Gemini」，把錯誤訊息和程式碼一起貼給 Gemini 修正，再把新程式貼回來上傳。</p></details>
+        <details><summary>看不懂範例或 Gemini 給的程式</summary><p>按「Gemini 提示詞」→「解說整份程式」，貼給 Gemini，它會分段解說並標出行號。只看不懂其中幾行，就先選取那幾行再打開選單，見 <a href="./help-tools.html#gemini">Gemini 提示詞</a>。</p></details>
+        <details><summary>按下「停止」後，程式之後還會自動執行嗎？</summary><p>會。「停止」只中斷目前的執行，<code>main.py</code> 還在板子上，下次通電或重新啟動時會再次執行。「停止」不是暫停，沒辦法從停下來的地方接著跑；要馬上再執行，按監控窗上方的「重新啟動」，程式會從頭開始。用「執行（不存檔）」試跑的程式，則是再按一次「執行（不存檔）」。</p></details>
+        <details><summary>用「執行（不存檔）」試好了，怎麼讓它通電就自動執行？</summary><p>按「上傳並執行」，程式會存成 <code>main.py</code>。「執行（不存檔）」的程式只在記憶體裡，重新啟動或拔掉電源就會消失。</p></details>
+        <details><summary>可以用 ESP32-CAM 拍照嗎？</summary><p>目前不行。MicroPython 官方韌體沒有相機模組，要改用第三方編譯的韌體才能拍照，網站沒有內建。</p></details>
+        <h3 id="faq-network">網路與手機</h3>
+        <details><summary>顯示 Wi-Fi 連線失敗</summary><p>確認名稱和密碼完全正確（包含大小寫），並確認是 2.4GHz 網路。</p></details>
+        <details><summary>手機打不開 192.168.x.x 的網頁</summary><p>確認手機和開發板連同一個 Wi-Fi，也關閉手機的行動數據試試。校園網路可能禁止裝置互連，可以改用手機熱點，或語音控制頁（MQTT）。</p></details>
+        <details><summary>沒有跳出麥克風權限，語音不能用</summary><p>確認開啟的是 HTTPS 的語音控制頁，不是 <code>http://192.168.x.x</code>。如果之前拒絕過，請到瀏覽器的網站設定改成允許。</p></details>
+        <details><summary>語音控制頁顯示「開發板沒有回應」或「離線」</summary><p>確認開發板程式正在執行、監控窗顯示已連上 MQTT 伺服器，以及頁面和程式裡的主題名稱完全相同。校園網路可能會擋 1883 連接埠，可以改用手機熱點測試。</p></details>
+        <details><summary>語音控制頁顯示「MQTT 帳號或密碼不正確」</summary><p>確認帳號密碼和伺服器設定相同，以及這個帳號有權限使用 <code>esp32-mp-class/</code> 開頭的 Topic。密碼不會儲存，重新整理後要再輸入一次。</p></details>
+        <details><summary>Google 試算表範例顯示「Google 沒有回傳 ok」</summary><p>通常是部署時存取權沒有選「所有人」，或學校帳號不允許。請先用瀏覽器的無痕視窗開啟網址測試，應該要顯示 <code>ok</code>。資料沒有增加時，也請確認網址結尾是 <code>/exec</code>。</p></details>
+      </section>
+      <section id="privacy">
+        <h2>隱私與安全</h2>
+        <ul>
+          <li><strong>程式碼：</strong>網站不會把程式碼上傳到伺服器。程式碼只存在這個瀏覽器和你的開發板上。GitHub 只提供網站檔案，可能記錄 IP 這類連線資訊，但收不到你的程式碼。</li>
+          <li><strong>瀏覽統計：</strong>網站用 <a href="https://www.goatcounter.com/" target="_blank" rel="noopener">GoatCounter</a> 統計頁面瀏覽人次，頁尾顯示的是編輯器頁面的累計人次。每次開啟頁面時，只會送出頁面路徑、頁面標題和來源網站，GoatCounter 也會收到瀏覽器必然帶上的 IP 和瀏覽器資訊，用來估算不重複的訪客。統計不使用 Cookie，也不會送出程式碼、Wi-Fi 密碼、序列埠內容或 MQTT 主題名稱。</li>
+          <li><strong>Wi-Fi 密碼：</strong>密碼寫在程式裡，所以會以明文存在瀏覽器和開發板的 <code>main.py</code>。網站也會在這個瀏覽器記住最後用的 Wi-Fi 名稱和密碼，載入範例時自動填入。使用共用電腦或借出開發板前，請先刪除密碼，做法見下方「共用電腦與開發板」。</li>
+          <li><strong>貼給 Gemini 前：</strong>「解說程式」、「複製給 Gemini」和「改寫成 MicroPython」會自動隱藏常見的 Wi-Fi、帳號密碼、Token 和 Apps Script 網址寫法，但不保證全部偵測得到。自己全選複製程式時不會隱藏，請先刪除密碼。</li>
+          <li><strong>截圖和投影：</strong>編輯器會顯示密碼，投影或分享畫面前請先遮住。上課建議使用專用 Wi-Fi 或手機熱點。</li>
+          <li><strong>語音控制和手機儀表板：</strong>資料會經過公用 MQTT 伺服器，沒有加密保護和權限控管，知道主題名稱的人都能看到和控制。只適合 LED 這類低風險實驗，不要控制插座或門鎖，也不要在主題名稱填入個人資料。</li>
+          <li><strong>語音辨識：</strong>語音由瀏覽器和其語音服務辨識，通常需要連網。</li>
+          <li><strong>Telegram Bot Token：</strong>Token 等於機器人的密碼，拿到的人可以冒用機器人，不要投影或分享。不小心外洩時，請到 @BotFather 傳 <code>/revoke</code> 換一組。範例不驗證伺服器憑證，不要用來控制重要設備。</li>
+        </ul>
+
+        <h3 id="shared-computer">共用電腦與開發板</h3>
+        <p class="tip warn"><strong>關閉網頁不會清除程式碼。</strong>程式碼和裡面的 Wi-Fi 密碼會留在瀏覽器，下一個用同一台電腦、同一個瀏覽器帳號的人打開網站就看得到。</p>
+        <p>離開電腦或交還開發板前，請照下面做：</p>
+        <ol>
+          <li><strong>想留下程式：</strong>先刪除程式裡的 Wi-Fi 名稱、密碼、MQTT 帳號密碼、Bot Token 和 Apps Script 網址，再按「下載 main.py」。下載的檔案不會自動隱藏這些資料。</li>
+          <li><strong>清除瀏覽器：</strong>刪除編輯器裡的全部內容。編輯器會自動儲存，所以舊內容會一起被取代，網站記住的 Wi-Fi 名稱和密碼也會一起清除。</li>
+          <li><strong>清除開發板：</strong>上傳不含密碼的程式，會覆蓋板子上的 <code>main.py</code>；其他含有密碼的檔案可以在<a href="./help-tools.html#files">板上檔案</a>刪除。要清除板子上所有檔案，請重新安裝韌體。</li>
+        </ol>
+        <p>電腦教室的還原卡通常會在重新開機後清除瀏覽器資料，但重新開機前，下一位使用者還是看得到。開發板不受還原卡影響，資料會一直留在板子上。</p>
+      </section>
+      <nav class="page-turn" aria-label="上一頁和下一頁">
+        <a rel="prev" href="./help-iot.html"><span aria-hidden="true">←</span> 手機與雲端</a>
+      </nav>
+
+      <p class="help-bottom"><a class="home-link" href="./index.html"><span aria-hidden="true">←</span> 回程式編輯頁</a></p>
+    </main>
+
+    <footer class="footer">
+      <div class="copyright">
+        <span>© 2026 <a href="https://begin0808.github.io/studio0808/" target="_blank" rel="noopener">Studio0808 智造實驗室</a>. All rights reserved.</span>
+        <span class="contact-note">如有建議或報錯，歡迎來信</span>
+        <a class="contact-link" href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=begin0808@gmail.com" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>寫信給我
+        </a>
+        <a class="contact-link" href="https://www.facebook.com/begin.li.1/" target="_blank" rel="noopener" aria-label="Facebook">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="#1877f2" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
+        </a>
+        <span id="visit-count" class="visit-count" hidden></span>
+      </div>
+    </footer>
+
+    <button id="to-top" class="to-top" type="button" hidden><span aria-hidden="true">↑</span> 回到頂端</button>
+
+    <script type="module" src="/src/help.ts"></script>
+  </body>
+</html>

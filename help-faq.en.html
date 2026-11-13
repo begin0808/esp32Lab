@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Troubleshooting and safety | Help | ESP32 Lab MicroPython Edition</title>
+    <meta name="description" content="Common questions about installing, connecting, running programs and networks in ESP32 Lab, plus privacy and safety notes." />
+    <script>
+      // Runs before the first paint so a saved style never flashes the default one.
+      try {
+        document.documentElement.dataset.style = localStorage.getItem("esp32-mp-style") || "mat";
+      } catch {}
+    </script>
+    <link rel="icon" href="/icons/logo.svg" type="image/svg+xml" />
+    <link rel="icon" href="/icons/logo-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/icons/logo-180.png" />
+    <link rel="stylesheet" href="/src/themes.css" />
+    <link rel="stylesheet" href="/src/help.css" />
+  </head>
+  <body>
+    <header class="help-top">
+      <div class="brand">
+        <img class="brand-logo" src="/icons/logo.svg" alt="" width="40" height="40" />
+        <div>
+          <h1>ESP32 Lab <span class="edition">MicroPython Edition</span> Help <span class="version" title="Version">v%VITE_APP_VERSION%</span></h1>
+          <p class="updated">Last updated: November 14, 2026</p>
+        </div>
+      </div>
+      <div class="help-actions">
+        <a id="home-link" class="home-link" href="./index.html"><span aria-hidden="true">←</span> Back to the editor</a>
+        <label class="style-picker">
+          Style
+          <select id="style-picker"></select>
+        </label>
+        <label class="style-picker language-picker">
+          語言 Language
+          <select id="language-picker"></select>
+        </label>
+      </div>
+    </header>
+
+    <main class="doc">
+      <nav class="help-pages" aria-label="Help pages">
+        <a href="./help.en.html">Help home</a>
+        <a href="./help-start.en.html">Quick start</a>
+        <a href="./help-path.en.html">Learning path</a>
+        <a href="./help-challenge.en.html">Challenge projects</a>
+        <a href="./help-tools.en.html">Editor tools</a>
+        <a href="./help-hardware.en.html">Boards and wiring</a>
+        <a href="./help-iot.en.html">Phone and cloud</a>
+        <a href="./help-faq.en.html" aria-current="page">Troubleshooting and safety</a>
+      </nav>
+      <nav class="toc" aria-label="On this page">
+        <a href="#faq">Common questions</a>
+        <a href="#privacy">Privacy and safety</a>
+      </nav>
+      <section id="faq">
+        <h2>Common questions</h2>
+        <h3 id="faq-connect">Installing and connecting</h3>
+        <details><summary>No serial port is listed after pressing "Connect board"</summary><p>First try a USB cable you know carries data, because some only charge. Then check that the right driver is installed, and replug the board.</p></details>
+        <details><summary>Connection fails, or the serial port is in use</summary><p>Close the Arduino IDE and any other tab of this site. Only one program can use the serial port at a time.</p></details>
+        <details><summary>It says "MicroPython was not found"</summary><p>This is normal on first use or after flashing an Arduino program. Press "Install firmware". There is nothing else to download.</p></details>
+        <details><summary>Firmware installation keeps failing to connect</summary><p>The site reconnects on its own, up to 10 tries, and writes each try in the monitor. If all 10 fail, hold the IO0 (BOOT) button on the board and press "Install firmware" again. You can let go once writing starts. Some boards have an unreliable auto-reset circuit, and holding IO0 is the most reliable fix. When reporting a problem, please include the lines under "Connection log" in the monitor.</p></details>
+        <details><summary>Installing the firmware shows "Serial data stream stopped"</summary><p>This usually happens before erasing starts, so the board is not damaged and keeps running its old program. Reload the page, unplug and replug the USB cable, connect again and retry; a CH340 board in testing was installed this way. If it still fails, plug into a USB port on the computer itself, try another USB cable, or hold IO0, press EN once, release IO0, and then install.</p></details>
+        <details><summary>An ESP32-S2, S3 or C3 will not connect during firmware installation, or does nothing afterwards</summary><p>On boards whose USB goes straight to the chip, the serial port disappears briefly when the chip restarts. If it will not connect, hold BOOT, press RST once, release BOOT, then press "Connect board" and install. Afterwards, press RST and wait 2 seconds before connecting. If the board has two USB ports, try the one marked UART or COM.</p></details>
+        <details><summary>It says "This board is an ESP32-xx. Only ESP32, ESP32-S2, S3 and C3 are supported"</summary><p>This board's chip is not supported, so the included firmware cannot be used. Please use a board with one of those four chips.</p></details>
+        <details><summary>I chose the wrong chip. Will uploading damage the board?</summary><p>The wrong menu choice does not affect the firmware, because the site detects the chip itself during installation. Uploaded programs do not change the firmware either, but the pins may be wrong. With an ESP32 set to S2, S3 or C3, examples may use GPIO 6–11, and the board may crash or keep restarting. Choose the right chip and example, then upload again; if you cannot upload, hold IO0 and reinstall the firmware. What can really damage a board is wiring, such as 5V on a GPIO, a shorted supply, or an output pin connected straight to power or GND.</p></details>
+        <h3 id="faq-run">Running programs</h3>
+        <details><summary>The monitor shows a red "The program hit an error"</summary><p>Press "Copy for Gemini", paste the error and code into Gemini to fix it, then paste the new program back and upload it.</p></details>
+        <details><summary>I do not understand an example, or a program from Gemini</summary><p>Press "Gemini prompts" → "Explain the whole program" and paste it into Gemini, which explains it section by section with line numbers. If only a few lines are unclear, select them before opening the menu; see <a href="./help-tools.en.html#gemini">Gemini prompts</a>.</p></details>
+        <details><summary>After pressing "Stop", will the program run again by itself?</summary><p>Yes. "Stop" only interrupts the current run. <code>main.py</code> stays on the board, and runs again at the next power-up or restart. "Stop" is not a pause, so a program cannot carry on from where it stopped; to run it again now, press "Restart" above the serial monitor and it starts from the beginning. For a program tried with "Run (no save)", press "Run (no save)" again.</p></details>
+        <details><summary>My program works with "Run (no save)". How do I make it run at power-up?</summary><p>Press "Upload and run" to save it as <code>main.py</code>. A program started with "Run (no save)" lives only in memory and is gone after a restart or power cycle.</p></details>
+        <details><summary>Can I take pictures with an ESP32-CAM?</summary><p>Not at the moment. The official MicroPython firmware has no camera module. Taking pictures needs a third-party build, which this site does not include.</p></details>
+        <h3 id="faq-network">Network and phone</h3>
+        <details><summary>It says Wi-Fi connection failed</summary><p>Check that the name and password are exactly right, including capitals, and that the network is 2.4GHz.</p></details>
+        <details><summary>My phone cannot open the 192.168.x.x page</summary><p>Check that the phone and board are on the same Wi-Fi, and try turning off the phone's mobile data. School networks may block devices from reaching each other, so try a phone hotspot or the voice control page (MQTT).</p></details>
+        <details><summary>No microphone permission appears, and voice does not work</summary><p>Check that you opened the HTTPS voice control page, not <code>http://192.168.x.x</code>. If you refused before, allow it in the browser's site settings.</p></details>
+        <details><summary>The voice control page says "no response" or "offline"</summary><p>Check that the board's program is running, that the monitor shows it connected to the MQTT broker, and that the topic names on the page and in the program match exactly. School networks may block port 1883, so try a phone hotspot.</p></details>
+        <details><summary>The voice control page says the MQTT username or password is wrong</summary><p>Check that the login matches the broker's settings, and that this account may use topics starting with <code>esp32-mp-class/</code>. The password is not saved, so enter it again after reloading.</p></details>
+        <details><summary>The Google Sheets example says "Google did not return ok"</summary><p>Usually access was not set to "Anyone" when deploying, or a school account does not allow it. Test the URL in a private browser window, where it should show <code>ok</code>. If no data is added, also check that the URL ends in <code>/exec</code>.</p></details>
+      </section>
+      <section id="privacy">
+        <h2>Privacy and safety</h2>
+        <ul>
+          <li><strong>Code:</strong> the site does not upload your code to a server. It exists only in this browser and on your board. GitHub only serves the site's files and may log connection details such as IP addresses, but never receives your code.</li>
+          <li><strong>Visit statistics:</strong> the site uses <a href="https://www.goatcounter.com/" target="_blank" rel="noopener">GoatCounter</a> to count page views, and the footer shows the editor page's total. Each page load sends only the page path, the page title and the referring site. GoatCounter also receives the IP address and browser details that every request carries, and uses them to estimate unique visitors. No cookies are used, and no code, Wi-Fi passwords, serial output or MQTT topic names are sent.</li>
+          <li><strong>Wi-Fi passwords:</strong> the password is part of the program, so it is stored as plain text in the browser and in <code>main.py</code> on the board. The site also remembers the last Wi-Fi name and password in this browser and fills them into examples you load. Delete it before using a shared computer or lending out a board; see "Shared computers and boards" below.</li>
+          <li><strong>Before pasting into Gemini:</strong> the "explain" prompt, "Copy for Gemini" and the "convert to MicroPython" prompt hide common forms of Wi-Fi details, logins, tokens and Apps Script URLs, but may not catch them all. Copying the program yourself hides nothing, so delete passwords first.</li>
+          <li><strong>Screenshots and projectors:</strong> the editor shows your password, so cover it before projecting or sharing your screen. A dedicated class Wi-Fi or phone hotspot is recommended.</li>
+          <li><strong>Voice control and the phone dashboard:</strong> data passes through a public MQTT broker with no encryption or access control, and anyone who knows the topic name can see it and send commands. It only suits low-risk experiments such as LEDs. Do not control sockets or door locks, and keep personal details out of the topic name.</li>
+          <li><strong>Speech recognition:</strong> your browser and its speech service handle recognition, which usually needs the internet.</li>
+          <li><strong>Telegram bot token:</strong> the token is the bot's password, and anyone with it can impersonate your bot, so do not project or share it. If it leaks, send <code>/revoke</code> to @BotFather for a new one. The example does not verify the server certificate, so do not control anything important.</li>
+        </ul>
+
+        <h3 id="shared-computer">Shared computers and boards</h3>
+        <p class="tip warn"><strong>Closing the page does not clear your code.</strong> The code and any Wi-Fi password in it stay in the browser, and the next person using the same computer and browser account will see them when they open the site.</p>
+        <p>Before leaving a computer or returning a board:</p>
+        <ol>
+          <li><strong>To keep your program:</strong> first delete the Wi-Fi name and password, MQTT login, bot token and Apps Script URL from it, then press "Download main.py". The downloaded file does not hide these automatically.</li>
+          <li><strong>To clear the browser:</strong> delete everything in the editor. The editor saves automatically, so this replaces the old contents too, and the Wi-Fi name and password the site remembered are forgotten as well.</li>
+          <li><strong>To clear the board:</strong> upload a program with no passwords, which overwrites <code>main.py</code>. Other files holding passwords can be deleted in <a href="./help-tools.en.html#files">Board files</a>. To erase every file on the board, reinstall the firmware.</li>
+        </ol>
+        <p>Restore cards in computer labs usually clear browser data on restart, but the next user can still see it until then. Restore cards do not affect the board, so its data stays until you remove it.</p>
+      </section>
+      <nav class="page-turn" aria-label="Previous and next page">
+        <a rel="prev" href="./help-iot.en.html"><span aria-hidden="true">←</span> Phone and cloud</a>
+      </nav>
+
+      <p class="help-bottom"><a class="home-link" href="./index.html"><span aria-hidden="true">←</span> Back to the editor</a></p>
+    </main>
+
+    <footer class="footer">
+      <div class="copyright">
+        <span>© 2026 <a href="https://begin0808.github.io/studio0808/" target="_blank" rel="noopener">Studio0808</a>. All rights reserved.</span>
+        <span class="contact-note">Suggestions and bug reports are welcome</span>
+        <a class="contact-link" href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=begin0808@gmail.com" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>Email me
+        </a>
+        <a class="contact-link" href="https://www.facebook.com/begin.li.1/" target="_blank" rel="noopener" aria-label="Facebook">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="#1877f2" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
+        </a>
+        <span id="visit-count" class="visit-count" hidden></span>
+      </div>
+    </footer>
+
+    <button id="to-top" class="to-top" type="button" hidden><span aria-hidden="true">↑</span> Back to top</button>
+
+    <script type="module" src="/src/help.ts"></script>
+  </body>
+</html>
