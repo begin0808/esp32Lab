@@ -84,6 +84,47 @@ export function fillExample(code: string, channel: string, voicePage: string): s
   return code.replaceAll("{{CHANNEL}}", channel).replaceAll("{{VOICE_PAGE}}", voicePage);
 }
 
+/** A Wi-Fi name and password as written between the quotes, so escapes survive being copied into another program. */
+export interface Wifi {
+  ssid: string;
+  password: string;
+}
+
+const EXAMPLE_SSID = "YOUR_WIFI_SSID";
+const EXAMPLE_PASSWORD = "YOUR_WIFI_PASSWORD";
+// The text inside a pair of double quotes, which may hold escapes but not a bare quote or a line break.
+const QUOTED_TEXT = String.raw`(?:[^"\\\r\n]|\\.)*`;
+const SSID_LINE = new RegExp(String.raw`^SSID\s*=\s*"(${QUOTED_TEXT})"`, "m");
+const PASSWORD_LINE = new RegExp(String.raw`^PASSWORD\s*=\s*"(${QUOTED_TEXT})"`, "m");
+const QUOTED_ONLY = new RegExp(`^${QUOTED_TEXT}$`);
+
+/**
+ * Reads the Wi-Fi name and password a program sets, the way the examples write them.
+ * Returns undefined when the program has no SSID line, and null when the name is empty or still a placeholder.
+ */
+export function findWifi(code: string): Wifi | null | undefined {
+  const ssid = code.match(SSID_LINE)?.[1];
+  if (ssid === undefined) return undefined;
+  if (ssid === "" || ssid === EXAMPLE_SSID || ssid === WIFI_PLACEHOLDER) return null;
+  const password = code.match(PASSWORD_LINE)?.[1] ?? "";
+  return { ssid, password: password === EXAMPLE_PASSWORD || password === WIFI_PLACEHOLDER ? "" : password };
+}
+
+/** Checks a remembered Wi-Fi read back from the browser, which could have been changed by hand. */
+export function isWifi(value: unknown): value is Wifi {
+  if (typeof value !== "object" || value === null) return false;
+  const { ssid, password } = value as Record<string, unknown>;
+  return typeof ssid === "string" && typeof password === "string" && ssid !== "" && QUOTED_ONLY.test(ssid) && QUOTED_ONLY.test(password);
+}
+
+/** Writes a remembered Wi-Fi name and password over an example's placeholders, leaving code without them unchanged. */
+export function fillWifi(code: string, wifi: Wifi): string {
+  // Replacing with functions keeps a "$" in a password from being read as a pattern.
+  return code
+    .replace(new RegExp(`^SSID = "${EXAMPLE_SSID}"`, "m"), () => `SSID = "${wifi.ssid}"`)
+    .replace(new RegExp(`^PASSWORD = "${EXAMPLE_PASSWORD}"`, "m"), () => `PASSWORD = "${wifi.password}"`);
+}
+
 export function stripTerminalCodes(text: string): string {
   // eslint-disable-next-line no-control-regex
   return text.replace(/\x1b\[[0-9;]*[A-Za-z]/g, "");

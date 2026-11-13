@@ -9,12 +9,15 @@ import {
   dashboardPrompt,
   DEFAULT_BROKER,
   fillExample,
+  fillWifi,
   findDeviceIp,
+  findWifi,
   findLastTraceback,
   fixErrorPrompt,
   hideWifiSettings,
   isValidBroker,
   isValidChannel,
+  isWifi,
   looksLikeArduino,
   numberLines,
   parseVoiceCommand,
@@ -285,5 +288,34 @@ describe("phone dashboard prompts", () => {
     expect(explainPrompt(dashCode, board)).not.toContain("secret");
     expect(explainPrompt("print(1)\n", board)).not.toContain("dash");
     expect(fixErrorPrompt("print(1)\n", "NameError")).not.toContain("dash");
+  });
+});
+
+describe("remembered Wi-Fi", () => {
+  it("reads the name and password the examples' way, but not a placeholder or an MQTT password", () => {
+    const code = 'SSID = "School-2.4G"\nPASSWORD = "p@ss\\"word$1"\nMQTT_PASSWORD = "mq"\n';
+    expect(findWifi(code)).toEqual({ ssid: "School-2.4G", password: 'p@ss\\"word$1' });
+    expect(findWifi('SSID = "YOUR_WIFI_SSID"\nPASSWORD = "YOUR_WIFI_PASSWORD"\n')).toBeNull();
+    expect(findWifi('SSID = "YOUR_WIFI_SETTING"\n')).toBeNull();
+    expect(findWifi('SSID = ""\nPASSWORD = "x"\n')).toBeNull();
+    expect(findWifi('SSID = "Home"\nPASSWORD = "YOUR_WIFI_PASSWORD"\n')).toEqual({ ssid: "Home", password: "" });
+    expect(findWifi("print(1)\n")).toBeUndefined();
+  });
+
+  it("fills only the placeholders, keeping a $ in the password as it is", () => {
+    const example = 'SSID = "YOUR_WIFI_SSID"\nPASSWORD = "YOUR_WIFI_PASSWORD"\nMQTT_PASSWORD = ""\n';
+    const filled = fillWifi(example, { ssid: "Home", password: "a$&b" });
+    expect(filled).toBe('SSID = "Home"\nPASSWORD = "a$&b"\nMQTT_PASSWORD = ""\n');
+    expect(findWifi(filled)).toEqual({ ssid: "Home", password: "a$&b" });
+    expect(fillWifi("print(1)\n", { ssid: "Home", password: "x" })).toBe("print(1)\n");
+  });
+
+  it("refuses a remembered Wi-Fi that would break the program's quotes", () => {
+    expect(isWifi({ ssid: "Home", password: "x" })).toBe(true);
+    expect(isWifi({ ssid: 'Ho"me', password: "x" })).toBe(false);
+    expect(isWifi({ ssid: "Home", password: "x\ny" })).toBe(false);
+    expect(isWifi({ ssid: "", password: "x" })).toBe(false);
+    expect(isWifi({ ssid: "Home" })).toBe(false);
+    expect(isWifi(null)).toBe(false);
   });
 });

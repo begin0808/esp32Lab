@@ -125,11 +125,23 @@ function chartView(card: HTMLElement, widget: Widget): View {
   const line = svg("polyline", { class: "chart-line", points: "" });
   // The newest value is marked, so even a single value shows on the chart.
   const dot = svg("path", { class: "chart-dot", d: "" });
-  drawing.append(line, dot);
+  // Faint lines at the highest and lowest values, which the numbers beside the chart name.
+  const grid = svg("path", { class: "chart-grid", d: "M 0 5 H 300 M 0 95 H 300" });
+  drawing.append(grid, line, dot);
+  // The Y axis is named by its unit and marked with the highest and lowest values, the X axis by time.
+  const yAxis = part("p", "chart-axis-y", widget.unit);
+  const ticks = part("div", "chart-ticks");
+  const highTick = part("span", "chart-tick high");
+  const lowTick = part("span", "chart-tick low");
+  ticks.append(highTick, lowTick);
   // The oldest, middle and newest times, so students can tell how fast the values change.
   const times = part("p", "chart-times");
+  const xAxis = part("p", "chart-axis-x", t("時間"));
+  const plot = part("div", "chart-plot");
+  plot.append(yAxis, ticks, drawing, times, xAxis);
   const range = part("p", "chart-range");
-  card.append(drawing, times, range);
+  card.append(plot, range);
+  const withUnit = (value: number) => `${formatNumber(value)} ${widget.unit}`.trim();
   const draw = () => {
     const entries = history.get(widget.id) ?? [];
     const points = entries.map((entry) => entry.value);
@@ -137,6 +149,9 @@ function chartView(card: HTMLElement, widget: Widget): View {
       line.setAttribute("points", "");
       dot.setAttribute("d", "");
       times.replaceChildren();
+      highTick.textContent = "";
+      lowTick.textContent = "";
+      grid.setAttribute("d", "");
       range.textContent = "";
       return;
     }
@@ -158,7 +173,12 @@ function chartView(card: HTMLElement, widget: Widget): View {
     const [x, y] = place(entries.at(-1)!);
     // A line with no length and round ends stays a round dot, however the chart is stretched.
     dot.setAttribute("d", `M ${x.toFixed(1)} ${y.toFixed(1)} h 0`);
-    range.textContent = t("最低 {low}，最高 {high}", { low: formatNumber(low), high: formatNumber(high) });
+    // Equal values lie on one line across the middle, which needs one number only.
+    highTick.textContent = formatNumber(high);
+    lowTick.textContent = high === low ? "" : formatNumber(low);
+    ticks.classList.toggle("flat", high === low);
+    grid.setAttribute("d", high === low ? "M 0 50 H 300" : "M 0 5 H 300 M 0 95 H 300");
+    range.textContent = t("最低 {low}，最高 {high}", { low: withUnit(low), high: withUnit(high) });
   };
   draw();
   return {

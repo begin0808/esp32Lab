@@ -33,7 +33,7 @@
         <img class="brand-logo" src="/icons/logo.svg" alt="" width="40" height="40" />
         <div>
           <h1>ESP32 Lab <span class="edition">MicroPython 版</span> 使用說明 <span class="version" title="版本">v%VITE_APP_VERSION%</span></h1>
-          <p class="updated">內容更新：2026 年 11 月 13 日</p>
+          <p class="updated">內容更新：2026 年 11 月 14 日</p>
         </div>
       </div>
       <div class="help-actions">
@@ -615,6 +615,7 @@ mylib.hello("ESP32")</pre>
         <p>板子約每 2 秒查一次新訊息，反應會有幾秒延遲。只有 <code>CHAT_ID</code> 指定的聊天室能控制板子，開機前累積的舊指令不會執行。校園網路封鎖 Telegram 時，板子會連不上，可以改用手機熱點。</p>
 
         <p class="tip warn"><strong>Wi-Fi 只支援 2.4GHz。</strong>ESP32 連不上 5GHz 網路。</p>
+        <p class="tip">填過一次 Wi-Fi 名稱和密碼後，網站會記住最後用的那一組，之後載入其他範例時自動填入，不用再打一次。要換 Wi-Fi，直接改程式裡的 <code>SSID</code> 和 <code>PASSWORD</code>。</p>
       </section>
 
       <section id="dashboard">
@@ -635,7 +636,7 @@ mylib.hello("ESP32")</pre>
             <tbody>
               <tr><td>數值</td><td><code>board.value("濕度", unit="%")</code></td><td>大字數字加單位</td><td><code>.set(數字或文字)</code></td></tr>
               <tr><td>儀表</td><td><code>board.gauge("溫度", min=0, max=50, unit="°C", color="red")</code></td><td>半圓形儀表，顏色有 green、red、yellow、blue</td><td><code>.set(數字)</code></td></tr>
-              <tr><td>折線圖</td><td><code>board.chart("濕度變化", unit="%")</code></td><td>最近 60 個值的折線，下方標出手機收到的時間</td><td><code>.set(數字)</code>，每次是一個點</td></tr>
+              <tr><td>折線圖</td><td><code>board.chart("濕度變化", unit="%")</code></td><td>最近 60 個值的折線，左邊標出最高、最低值和單位，下方標出手機收到的時間</td><td><code>.set(數字)</code>，每次是一個點</td></tr>
               <tr><td>指示燈</td><td><code>board.led("警報", color="red")</code></td><td>亮或暗的圓燈，顏色有 green、red、yellow、blue</td><td><code>.set(True)</code> 亮、<code>.set(False)</code> 暗</td></tr>
               <tr><td>文字</td><td><code>board.text("狀態")</code></td><td>一行文字</td><td><code>.set("文字")</code></td></tr>
               <tr><td>開關</td><td><code>board.switch("LED")</code></td><td>開關</td><td><code>.value</code> 是 True 或 False，板子也能用 <code>.set()</code> 改</td></tr>
@@ -703,7 +704,7 @@ mylib.hello("ESP32")</pre>
         <ul>
           <li><strong>程式碼：</strong>網站不會把程式碼上傳到伺服器。程式碼只存在這個瀏覽器和你的開發板上。GitHub 只提供網站檔案，可能記錄 IP 這類連線資訊，但收不到你的程式碼。</li>
           <li><strong>瀏覽統計：</strong>網站用 <a href="https://www.goatcounter.com/" target="_blank" rel="noopener">GoatCounter</a> 統計頁面瀏覽人次，頁尾顯示的是編輯器頁面的累計人次。每次開啟頁面時，只會送出頁面路徑、頁面標題和來源網站，GoatCounter 也會收到瀏覽器必然帶上的 IP 和瀏覽器資訊，用來估算不重複的訪客。統計不使用 Cookie，也不會送出程式碼、Wi-Fi 密碼、序列埠內容或 MQTT 主題名稱。</li>
-          <li><strong>Wi-Fi 密碼：</strong>密碼寫在程式裡，所以會以明文存在瀏覽器和開發板的 <code>main.py</code>。使用共用電腦或借出開發板前，請先刪除密碼，做法見下方「共用電腦與開發板」。</li>
+          <li><strong>Wi-Fi 密碼：</strong>密碼寫在程式裡，所以會以明文存在瀏覽器和開發板的 <code>main.py</code>。網站也會在這個瀏覽器記住最後用的 Wi-Fi 名稱和密碼，載入範例時自動填入。使用共用電腦或借出開發板前，請先刪除密碼，做法見下方「共用電腦與開發板」。</li>
           <li><strong>貼給 Gemini 前：</strong>「解說程式」、「複製給 Gemini」和「改寫成 MicroPython」會自動隱藏常見的 Wi-Fi、帳號密碼、Token 和 Apps Script 網址寫法，但不保證全部偵測得到。自己全選複製程式時不會隱藏，請先刪除密碼。</li>
           <li><strong>截圖和投影：</strong>編輯器會顯示密碼，投影或分享畫面前請先遮住。上課建議使用專用 Wi-Fi 或手機熱點。</li>
           <li><strong>語音控制和手機儀表板：</strong>資料會經過公用 MQTT 伺服器，沒有加密保護和權限控管，知道主題名稱的人都能看到和控制。只適合 LED 這類低風險實驗，不要控制插座或門鎖，也不要在主題名稱填入個人資料。</li>
@@ -716,7 +717,7 @@ mylib.hello("ESP32")</pre>
         <p>離開電腦或交還開發板前，請照下面做：</p>
         <ol>
           <li><strong>想留下程式：</strong>先刪除程式裡的 Wi-Fi 名稱、密碼、MQTT 帳號密碼、Bot Token 和 Apps Script 網址，再按「下載 main.py」。下載的檔案不會自動隱藏這些資料。</li>
-          <li><strong>清除瀏覽器：</strong>刪除編輯器裡的全部內容。編輯器會自動儲存，所以舊內容會一起被取代。</li>
+          <li><strong>清除瀏覽器：</strong>刪除編輯器裡的全部內容。編輯器會自動儲存，所以舊內容會一起被取代，網站記住的 Wi-Fi 名稱和密碼也會一起清除。</li>
           <li><strong>清除開發板：</strong>上傳不含密碼的程式，會覆蓋板子上的 <code>main.py</code>；其他含有密碼的檔案可以在<a href="#files">板上檔案</a>刪除。要清除板子上所有檔案，請重新安裝韌體。</li>
         </ol>
         <p>電腦教室的還原卡通常會在重新開機後清除瀏覽器資料，但重新開機前，下一位使用者還是看得到。開發板不受還原卡影響，資料會一直留在板子上。</p>

@@ -23,7 +23,7 @@
         <img class="brand-logo" src="/icons/logo.svg" alt="" width="40" height="40" />
         <div>
           <h1>ESP32 Lab <span class="edition">MicroPython Edition</span> Help <span class="version" title="Version">v%VITE_APP_VERSION%</span></h1>
-          <p class="updated">Last updated: November 13, 2026</p>
+          <p class="updated">Last updated: November 14, 2026</p>
         </div>
       </div>
       <div class="help-actions">
@@ -605,6 +605,7 @@ mylib.hello("ESP32")</pre>
         <p>The board checks for new messages about every 2 seconds, so replies can take a few seconds. Only the chat set in <code>CHAT_ID</code> can control the board, and old commands from before it started are not run. If your school network blocks Telegram, try a phone hotspot.</p>
 
         <p class="tip warn"><strong>Wi-Fi is 2.4GHz only.</strong> The ESP32 cannot connect to 5GHz networks.</p>
+        <p class="tip">Once you have typed a Wi-Fi name and password, the site remembers the last ones and fills them into the next examples you load, so you need not type them again. To use another Wi-Fi, change <code>SSID</code> and <code>PASSWORD</code> in the program.</p>
       </section>
 
       <section id="dashboard">
@@ -625,7 +626,7 @@ mylib.hello("ESP32")</pre>
             <tbody>
               <tr><td>Value</td><td><code>board.value("Humidity", unit="%")</code></td><td>A big number with its unit</td><td><code>.set(number or text)</code></td></tr>
               <tr><td>Gauge</td><td><code>board.gauge("Temperature", min=0, max=50, unit="°C", color="red")</code></td><td>A half-circle gauge in green, red, yellow or blue</td><td><code>.set(number)</code></td></tr>
-              <tr><td>Chart</td><td><code>board.chart("Humidity over time", unit="%")</code></td><td>A line of the last 60 values, with the times the phone got them below</td><td><code>.set(number)</code>, one point each time</td></tr>
+              <tr><td>Chart</td><td><code>board.chart("Humidity over time", unit="%")</code></td><td>A line of the last 60 values, with the highest and lowest values and the unit on the left and the times the phone got them below</td><td><code>.set(number)</code>, one point each time</td></tr>
               <tr><td>Lamp</td><td><code>board.led("Alarm", color="red")</code></td><td>A round light, on or off, in green, red, yellow or blue</td><td><code>.set(True)</code> for on, <code>.set(False)</code> for off</td></tr>
               <tr><td>Text</td><td><code>board.text("Status")</code></td><td>One line of text</td><td><code>.set("text")</code></td></tr>
               <tr><td>Switch</td><td><code>board.switch("LED")</code></td><td>A switch</td><td><code>.value</code> is True or False; the board can change it with <code>.set()</code></td></tr>
@@ -693,7 +694,7 @@ mylib.hello("ESP32")</pre>
         <ul>
           <li><strong>Code:</strong> the site does not upload your code to a server. It exists only in this browser and on your board. GitHub only serves the site's files and may log connection details such as IP addresses, but never receives your code.</li>
           <li><strong>Visit statistics:</strong> the site uses <a href="https://www.goatcounter.com/" target="_blank" rel="noopener">GoatCounter</a> to count page views, and the footer shows the editor page's total. Each page load sends only the page path, the page title and the referring site. GoatCounter also receives the IP address and browser details that every request carries, and uses them to estimate unique visitors. No cookies are used, and no code, Wi-Fi passwords, serial output or MQTT topic names are sent.</li>
-          <li><strong>Wi-Fi passwords:</strong> the password is part of the program, so it is stored as plain text in the browser and in <code>main.py</code> on the board. Delete it before using a shared computer or lending out a board; see "Shared computers and boards" below.</li>
+          <li><strong>Wi-Fi passwords:</strong> the password is part of the program, so it is stored as plain text in the browser and in <code>main.py</code> on the board. The site also remembers the last Wi-Fi name and password in this browser and fills them into examples you load. Delete it before using a shared computer or lending out a board; see "Shared computers and boards" below.</li>
           <li><strong>Before pasting into Gemini:</strong> the "explain" prompt, "Copy for Gemini" and the "convert to MicroPython" prompt hide common forms of Wi-Fi details, logins, tokens and Apps Script URLs, but may not catch them all. Copying the program yourself hides nothing, so delete passwords first.</li>
           <li><strong>Screenshots and projectors:</strong> the editor shows your password, so cover it before projecting or sharing your screen. A dedicated class Wi-Fi or phone hotspot is recommended.</li>
           <li><strong>Voice control and the phone dashboard:</strong> data passes through a public MQTT broker with no encryption or access control, and anyone who knows the topic name can see it and send commands. It only suits low-risk experiments such as LEDs. Do not control sockets or door locks, and keep personal details out of the topic name.</li>
@@ -706,7 +707,7 @@ mylib.hello("ESP32")</pre>
         <p>Before leaving a computer or returning a board:</p>
         <ol>
           <li><strong>To keep your program:</strong> first delete the Wi-Fi name and password, MQTT login, bot token and Apps Script URL from it, then press "Download main.py". The downloaded file does not hide these automatically.</li>
-          <li><strong>To clear the browser:</strong> delete everything in the editor. The editor saves automatically, so this replaces the old contents too.</li>
+          <li><strong>To clear the browser:</strong> delete everything in the editor. The editor saves automatically, so this replaces the old contents too, and the Wi-Fi name and password the site remembered are forgotten as well.</li>
           <li><strong>To clear the board:</strong> upload a program with no passwords, which overwrites <code>main.py</code>. Other files holding passwords can be deleted in <a href="#files">Board files</a>. To erase every file on the board, reinstall the firmware.</li>
         </ol>
         <p>Restore cards in computer labs usually clear browser data on restart, but the next user can still see it until then. Restore cards do not affect the board, so its data stays until you remove it.</p>

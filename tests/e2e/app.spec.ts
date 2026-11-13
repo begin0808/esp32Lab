@@ -509,6 +509,31 @@ test("MQTT example gets its own channel when loaded", async ({ page }) => {
   expect(code).toContain("/voice.html");
 });
 
+test("fills the last Wi-Fi into each example, until the editor is emptied", async ({ page }) => {
+  await page.goto("/");
+  page.on("dialog", (dialog) => dialog.accept());
+  const code = () => page.evaluate(() => localStorage.getItem("esp32-mp-code") ?? "");
+  const voice = { label: "17. 語音控制 LED（MQTT）" };
+  await page.locator("#examples").selectOption(voice);
+  expect(await code()).toContain('SSID = "YOUR_WIFI_SSID"');
+  await expect(page.locator("#monitor")).not.toContainText("上次用的 Wi-Fi");
+
+  const typed = (await code()).replace('SSID = "YOUR_WIFI_SSID"', () => 'SSID = "Lab-2.4G"').replace('PASSWORD = "YOUR_WIFI_PASSWORD"', () => 'PASSWORD = "pa$$&1"');
+  await page.locator("#editor .cm-content").fill(typed);
+  // An example without Wi-Fi in between does not forget it.
+  await page.locator("#examples").selectOption({ label: "1. LED 閃爍" });
+  await page.reload();
+  await page.locator("#examples").selectOption(voice);
+  expect(await code()).toContain('SSID = "Lab-2.4G"\nPASSWORD = "pa$$&1"');
+  await expect(page.locator("#monitor")).toContainText("已填入上次用的 Wi-Fi「Lab-2.4G」和密碼");
+
+  // Emptying the editor, as the help page says for shared computers, forgets the Wi-Fi too.
+  await page.locator("#editor .cm-content").fill("");
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("esp32-mp-wifi"))).toBeNull();
+  await page.locator("#examples").selectOption(voice);
+  expect(await code()).toContain('SSID = "YOUR_WIFI_SSID"');
+});
+
 for (const path of ["/", "/voice.html", "/dashboard.html", "/help.html"]) {
   test(`shows the visit count on ${path} without recording a local visit`, async ({ page }) => {
     const requests: string[] = [];
@@ -2202,7 +2227,12 @@ test.describe("phone dashboard", () => {
 
     broker.send(`${DASH}out/2c`, "26");
     await expect(page.locator(".widget-chart .number")).toHaveText("26");
-    await expect(page.locator(".chart-range")).toHaveText("最低 24.5，最高 26");
+    await expect(page.locator(".chart-range")).toHaveText("最低 24.5 °C，最高 26 °C");
+    // The Y axis is named by the unit and marked with the highest and lowest values, the X axis by time.
+    await expect(page.locator(".chart-axis-y")).toHaveText("°C");
+    await expect(page.locator(".chart-tick.high")).toHaveText("26");
+    await expect(page.locator(".chart-tick.low")).toHaveText("24.5");
+    await expect(page.locator(".chart-axis-x")).toHaveText("時間");
     expect((await page.locator(".chart-line").getAttribute("points"))!.split(" ")).toHaveLength(2);
     // Each value is marked with the time the phone got it.
     await expect(page.locator(".chart-times span")).toHaveCount(3);

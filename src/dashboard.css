@@ -121,10 +121,77 @@
   margin-left: auto;
 }
 
+/* The Y axis's unit above, its numbers on the left, and the times and "time" below the line. */
+.chart-plot {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 6px;
+}
+
+.chart-axis-y,
+.chart-axis-x {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.chart-axis-y {
+  grid-column: 1 / -1;
+}
+
+.chart-axis-y:empty {
+  display: none;
+}
+
+.chart-axis-x {
+  grid-column: 2;
+  text-align: center;
+}
+
+/* Both numbers share one cell, so the column is as wide as the longer one. */
+.chart-ticks {
+  display: grid;
+  border-right: 1px solid var(--border);
+  padding-right: 4px;
+  color: var(--muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.chart-tick {
+  grid-area: 1 / 1;
+  line-height: 1;
+}
+
+.chart-tick.high {
+  align-self: start;
+}
+
+.chart-tick.low {
+  align-self: end;
+}
+
+.chart-ticks.flat .chart-tick.high {
+  align-self: center;
+}
+
+.chart-times {
+  grid-column: 2;
+}
+
 .chart {
   width: 100%;
   height: 110px;
   border-bottom: 1px solid var(--border);
+}
+
+.chart-grid {
+  fill: none;
+  stroke: var(--border);
+  stroke-dasharray: 4 4;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
 }
 
 .chart-dot {

@@ -24,19 +24,25 @@ import {
   explainPrompt,
   findDeviceIp,
   fillExample,
+  fillWifi,
   findLastTraceback,
+  findWifi,
   fixErrorPrompt,
   geminiPrompt,
+  isWifi,
   looksLikeArduino,
   randomChannel,
   selectedLineRange,
   stripTerminalCodes,
+  type Wifi,
 } from "./text";
 
 translatePage();
 
 const STORAGE_KEY = "esp32-mp-code";
 const CHIP_KEY = "esp32-mp-chip";
+// The last Wi-Fi typed into a program, so each new example does not need it typed again.
+const WIFI_KEY = "esp32-mp-wifi";
 const MONITOR_LIMIT = 200_000;
 // Output is drawn in batches, so a program printing as fast as it can does not freeze the page.
 const MONITOR_FLUSH_MS = 50;
@@ -292,7 +298,30 @@ function setCode(code: string): void {
 function onCodeChanged(): void {
   const code = getCode();
   save(code);
+  rememberWifi(code);
   ui.arduinoWarning.hidden = !looksLikeArduino(code);
+}
+
+/** Keeps the Wi-Fi the student typed. Emptying the editor forgets it too, as the help page's steps for shared computers say. */
+function rememberWifi(code: string): void {
+  const found = code.trim() ? findWifi(code) : null;
+  // A program with no Wi-Fi, such as the blink example, keeps the one remembered.
+  if (found === undefined) return;
+  try {
+    if (found) localStorage.setItem(WIFI_KEY, JSON.stringify(found));
+    else localStorage.removeItem(WIFI_KEY);
+  } catch {
+    // Without storage, each example still starts with its placeholders.
+  }
+}
+
+function readWifi(): Wifi | null {
+  try {
+    const saved: unknown = JSON.parse(localStorage.getItem(WIFI_KEY) ?? "null");
+    return isWifi(saved) ? saved : null;
+  } catch {
+    return null;
+  }
 }
 
 function readChip(): ChipId {
@@ -1045,7 +1074,10 @@ ui.examples.addEventListener("change", () => {
 
 function loadExample(chosen: Example): void {
   const code = fillExample(chosen.code, randomChannel(usesDash(chosen.code) ? "dash" : "led"), new URL("voice.html", location.href).href);
-  setCode(adaptExamplePins(code, selectedChip()));
+  const wifi = readWifi();
+  const filled = wifi ? fillWifi(code, wifi) : code;
+  setCode(adaptExamplePins(filled, selectedChip()));
+  if (wifi && filled !== code) systemMessage(t("已填入上次用的 Wi-Fi「{ssid}」和密碼。要換 Wi-Fi，直接改程式裡的 SSID 和 PASSWORD。", { ssid: wifi.ssid }));
 }
 
 function loadFromLearningPath(chosen: Example): void {

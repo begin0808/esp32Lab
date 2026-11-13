@@ -285,6 +285,8 @@ const en = {
   "實際使用的 Topic：{topic}（畫面、數值和操作都在這裡面）": "Topics in use: {topic} (the layout, values and controls are all under it)",
   "開發板：在線": "Board: online",
   "最低 {low}，最高 {high}": "Lowest {low}, highest {high}",
+  "已填入上次用的 Wi-Fi「{ssid}」和密碼。要換 Wi-Fi，直接改程式裡的 SSID 和 PASSWORD。":
+    'Filled in the Wi-Fi "{ssid}" and password you used last time. To use another Wi-Fi, change SSID and PASSWORD in the program.',
   上: "Up",
   下: "Down",
   左: "Left",
