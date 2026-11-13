@@ -2305,7 +2305,7 @@ test.describe("phone dashboard", () => {
     await expect(page.locator(".log-count")).toHaveText("還沒有紀錄");
     await expect(page.getByRole("button", { name: "下載 CSV" })).toBeDisabled();
     broker.send(`${DASH}out/1o`, "[[25.12, 60], [26, 61]]", false);
-    await expect(page.locator(".log-count")).toHaveText("共 2 筆");
+    await expect(page.locator(".log-count")).toHaveText("共 2 筆（最多 1000 筆）");
     await expect(page.locator(".log-table tbody tr")).toHaveCount(2);
     await expect(page.locator(".log-table tbody tr").first().locator("td")).toHaveText([/^\d\d:\d\d:\d\d$/, "26", "61"]);
     const downloading = page.waitForEvent("download");
@@ -2315,6 +2315,18 @@ test.describe("phone dashboard", () => {
     const csv = readFileSync(await file.path(), "utf8");
     expect(csv.startsWith("\ufeff日期,時間,溫度,濕度\r\n")).toBe(true);
     expect(csv).toMatch(/\r\n\d{4}-\d\d-\d\d,\d\d:\d\d:\d\d,25\.12,60\r\n\d{4}-.*,26,61\r\n$/);
+
+    // A full log keeps the newest 1000 rows and says so in red.
+    await expect(page.locator(".log-count")).not.toHaveClass(/full/);
+    for (let batch = 0; batch < 50; batch++) {
+      const rows = Array.from({ length: 20 }, (_, index) => [batch * 20 + index, 0]);
+      broker.send(`${DASH}out/1o`, JSON.stringify(rows), false);
+    }
+    await expect(page.locator(".log-count")).toHaveText("已滿 1000 筆，最舊的會被刪除，請先下載 CSV");
+    await expect(page.locator(".log-count")).toHaveClass(/full/);
+    await expect(page.locator(".log-table tbody tr")).toHaveCount(1000);
+    await expect(page.locator(".log-table tbody tr").first().locator("td").nth(1)).toHaveText("999");
+    await expect(page.locator(".log-table tbody tr").last().locator("td").nth(1)).toHaveText("0");
 
     // Dragging the joystick sends where it points, and letting go centres it.
     const stick = page.locator(".joystick");

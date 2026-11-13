@@ -31,8 +31,8 @@ translatePage();
 
 const BOARD_REPLY_TIMEOUT = 5000;
 const CHART_POINTS = 60;
-/** The phone keeps the newest 200 rows of each log. */
-const LOG_ROWS = 200;
+/** The phone keeps the newest 1000 rows of each log: about 83 minutes at one row every 5 seconds. */
+const LOG_ROWS = 1000;
 const NUMBER_WAIT_MS = 1500;
 const STICK_SEND_MS = 150;
 const STICK_REPEAT_MS = 400;
@@ -508,7 +508,12 @@ function logView(card: HTMLElement, widget: Widget): View {
   const rows = () => logs.get(widget.id) ?? [];
   const draw = () => {
     const list = rows();
-    count.textContent = list.length ? t("共 {count} 筆", { count: list.length }) : t("還沒有紀錄");
+    // A full log says so plainly, so nobody finds out after class that the first rows are gone.
+    const full = list.length >= LOG_ROWS;
+    count.classList.toggle("full", full);
+    if (!list.length) count.textContent = t("還沒有紀錄");
+    else if (full) count.textContent = t("已滿 {max} 筆，最舊的會被刪除，請先下載 CSV", { max: LOG_ROWS });
+    else count.textContent = t("共 {count} 筆（最多 {max} 筆）", { count: list.length, max: LOG_ROWS });
     download.disabled = clear.disabled = list.length === 0;
     // The newest row is on top, where it shows without scrolling.
     body.replaceChildren(
