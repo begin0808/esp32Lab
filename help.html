@@ -668,9 +668,9 @@ mylib.hello("ESP32")</pre>
 
       <section id="google-sheets">
         <h2>把感測器資料存到 Google 試算表</h2>
-        <p>範例「DHT11 資料存到 Google 試算表」每分鐘會把時間、溫度和濕度新增成一列。Google Apps Script 是免費服務，但要先設定一次。這個範例已用模擬硬體和模擬 Google 回應測試，尚未接實體 Google 試算表測試。</p>
+        <p>範例「DHT11 資料存到 Google 試算表」每分鐘會把日期、時間、溫度和濕度新增成一列。Google Apps Script 是免費服務，但要先設定一次。這個範例已用模擬硬體和模擬 Google 回應測試，尚未接實體 Google 試算表測試。</p>
         <ol>
-          <li>到 Google 試算表建立新檔案，在第一列輸入標題：<strong>時間、溫度、濕度</strong>。</li>
+          <li>到 Google 試算表建立新檔案，在第一列的 A1～D1 輸入標題：<strong>日期、時間、溫度、濕度</strong>。日期和時間分成兩欄，時間才會顯示到秒。</li>
           <li>點選「擴充功能」→「Apps Script」，把原本的內容換成下面的程式後儲存：
             <pre class="code-block" tabindex="0">function doGet(e) {
   var temp = Number(e.parameter.temp);
@@ -678,8 +678,15 @@ mylib.hello("ESP32")</pre>
   if (isNaN(temp) || isNaN(hum)) {
     return ContentService.createTextOutput("bad data");
   }
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
-  sheet.appendRow([new Date(), temp, hum]);
+  var book = SpreadsheetApp.getActiveSpreadsheet();
+  var zone = book.getSpreadsheetTimeZone();
+  var now = new Date();
+  book.getSheets()[0].appendRow([
+    Utilities.formatDate(now, zone, "yyyy-MM-dd"),
+    Utilities.formatDate(now, zone, "HH:mm:ss"),
+    temp,
+    hum
+  ]);
   return ContentService.createTextOutput("ok");
 }</pre>
           </li>

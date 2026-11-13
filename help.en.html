@@ -658,9 +658,9 @@ mylib.hello("ESP32")</pre>
 
       <section id="google-sheets">
         <h2>Saving sensor data to Google Sheets</h2>
-        <p>The example "Log DHT11 data to Google Sheets" adds a row of time, temperature and humidity every minute. Google Apps Script is free, but needs setting up once. This example has been tested with simulated hardware and simulated Google responses, but not with a real Google Sheet.</p>
+        <p>The example "Log DHT11 data to Google Sheets" adds a row of date, time, temperature and humidity every minute. Google Apps Script is free, but needs setting up once. This example has been tested with simulated hardware and simulated Google responses, but not with a real Google Sheet.</p>
         <ol>
-          <li>Create a new Google Sheet, and enter the headings in the first row: <strong>Time, Temperature, Humidity</strong>.</li>
+          <li>Create a new Google Sheet, and enter the headings in A1 to D1: <strong>Date, Time, Temperature, Humidity</strong>. Keeping the date and the time in separate columns shows the time to the second.</li>
           <li>Choose "Extensions" → "Apps Script", replace the contents with the program below, and save:
             <pre class="code-block" tabindex="0">function doGet(e) {
   var temp = Number(e.parameter.temp);
@@ -668,8 +668,15 @@ mylib.hello("ESP32")</pre>
   if (isNaN(temp) || isNaN(hum)) {
     return ContentService.createTextOutput("bad data");
   }
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
-  sheet.appendRow([new Date(), temp, hum]);
+  var book = SpreadsheetApp.getActiveSpreadsheet();
+  var zone = book.getSpreadsheetTimeZone();
+  var now = new Date();
+  book.getSheets()[0].appendRow([
+    Utilities.formatDate(now, zone, "yyyy-MM-dd"),
+    Utilities.formatDate(now, zone, "HH:mm:ss"),
+    temp,
+    hum
+  ]);
   return ContentService.createTextOutput("ok");
 }</pre>
           </li>
