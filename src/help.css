@@ -349,3 +349,32 @@ select:focus-visible {
   outline: 3px solid var(--accent-text);
   outline-offset: 2px;
 }
+
+.code-wrap {
+  position: relative;
+}
+
+/* Room at the top for the copy button, so it never covers a line of code. */
+.code-wrap .code-block {
+  padding-top: 40px;
+}
+
+.copy-code {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 2px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--solid-bg);
+  color: var(--solid-text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.copy-code:focus-visible {
+  outline: 3px solid var(--accent-text);
+  outline-offset: 2px;
+}

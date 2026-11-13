@@ -1524,6 +1524,25 @@ test.describe("in an English browser", () => {
     }
   });
 
+  test("the help pages' code boxes copy all of their code", async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    for (const [lang, path, copy, copied] of [["zh-Hant", "/help.html", "複製", "已複製"], ["en", "/help.en.html", "Copy", "Copied"]]) {
+      await page.goto("/help.en.html");
+      await page.evaluate((next) => localStorage.setItem("esp32-mp-lang", next), lang);
+      await page.goto(path);
+      expect(await page.locator(".copy-code").count()).toBe(await page.locator(".code-block").count());
+      const button = page.locator("#google-sheets .copy-code");
+      await expect(button).toHaveText(copy);
+      await button.click();
+      await expect(button).toHaveText(copied);
+      const code = await page.evaluate(() => navigator.clipboard.readText());
+      expect(code.startsWith("function doGet(e) {")).toBe(true);
+      expect(code.trimEnd().endsWith("}")).toBe(true);
+      expect(code).toContain('Utilities.formatDate(now, zone, "HH:mm:ss")');
+      await expect(button).toHaveText(copy, { timeout: 4000 });
+    }
+  });
+
   test("the English help page has the same sections and links as the Chinese one", async ({ page, request }) => {
     const outline = () => page.evaluate(() => [...document.querySelectorAll(".toc a, section[id], h3[id]")].map((node) => node.getAttribute("href") ?? node.id));
     const rows = () => page.locator(".doc tbody tr").count();

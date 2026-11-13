@@ -10,6 +10,37 @@ setupHomeLinks();
 setupExampleLinks((name) => confirm(t("要用「{name}」取代目前的程式嗎？", { name })));
 setupStats();
 setupToTop(document.getElementById("to-top") as HTMLButtonElement | null);
+setupCopyButtons();
+
+/** Each code box gets a button that copies all of it, so nobody misses the first or the last line. */
+function setupCopyButtons(): void {
+  for (const block of document.querySelectorAll<HTMLElement>(".code-block")) {
+    const wrap = document.createElement("div");
+    wrap.className = "code-wrap";
+    block.replaceWith(wrap);
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "copy-code";
+    button.textContent = t("複製");
+    wrap.append(block, button);
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    button.addEventListener("click", async () => {
+      let copied = true;
+      try {
+        await navigator.clipboard.writeText(block.textContent ?? "");
+      } catch {
+        copied = false;
+        // With the code selected, Ctrl+C still copies it by hand.
+        getSelection()?.selectAllChildren(block);
+      }
+      button.textContent = copied ? t("已複製") : t("複製失敗");
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        button.textContent = t("複製");
+      }, 2000);
+    });
+  }
+}
 
 /** A button that appears once the page is scrolled down, and goes back to the top of the page. */
 function setupToTop(button: HTMLButtonElement | null): void {

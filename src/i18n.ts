@@ -186,6 +186,7 @@ const en = {
   "請按一下板子上的 RST 鍵，等 2 秒，再按「連接開發板」並重新選擇序列埠。": 'Press the RST button on the board, wait 2 seconds, then press "Connect board" and choose the serial port again.',
   "無法重新連接開發板：{message}": "Could not reconnect to the board: {message}",
   已複製: "Copied",
+  複製: "Copy",
   複製失敗: "Copy failed",
   "開發板連線中斷，請檢查 USB 線後重新連接": "Lost the board. Check the USB cable and connect again",
   開發板連線中斷: "Lost the connection to the board",
