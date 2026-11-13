@@ -714,14 +714,15 @@ test("help page opens in a new tab and follows the chosen style", async ({ page,
   await expect(help.locator("#style-picker")).toHaveValue("mat");
 });
 
-test("marks the site as a beta version and asks for feedback", async ({ page }) => {
+test("no longer calls the site a beta, and asks for feedback", async ({ page }) => {
   await page.goto("/");
-  await expect(page.locator("h1 .beta")).toHaveText("測試 Beta 版");
+  await expect(page).toHaveTitle("ESP32 Lab MicroPython 版");
+  await expect(page.locator("h1")).not.toContainText("Beta");
   await page.goto("/help.html");
   // The choice of MicroPython decides everything else, so it comes before any section.
   await expect(page.locator(".doc > .tip").first()).toContainText("本網站採用 MicroPython");
-  const notice = page.locator("#beta-notice");
-  await expect(notice).toContainText("尚未逐一實測");
+  const notice = page.locator("#feedback-notice");
+  await expect(notice).toContainText("所有範例都已在 ESP32 開發板上實測過");
   await expect(notice.getByRole("link", { name: "寫信告訴我" })).toHaveAttribute(
     "href",
     "https://mail.google.com/mail/?view=cm&fs=1&to=begin0808@gmail.com",

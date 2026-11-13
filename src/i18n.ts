@@ -13,11 +13,10 @@ export const lang: Lang = typeof document !== "undefined" && document.documentEl
 /** The Chinese text is both the source wording and the key, so the code still reads as what students see. */
 const en = {
   // Pages
-  "ESP32 Lab MicroPython 版（測試 Beta 版）": "ESP32 Lab MicroPython Edition (Beta)",
+  "ESP32 Lab MicroPython 版": "ESP32 Lab MicroPython Edition",
   "免安裝，開瀏覽器就能寫程式、燒錄 ESP32：貼上 MicroPython 程式碼，透過 USB 直接上傳到開發板。":
     "Nothing to install: write and flash ESP32 programs from the browser. Paste MicroPython code and upload it to the board over USB.",
   "MicroPython 版": "MicroPython Edition",
-  "測試 Beta 版": "Beta",
   "ESP32 語音控制｜ESP32 Lab MicroPython 版": "ESP32 Voice Control | ESP32 Lab MicroPython Edition",
   "用手機或電腦的語音，透過 MQTT 控制 ESP32 上的 LED。": "Control an LED on the ESP32 with your voice from a phone or computer, through MQTT.",
   "ESP32 手機儀表板｜ESP32 Lab MicroPython 版": "ESP32 Phone Dashboard | ESP32 Lab MicroPython Edition",
