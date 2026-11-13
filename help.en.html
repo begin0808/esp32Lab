@@ -43,6 +43,7 @@
       <nav class="toc" aria-label="On this page">
         <a href="#start">Getting started</a>
         <a href="#path">Learning path</a>
+        <a href="#challenge">Challenge projects</a>
         <a href="#run">Run (no save)</a>
         <a href="#gemini">Gemini prompts</a>
         <a href="#languages">MicroPython and Arduino</a>
@@ -202,6 +203,80 @@
           <li id="path-sheets_dht11"><a class="example-link" href="./index.html?example=sheets_dht11">20. Log DHT11 data to Google Sheets</a>: put the readings in the address's parameters and send them to Apps Script, which writes them to the sheet.<span class="path-try"><strong>Try changing it:</strong> set <code>SEND_SECONDS</code> to 10 for testing, then draw a line chart in the sheet from the data collected.</span></li>
           <li id="path-deep_sleep"><a class="example-link" href="./index.html?example=deep_sleep">24. Deep sleep with timed wake-ups</a>: the board uses almost no power while asleep, RTC memory keeps data during sleep, and waking up is like restarting.<span class="path-try"><strong>Try changing it:</strong> read the DHT11 once on each wake-up before sleeping again, to make a battery-saving temperature logger.</span></li>
           <li id="path-espnow_led"><a class="example-link" href="./index.html?example=espnow_led">25. ESP-NOW between boards</a>: boards send messages straight to each other without a Wi-Fi router.<span class="path-try"><strong>Try changing it:</strong> send the number of presses instead, and have the receiving boards print it on the monitor.</span></li>
+        </ul>
+        <p>After the advanced level, pick a <a href="#challenge">challenge project</a> and combine several examples into a complete project of your own.</p>
+      </section>
+
+      <section id="challenge">
+        <h2>Challenge projects</h2>
+        <p>After the advanced examples, try combining several examples into one complete project. Here you get only the goal and some hints: <strong>there is no ready-made program and no single right answer</strong>, so these suit group projects or end-of-term work. More ★ means harder.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Project</th><th>Difficulty</th><th>Examples used</th></tr></thead>
+            <tbody>
+              <tr><td><a href="#challenge-mood-light">Mood light controller</a></td><td>★★</td><td>4, 7, 12, 30, 32</td></tr>
+              <tr><td><a href="#challenge-classroom">Classroom weather station</a></td><td>★★★</td><td>7, 10, 13, 20, 28, 35</td></tr>
+              <tr><td><a href="#challenge-quiz">Quiz buzzer</a></td><td>★★★</td><td>2, 5, 13, 22, 27, 36</td></tr>
+              <tr><td><a href="#challenge-door">Smart doorway alert</a></td><td>★★★</td><td>7, 8, 19, 34, 36</td></tr>
+              <tr><td><a href="#challenge-maze">Tilt maze game</a></td><td>★★★</td><td>5, 15, 37</td></tr>
+              <tr><td><a href="#challenge-car">Self-braking remote car</a></td><td>★★★★</td><td>6, 9, 32, 38</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="tip"><strong>How to start:</strong> list what the project should do and draw the wiring, checking that no two parts share a pin. Start from the closest example and add one feature at a time, uploading and testing after each, and only then add the next. When you get stuck, the "Write a phone dashboard program" and "Explain the program" options in <a href="#gemini">Gemini prompts</a> can help.</p>
+
+        <h3 id="challenge-mood-light">Mood light controller ★★</h3>
+        <ul>
+          <li><strong>Goal:</strong> a WS2812 strip sets its brightness from the room's light; the phone picks a mode (steady, breathing, rainbow) and a colour, and a knob fine-tunes the brightness.</li>
+          <li><strong>Examples used:</strong> <a href="#path-knob_led">4</a>, <a href="#path-light_sensor">7</a>, <a href="#path-ws2812_rainbow">12</a>, <a href="#path-dash_color">30</a>, <a href="#path-dash_mode">32</a>.</li>
+          <li><strong>Parts:</strong> a WS2812 strip, a photoresistor and a 10kΩ resistor, a 10kΩ potentiometer.</li>
+          <li><strong>Hints:</strong> the knob in example 4 and the photoresistor in example 7 both use GPIO 34, so move one of them to GPIO 35. With Wi-Fi on, only GPIO 32–39 can read analog values on the original ESP32. Work out the breathing and rainbow effects from <code>time.ticks_ms()</code>, as example 32 does, instead of waiting with <code>time.sleep</code>, so the phone's controls never stall.</li>
+          <li><strong>Going further:</strong> add a "sleep mode" that dims the light slowly over 10 minutes and then turns it off.</li>
+        </ul>
+
+        <h3 id="challenge-classroom">Classroom weather station ★★★</h3>
+        <ul>
+          <li><strong>Goal:</strong> measure the classroom's temperature, humidity and light, shown on an OLED and on the phone dashboard; save a row to Google Sheets every 10 minutes; when it is too hot or too dark, the phone shows an alert and a buzzer sounds.</li>
+          <li><strong>Examples used:</strong> <a href="#path-light_sensor">7</a>, <a href="#path-dht11_serial">10</a>, <a href="#path-oled_ssd1306">13</a>, <a href="#path-sheets_dht11">20</a>, <a href="#path-dash_dht11">28</a>, <a href="#path-dash_threshold">35</a>.</li>
+          <li><strong>Parts:</strong> a DHT11, a photoresistor and a 10kΩ resistor, an SSD1306 OLED, a buzzer.</li>
+          <li><strong>Hints:</strong> the phone updates every 2 seconds, the OLED every second and the sheet every 10 minutes. With three different intervals, keep the time each job last ran and check it with <code>time.ticks_diff()</code>, as example 28 does, instead of waiting with <code>time.sleep</code>. Reaching Google takes a few seconds, and the dashboard does not update during them; that is normal. Let the phone set the limits with <code>board.number()</code>, as in example 35.</li>
+          <li><strong>Going further:</strong> record a whole day and chart the classroom's temperature and light in the sheet, to find when it is hottest and when the lights should go on.</li>
+        </ul>
+
+        <h3 id="challenge-quiz">Quiz buzzer ★★★</h3>
+        <ul>
+          <li><strong>Goal:</strong> four teams each have a button. After the teacher presses "Start" on the phone, the first team to press gets its LED lit, a beep and its number on the OLED; a team that presses before "Start" is out for that question.</li>
+          <li><strong>Examples used:</strong> <a href="#path-button_led">2</a>, <a href="#path-buzzer_song">5</a>, <a href="#path-oled_ssd1306">13</a>, <a href="#path-button_irq">22</a>, <a href="#path-dash_intro">27</a>, <a href="#path-dash_log">36</a>.</li>
+          <li><strong>Parts:</strong> 4 push buttons, 4 LEDs and 220Ω resistors, an SSD1306 OLED, a passive buzzer.</li>
+          <li><strong>Hints:</strong> to tell who pressed first, use interrupts as in example 22. The interrupt handler only notes the team and <code>time.ticks_us()</code>; deciding and showing the result is left to the main program. Give each button its own GPIO, with the other leg to GND. GPIO 34–39 have no internal pull-up, so they cannot take a button directly, and keep GPIO 21 and 22 for the OLED.</li>
+          <li><strong>Going further:</strong> use <code>board.log()</code> to record which team won each question and its reaction time in milliseconds, then download the CSV and work out each team's average.</li>
+        </ul>
+
+        <h3 id="challenge-door">Smart doorway alert ★★★</h3>
+        <ul>
+          <li><strong>Goal:</strong> when someone comes near or rings the bell, the phone shows an alert, Telegram gets a message, and the log records the time. It stays quiet in daylight and only switches on once it gets dark.</li>
+          <li><strong>Examples used:</strong> <a href="#path-light_sensor">7</a>, <a href="#path-pir_alarm">8</a>, <a href="#path-telegram_led">19</a>, <a href="#path-dash_doorbell">34</a>, <a href="#path-dash_log">36</a>.</li>
+          <li><strong>Parts:</strong> an HC-SR501, a push button, a photoresistor and a 10kΩ resistor, a buzzer.</li>
+          <li><strong>Hints:</strong> the HC-SR501 keeps triggering while someone stands at the door, so after one alert, send no more for 30 seconds. Get Telegram and the phone dashboard working separately first, then join the two programs. Sending a Telegram message takes a few seconds, and the dashboard pauses meanwhile. If you get a <code>MemoryError</code> after joining them, call <code>gc.collect()</code> before sending to Telegram.</li>
+          <li><strong>Going further:</strong> add an "away mode" switch on the phone, so Telegram messages are sent only while it is on, and otherwise only the phone shows alerts.</li>
+        </ul>
+
+        <h3 id="challenge-maze">Tilt maze game ★★★</h3>
+        <ul>
+          <li><strong>Goal:</strong> tilt the phone to roll a ball through a maze on a MAX7219 dot matrix, and clear the level by reaching the exit; the buzzer sounds when the ball hits a wall.</li>
+          <li><strong>Examples used:</strong> <a href="#path-buzzer_song">5</a>, <a href="#path-max7219_matrix">15</a>, <a href="#path-dash_level">37</a>.</li>
+          <li><strong>Parts:</strong> a MAX7219 dot matrix, a passive buzzer, a phone.</li>
+          <li><strong>Hints:</strong> store the maze as 8 numbers, one per row, where a binary 1 is a wall. Move one dot only when <code>tilt.x</code> or <code>tilt.y</code> is beyond 30, and at most once every 0.2 seconds, or the ball shoots straight to the edge. Tilt only works on https addresses; see <a href="#dashboard">Phone dashboard</a>.</li>
+          <li><strong>Going further:</strong> add more levels and use <code>board.log()</code> to record how many seconds each one took, to see who is fastest.</li>
+        </ul>
+
+        <h3 id="challenge-car">Self-braking remote car ★★★★</h3>
+        <ul>
+          <li><strong>Goal:</strong> drive with the phone's joystick as usual, but brake by itself when something is closer than 20 cm ahead, and refuse to go forward. In "auto mode" the car drives on its own; at an obstacle, a servo turns the ultrasonic sensor left and right, and the car turns towards the clearer side.</li>
+          <li><strong>Examples used:</strong> <a href="#path-servo_sweep">6</a>, <a href="#path-ultrasonic">9</a>, <a href="#path-dash_mode">32</a>, <a href="#path-dash_joycar">38</a>.</li>
+          <li><strong>Parts:</strong> the car and L9110S motor driver from example 38, an HC-SR04 with 1kΩ and 2kΩ resistors for the voltage divider, an SG90 servo.</li>
+          <li><strong>Hints:</strong> the motors use GPIO 18, 19, 21 and 22, the ultrasonic sensor 26 and 33 and the servo 13, so nothing clashes. To add an OLED too, its usual 21 and 22 clash with the motors, so move it to other pins. The motors and the servo draw a lot of current, so power them from the battery pack with a ground shared with the ESP32. Each distance reading pauses the program briefly, so measuring every 0.1 seconds is plenty, while <code>board.check()</code> keeps running every time round.</li>
+          <li><strong>Going further:</strong> show the distance ahead on a gauge on the phone, and set up an obstacle course to see whose auto mode finishes fastest.</li>
         </ul>
       </section>
 

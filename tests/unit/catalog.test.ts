@@ -31,6 +31,20 @@ function expectEveryExampleOnce(steps: ReturnType<typeof pathSteps>, catalog: { 
   }
 }
 
+/** Each challenge project's id, the example numbers its overview row lists, and the example links in its own part. */
+function challenges(page: string): { id: string; listed: number[]; linked: { example: string; number: number }[] }[] {
+  const html = readFileSync(page, "utf8");
+  const section = html.slice(html.indexOf('<section id="challenge">'), html.indexOf('<section id="run">'));
+  return [...section.matchAll(/<tr><td><a href="#challenge-([a-z-]+)">[^<]+<\/a><\/td><td>★+<\/td><td>([^<]+)<\/td><\/tr>/g)].map(([, id, numbers]) => {
+    const part = section.slice(section.indexOf(`<h3 id="challenge-${id}">`)).split("<h3")[1];
+    return {
+      id,
+      listed: numbers.split(/[、,]\s*/).map(Number),
+      linked: [...part.matchAll(/<a href="#path-([a-z0-9_]+)">(\d+)<\/a>/g)].map(([, example, number]) => ({ example, number: Number(number) })),
+    };
+  });
+}
+
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.resetModules();
@@ -74,5 +88,27 @@ describe("learning path on the help page", () => {
   it("states how many examples there are, so the count keeps up with new ones", () => {
     expect(readFileSync("help.html", "utf8")).toContain(`<p>${EXAMPLES.length} 個範例分成初階、中階、進階三級`);
     expect(readFileSync("help.en.html", "utf8")).toContain(`<p>The ${EXAMPLES.length} examples are arranged in three levels`);
+  });
+});
+
+describe("challenge projects on the help page", () => {
+  it("link each example by its own number, and list the same examples in the overview", () => {
+    for (const page of ["help.html", "help.en.html"]) {
+      const projects = challenges(page);
+      expect(projects.length, page).toBe(6);
+      for (const { id, listed, linked } of projects) {
+        expect(linked.length, `${page} ${id}`).toBeGreaterThan(0);
+        for (const { example, number } of linked) {
+          const chosen = findExample(example);
+          expect(chosen, `${page} ${id} ${example}`).toBeDefined();
+          expect(EXAMPLES.indexOf(chosen!) + 1, `${page} ${id} ${example}`).toBe(number);
+        }
+        expect(linked.map((link) => link.number), `${page} ${id}`).toEqual(listed);
+      }
+    }
+  });
+
+  it("gives both pages the same projects with the same examples", () => {
+    expect(challenges("help.en.html")).toEqual(challenges("help.html"));
   });
 });
