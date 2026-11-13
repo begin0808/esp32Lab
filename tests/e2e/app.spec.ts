@@ -1121,6 +1121,13 @@ test.describe("run without saving", () => {
     await expect(page.locator("#monitor")).toContainText("KeyboardInterrupt");
     await expect.poll(async () => (await board(page)).mode).toBe("friendly");
     await expect(page.locator("#error-card")).toBeHidden();
+    // The hint says how to start again, after the board's KeyboardInterrupt and only once.
+    const hint = page.locator("#monitor .system").filter({ hasText: "從頭再試一次" });
+    await expect(hint).toHaveCount(1);
+    expect(await page.locator("#monitor").innerText()).toMatch(/KeyboardInterrupt[\s\S]*從頭再試一次/);
+    await page.locator("#stop").click();
+    await page.waitForTimeout(300);
+    await expect(page.locator("#monitor .system").filter({ hasText: "程式已停止。按" })).toHaveCount(1);
 
     await page.locator("#reset").click();
     await expect.poll(async () => (await board(page)).resets).toBe(1);
@@ -1909,6 +1916,7 @@ test.describe("REPL", () => {
 
     await page.locator("#stop").click();
     await expect(box(page)).toHaveAttribute("placeholder", /輸入 MicroPython/);
+    await expect(page.locator("#monitor .system").last()).toHaveText(/程式已停止。按「重新啟動」可以從頭再執行 main\.py。/);
     await page.locator("#repl-send").click();
     await expect.poll(() => pasted(page)).toHaveLength(1);
   });

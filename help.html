@@ -741,7 +741,7 @@ mylib.hello("ESP32")</pre>
         <details><summary>語音控制頁顯示「開發板沒有回應」或「離線」</summary><p>確認開發板程式正在執行、監控窗顯示已連上 MQTT 伺服器，以及頁面和程式裡的主題名稱完全相同。校園網路可能會擋 1883 連接埠，可以改用手機熱點測試。</p></details>
         <details><summary>語音控制頁顯示「MQTT 帳號或密碼不正確」</summary><p>確認帳號密碼和伺服器設定相同，以及這個帳號有權限使用 <code>esp32-mp-class/</code> 開頭的 Topic。密碼不會儲存，重新整理後要再輸入一次。</p></details>
         <details><summary>Google 試算表範例顯示「Google 沒有回傳 ok」</summary><p>通常是部署時存取權沒有選「所有人」，或學校帳號不允許。請先用瀏覽器的無痕視窗開啟網址測試，應該要顯示 <code>ok</code>。資料沒有增加時，也請確認網址結尾是 <code>/exec</code>。</p></details>
-        <details><summary>按下「停止」後，程式之後還會自動執行嗎？</summary><p>會。「停止」只中斷目前的執行，<code>main.py</code> 還在板子上，下次通電或重新啟動時會再次執行。</p></details>
+        <details><summary>按下「停止」後，程式之後還會自動執行嗎？</summary><p>會。「停止」只中斷目前的執行，<code>main.py</code> 還在板子上，下次通電或重新啟動時會再次執行。「停止」不是暫停，沒辦法從停下來的地方接著跑；要馬上再執行，按監控窗上方的「重新啟動」，程式會從頭開始。用「執行（不存檔）」試跑的程式，則是再按一次「執行（不存檔）」。</p></details>
         <details><summary>用「執行（不存檔）」試好了，怎麼讓它通電就自動執行？</summary><p>按「上傳並執行」，程式會存成 <code>main.py</code>。「執行（不存檔）」的程式只在記憶體裡，重新啟動或拔掉電源就會消失。</p></details>
       </section>
 

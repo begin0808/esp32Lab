@@ -399,6 +399,8 @@ const en = {
   正在管理板上檔案: "Managing board files",
   "無法讀取板上檔案：{message}": "Could not read the board's files: {message}",
   "程式已停止。按「重新啟動」可以再執行 main.py。": 'Program stopped. Press "Restart" to run main.py again.',
+  "程式已停止。按「重新啟動」可以從頭再執行 main.py。": 'Program stopped. Press "Restart" to run main.py again from the start.',
+  "程式已停止。按「執行（不存檔）」可以從頭再試一次；按「重新啟動」會執行板子上的 main.py。": 'Program stopped. Press "Run (no save)" to try it again from the start; "Restart" runs the main.py on the board.',
   監控窗顯示方式: "Monitor view",
   文字: "Text",
   圖表: "Chart",

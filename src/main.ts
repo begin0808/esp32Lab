@@ -143,6 +143,8 @@ let completing = false;
 /** Set while a program sent by "Run (no save)" is running, so the end of its output can be noticed. */
 let rawRun: RawRunWatcher | null = null;
 let shownVariablesTip = false;
+/** What to say once the board is back at its prompt after Stop, so the hint comes after KeyboardInterrupt. */
+let stopHint: string | null = null;
 const commandHistory = new CommandHistory();
 /** Every number the board printed in a form the chart understands, kept even while the text view is shown. */
 const dataLog = new DataLog();
@@ -496,6 +498,10 @@ function showBoardText(decoded: string): void {
   const wasAtPrompt = atPrompt;
   atPrompt = /(?:^|\n)>>> $/.test(promptTail);
   if (atPrompt !== wasAtPrompt) refreshButtons();
+  if (atPrompt && stopHint) {
+    systemMessage(stopHint);
+    stopHint = null;
+  }
 }
 
 function recordData(text: string): void {
@@ -763,6 +769,8 @@ function finishRun(): void {
 }
 
 async function stopProgram(): Promise<void> {
+  // Stop cannot resume a program, so say how to run it again from the start. Nothing to say at the prompt.
+  if (!atPrompt) stopHint = rawRun ? t("程式已停止。按「執行（不存檔）」可以從頭再試一次；按「重新啟動」會執行板子上的 main.py。") : t("程式已停止。按「重新啟動」可以從頭再執行 main.py。");
   await link.write(Uint8Array.of(0x03, 0x03));
   setStatus(t("程式已停止"), "ready");
 }
