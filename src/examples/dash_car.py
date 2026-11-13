@@ -39,7 +39,7 @@ def motor(pins, speed):  # speed 是 -100～100，正的往前、負的往後
 
 board = dash.Dashboard(TOPIC_NAME, SSID, PASSWORD)
 drive = board.pad("方向")  # 手機 → 板子：按住才會動
-speed = board.slider("速度", min=30, max=100, unit="%")  # 速度太低時馬達會轉不動，所以從 30% 起跳
+speed = board.slider("速度", min=50, max=100, unit="%")  # 一般 TT 馬達低於 50% 轉不動，所以從 50% 起跳；你的馬達轉不動就再調高
 state = board.text("車子狀態")  # 板子 → 手機
 speed.set(60)  # 第一次用 60% 的速度，之後伺服器會記住手機上最後的位置
 board.start()

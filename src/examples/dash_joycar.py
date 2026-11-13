@@ -18,7 +18,7 @@ LEFT_A_PIN = 18
 LEFT_B_PIN = 19
 RIGHT_A_PIN = 21
 RIGHT_B_PIN = 22
-MIN_POWER = 30  # 馬達低於 30% 通常轉不動，所以從 30% 起跳
+MIN_POWER = 50  # 一般 TT 馬達低於 50% 轉不動，所以從 50% 起跳；你的馬達轉不動就再調高
 DEAD_ZONE = 10  # 搖桿在中間附近（-10～10）就停，手指輕輕抖動車子不會亂動
 
 # MQTT 主題名稱，每塊板子請用不同的名稱。手機儀表板要輸入一樣的名稱
@@ -29,7 +29,7 @@ left = (PWM(Pin(LEFT_A_PIN), freq=1000, duty_u16=0), PWM(Pin(LEFT_B_PIN), freq=1
 right = (PWM(Pin(RIGHT_A_PIN), freq=1000, duty_u16=0), PWM(Pin(RIGHT_B_PIN), freq=1000, duty_u16=0))
 
 
-def power(speed):  # 把 -100～100 換成馬達真正用的力道：中間附近是 0，其他是 30～100
+def power(speed):  # 把 -100～100 換成馬達真正用的力道：中間附近是 0，其他是 50～100
     if abs(speed) < DEAD_ZONE:
         return 0
     size = MIN_POWER + abs(speed) * (100 - MIN_POWER) // 100

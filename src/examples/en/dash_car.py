@@ -39,7 +39,7 @@ def motor(pins, speed):  # speed is -100 to 100: positive forward, negative back
 
 board = dash.Dashboard(TOPIC_NAME, SSID, PASSWORD)
 drive = board.pad("Direction")  # phone -> board: moves only while held
-speed = board.slider("Speed", min=30, max=100, unit="%")  # Motors stall at low speeds, so it starts at 30%
+speed = board.slider("Speed", min=50, max=100, unit="%")  # A usual TT motor does not turn below 50%, so it starts at 50%; raise it if yours still stalls
 state = board.text("Car")  # board -> phone
 speed.set(60)  # Start at 60% the first time; later the broker remembers the phone's last setting
 board.start()

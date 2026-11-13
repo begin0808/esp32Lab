@@ -18,7 +18,7 @@ LEFT_A_PIN = 18
 LEFT_B_PIN = 19
 RIGHT_A_PIN = 21
 RIGHT_B_PIN = 22
-MIN_POWER = 30  # Motors usually do not turn below 30%, so power starts at 30%
+MIN_POWER = 50  # A usual TT motor does not turn below 50%, so power starts at 50%; raise it if yours still stalls
 DEAD_ZONE = 10  # Near the centre (-10 to 10) the car stops, so a shaky finger does not move it
 
 # MQTT topic name: give each board its own. Enter the same name on the phone dashboard
@@ -29,7 +29,7 @@ left = (PWM(Pin(LEFT_A_PIN), freq=1000, duty_u16=0), PWM(Pin(LEFT_B_PIN), freq=1
 right = (PWM(Pin(RIGHT_A_PIN), freq=1000, duty_u16=0), PWM(Pin(RIGHT_B_PIN), freq=1000, duty_u16=0))
 
 
-def power(speed):  # Turns -100 to 100 into the power a motor really gets: 0 near the centre, otherwise 30 to 100
+def power(speed):  # Turns -100 to 100 into the power a motor really gets: 0 near the centre, otherwise 50 to 100
     if abs(speed) < DEAD_ZONE:
         return 0
     size = MIN_POWER + abs(speed) * (100 - MIN_POWER) // 100
