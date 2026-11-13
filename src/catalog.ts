@@ -74,7 +74,7 @@ export const EXAMPLE_GROUPS: { label: string; examples: Example[] }[] = [
     examples: [
       item("dash_intro", t("儀表板入門：開關 LED、看按鈕")),
       item("dash_dht11", t("DHT11 溫濕度儀表板")),
-      item("dash_knob", t("滑桿調 LED 亮度、看可變電阻")),
+      item("dash_knob", t("旋鈕和手機滑桿一起調 LED 亮度")),
       item("dash_color", t("手機選顏色點亮全彩 LED")),
       item("dash_car", t("手機方向鍵遙控車")),
       item("dash_mode", t("選單切換 LED 模式")),

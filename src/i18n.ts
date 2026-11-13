@@ -138,7 +138,7 @@ const en = {
   手機儀表板: "Phone dashboard",
   "儀表板入門：開關 LED、看按鈕": "Dashboard basics: LED switch and button",
   "DHT11 溫濕度儀表板": "DHT11 dashboard",
-  "滑桿調 LED 亮度、看可變電阻": "Slider dims an LED, gauge shows a knob",
+  "旋鈕和手機滑桿一起調 LED 亮度": "Knob and phone slider both dim an LED",
   "手機選顏色點亮全彩 LED": "Pick a colour for an RGB LED",
   手機方向鍵遙控車: "Phone-controlled car",
   "選單切換 LED 模式": "Menu switches LED modes",

@@ -119,7 +119,7 @@
               <tr><td>asyncio 同時做三件事</td><td>LED 閃爍、監看按鈕、每 2 秒報告執行時間同時進行</td><td>同範例 2：按鈕 GPIO 19、LED GPIO 18</td><td>不需要</td></tr>
               <tr><td>儀表板入門：開關 LED、看按鈕</td><td>手機儀表板的開關控制 LED，指示燈顯示按鈕有沒有按下，數字顯示按了幾下</td><td>同範例 2：按鈕 GPIO 19、LED GPIO 18</td><td>板子和手機都要能上網</td></tr>
               <tr><td>DHT11 溫濕度儀表板</td><td>手機上看溫度和濕度儀表、標有時間的濕度變化圖，溫度超過 30°C 時狀態文字會提醒</td><td>DATA GPIO 4</td><td>板子和手機都要能上網</td></tr>
-              <tr><td>滑桿調 LED 亮度、看可變電阻</td><td>手機滑桿調 LED 亮度，儀表顯示旋鈕位置，「全亮」按鈕讓滑桿跳到 100%</td><td>旋鈕 GPIO 34、LED GPIO 18</td><td>板子和手機都要能上網</td></tr>
+              <tr><td>旋鈕和手機滑桿一起調 LED 亮度</td><td>轉旋鈕或拉手機滑桿都能調 LED 亮度，轉旋鈕時手機的滑桿也會跟著動；儀表顯示旋鈕位置，「全亮」按鈕讓滑桿跳到 100%</td><td>旋鈕 GPIO 34、LED GPIO 18</td><td>板子和手機都要能上網</td></tr>
               <tr><td>手機選顏色點亮全彩 LED</td><td>手機色盤選顏色，WS2812 燈條跟著變色，滑桿調亮度</td><td>DIN GPIO 16</td><td>板子和手機都要能上網</td></tr>
               <tr><td>手機方向鍵遙控車</td><td>按住手機的方向鍵，車子前進、後退或轉彎，放開就停；手機斷線時自動停車</td><td>L298N 或 L9110S：IN1–IN4 接 GPIO 18、19、21、22</td><td>板子和手機都要能上網</td></tr>
               <tr><td>選單切換 LED 模式</td><td>手機選單切換關、亮、閃爍、呼吸燈，儀表顯示目前亮度</td><td>LED GPIO 18</td><td>板子和手機都要能上網</td></tr>
@@ -198,7 +198,7 @@
           <li id="path-mqtt_led"><a class="example-link" href="./index.html?example=mqtt_led">17. 語音控制 LED（MQTT）</a>：透過網路上的 MQTT 伺服器，在不同的 Wi-Fi 之間收發訊息。<span class="path-try"><strong>動手改改看：</strong>加上一顆按鈕，按下時切換 LED，並回報狀態，讓語音控制頁跟著更新。</span></li>
           <li id="path-dash_intro"><a class="example-link" href="./index.html?example=dash_intro">27. 儀表板入門：開關 LED、看按鈕</a>：用 <code>dash</code> 建立手機上的元件，<code>.set()</code> 把值送到手機，<code>.value</code> 讀手機上的開關。<span class="path-try"><strong>動手改改看：</strong>加一個 <code>board.text("訊息")</code>，按下按鈕時顯示「有人按了！」。</span></li>
           <li id="path-dash_dht11"><a class="example-link" href="./index.html?example=dash_dht11">28. DHT11 溫濕度儀表板</a>：同一個數值可以同時給儀表和折線圖，儀表可以用 <code>color=</code> 選顏色；用時間差每 3 秒讀一次感測器，<code>board.check()</code> 照樣一直執行。對感測器哈氣，濕度變化最明顯。<span class="path-try"><strong>動手改改看：</strong>加一個 <code>board.led("太熱", color="red")</code>，溫度超過 <code>HOT</code> 時亮紅燈。</span></li>
-          <li id="path-dash_knob"><a class="example-link" href="./index.html?example=dash_knob">29. 滑桿調 LED 亮度、看可變電阻</a>：手機的滑桿和按鈕控制板子，板子也能用 <code>.set()</code> 改滑桿的位置。<span class="path-try"><strong>動手改改看：</strong>加一個「關燈」按鈕，按下時把滑桿設成 0。</span></li>
+          <li id="path-dash_knob"><a class="example-link" href="./index.html?example=dash_knob">29. 旋鈕和手機滑桿一起調 LED 亮度</a>：手機的滑桿和按鈕控制板子；轉旋鈕時，板子用 <code>.set()</code> 把手機的滑桿移到同樣的位置，兩邊誰最後動就聽誰的。<span class="path-try"><strong>動手改改看：</strong>加一個「關燈」按鈕，按下時把滑桿設成 0。</span></li>
           <li id="path-dash_color"><a class="example-link" href="./index.html?example=dash_color">30. 手機選顏色點亮全彩 LED</a>：色盤的值是（紅, 綠, 藍）三個 0～255 的數字，和範例 12 的燈條用同一種寫法。<span class="path-try"><strong>動手改改看：</strong>加一個「彩虹」開關，打開時燈條自己變換顏色。</span></li>
           <li id="path-dash_car"><a class="example-link" href="./index.html?example=dash_car">31. 手機方向鍵遙控車</a>：用兩支 PWM 腳控制一顆馬達的方向和速度；方向鍵要按住才會動，手機斷線時板子會自己停車。<span class="path-try"><strong>動手改改看：</strong>轉彎時改成一邊輪子慢、一邊快，轉得比較平順。</span></li>
           <li id="path-dash_mode"><a class="example-link" href="./index.html?example=dash_mode">32. 選單切換 LED 模式</a>：用 <code>time.ticks_ms()</code> 算出閃爍和呼吸燈的亮度，不用 <code>time.sleep</code> 等待。<span class="path-try"><strong>動手改改看：</strong>在選單加一個「SOS」模式，閃出三短三長三短。</span></li>

@@ -49,7 +49,7 @@ describe("example catalog", () => {
   it("finds an example by id and numbers it as the menu does", () => {
     expect(numberedName(findExample("blink")!)).toBe("1. LED 閃爍");
     expect(numberedName(findExample("asyncio_tasks")!)).toBe("26. asyncio 同時做三件事");
-    expect(numberedName(findExample("dash_knob")!)).toBe("29. 滑桿調 LED 亮度、看可變電阻");
+    expect(numberedName(findExample("dash_knob")!)).toBe("29. 旋鈕和手機滑桿一起調 LED 亮度");
     expect(numberedName(findExample("dash_doorbell")!)).toBe("34. 按鈕門鈴通知手機");
     expect(numberedName(findExample("dash_joycar")!)).toBe("38. 手機搖桿遙控車");
     expect(findExample("nothing")).toBeUndefined();
