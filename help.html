@@ -668,7 +668,7 @@ mylib.hello("ESP32")</pre>
 
       <section id="google-sheets">
         <h2>把感測器資料存到 Google 試算表</h2>
-        <p>範例「DHT11 資料存到 Google 試算表」每分鐘會把日期、時間、溫度和濕度新增成一列。Google Apps Script 是免費服務，但要先設定一次。這個範例已用模擬硬體和模擬 Google 回應測試，尚未接實體 Google 試算表測試。</p>
+        <p>範例「DHT11 資料存到 Google 試算表」每分鐘會把日期、時間、溫度和濕度新增成一列。Google Apps Script 是免費服務，但要先設定一次。</p>
         <ol>
           <li>到 Google 試算表建立新檔案，在第一列的 A1～D1 輸入標題：<strong>日期、時間、溫度、濕度</strong>。日期和時間分成兩欄，時間才會顯示到秒。</li>
           <li>點選「擴充功能」→「Apps Script」，把原本的內容換成下面的程式後儲存：
@@ -692,7 +692,7 @@ mylib.hello("ESP32")</pre>
           </li>
           <li>點選「部署」→「新增部署作業」，類型選「網頁應用程式」。執行身分選「我」，存取權選「<strong>所有人</strong>」，再依畫面完成授權。</li>
           <li>複製部署後的網址，結尾是 <code>/exec</code>。先在瀏覽器網址列的網址後面加上 <code>?temp=25&amp;hum=60</code> 開啟，畫面顯示 <code>ok</code>、試算表多一列，就代表設定正確。測試完可以刪除這一列。</li>
-          <li>範例選「DHT11 資料存到 Google 試算表」，填入 Wi-Fi 名稱、密碼和 <code>SCRIPT_URL</code>，按「上傳並執行」。</li>
+          <li>範例選「DHT11 資料存到 Google 試算表」，填入 Wi-Fi 名稱、密碼和 <code>SCRIPT_URL</code>，按「上傳並執行」。每次連到 Google 要花幾秒，所以每一列的間隔會比 <code>SEND_SECONDS</code> 多幾秒。</li>
         </ol>
         <p class="tip warn"><strong>網址等於試算表的寫入權限。</strong>知道網址的人都能新增資料，不要投影或分享。不小心外洩時，請到「部署」→「管理部署作業」封存這個部署，再建立新的部署。</p>
         <p>學校的 Google 帳號可能不允許把存取權設成「所有人」，這時請改用個人帳號。之後修改 Apps Script，要在「管理部署作業」選編輯並發布新版本，才會生效。</p>

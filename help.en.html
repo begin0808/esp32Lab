@@ -658,7 +658,7 @@ mylib.hello("ESP32")</pre>
 
       <section id="google-sheets">
         <h2>Saving sensor data to Google Sheets</h2>
-        <p>The example "Log DHT11 data to Google Sheets" adds a row of date, time, temperature and humidity every minute. Google Apps Script is free, but needs setting up once. This example has been tested with simulated hardware and simulated Google responses, but not with a real Google Sheet.</p>
+        <p>The example "Log DHT11 data to Google Sheets" adds a row of date, time, temperature and humidity every minute. Google Apps Script is free, but needs setting up once.</p>
         <ol>
           <li>Create a new Google Sheet, and enter the headings in A1 to D1: <strong>Date, Time, Temperature, Humidity</strong>. Keeping the date and the time in separate columns shows the time to the second.</li>
           <li>Choose "Extensions" → "Apps Script", replace the contents with the program below, and save:
@@ -682,7 +682,7 @@ mylib.hello("ESP32")</pre>
           </li>
           <li>Choose "Deploy" → "New deployment", with the type "Web app". Set "Execute as" to "Me" and "Who has access" to "<strong>Anyone</strong>", then complete the authorization.</li>
           <li>Copy the deployment URL, which ends in <code>/exec</code>. First test it in a browser by adding <code>?temp=25&amp;hum=60</code> to the end. If the page shows <code>ok</code> and the sheet gains a row, the setup is correct. You can delete that row afterwards.</li>
-          <li>Choose the example "Log DHT11 data to Google Sheets", fill in your Wi-Fi name, password and <code>SCRIPT_URL</code>, and press "Upload and run".</li>
+          <li>Choose the example "Log DHT11 data to Google Sheets", fill in your Wi-Fi name, password and <code>SCRIPT_URL</code>, and press "Upload and run". Reaching Google takes a few seconds each time, so the rows are a few seconds further apart than <code>SEND_SECONDS</code>.</li>
         </ol>
         <p class="tip warn"><strong>Anyone with the URL can write to the sheet.</strong> Do not project or share it. If it leaks, archive the deployment under "Deploy" → "Manage deployments" and create a new one.</p>
         <p>School Google accounts may not allow access for "Anyone". If so, use a personal account. After changing the Apps Script later, edit the deployment in "Manage deployments" and publish a new version for the change to take effect.</p>
