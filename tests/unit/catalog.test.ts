@@ -70,4 +70,9 @@ describe("learning path on the help page", () => {
   it("gives both pages the same steps in the same order", () => {
     expect(pathSteps("help.en.html").map((step) => step.example)).toEqual(pathSteps("help.html").map((step) => step.example));
   });
+
+  it("states how many examples there are, so the count keeps up with new ones", () => {
+    expect(readFileSync("help.html", "utf8")).toContain(`<p>${EXAMPLES.length} 個範例分成初階、中階、進階三級`);
+    expect(readFileSync("help.en.html", "utf8")).toContain(`<p>The ${EXAMPLES.length} examples are arranged in three levels`);
+  });
 });
