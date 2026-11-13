@@ -1508,6 +1508,22 @@ test.describe("in an English browser", () => {
     await expect(page).toHaveTitle(/Help/);
   });
 
+  test("the help pages have a back-to-top button once they are scrolled down", async ({ page }) => {
+    for (const [lang, path, name] of [["zh-Hant", "/help.html", "回到頂端"], ["en", "/help.en.html", "Back to top"]]) {
+      await page.goto("/help.en.html");
+      await page.evaluate((next) => localStorage.setItem("esp32-mp-lang", next), lang);
+      await page.goto(path);
+      const button = page.getByRole("button", { name });
+      await expect(button).toBeHidden();
+      await page.goto(`${path}#google-sheets`);
+      await expect(button).toBeVisible();
+      await button.click();
+      await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+      await expect(button).toBeHidden();
+      await expect(page.locator(".help-top h1")).toBeFocused();
+    }
+  });
+
   test("the English help page has the same sections and links as the Chinese one", async ({ page, request }) => {
     const outline = () => page.evaluate(() => [...document.querySelectorAll(".toc a, section[id], h3[id]")].map((node) => node.getAttribute("href") ?? node.id));
     const rows = () => page.locator(".doc tbody tr").count();
