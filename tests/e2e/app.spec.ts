@@ -863,6 +863,10 @@ for (const id of STYLE_IDS) {
     for (const path of HELP_PATHS) {
       await page.goto(path);
       await expect(page.locator("html")).toHaveAttribute("data-style", id);
+      // The button back to the editor at the foot of the page is filled, so it stands out from the white card under it.
+      const [buttonBg, cardBg] = await page.locator(".help-bottom .home-link").evaluate((node) => [getComputedStyle(node).backgroundColor, getComputedStyle(node.parentElement!).backgroundColor]);
+      expect(buttonBg, path).not.toBe(cardBg);
+      expect(buttonBg, path).not.toBe("rgb(255, 255, 255)");
       expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), path).toBe(false);
 
       for (const anchor of await page.locator(".toc a").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("href")!))) {
