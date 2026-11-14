@@ -18,11 +18,11 @@ LED_PIN = 18
 TOPIC_NAME = "{{CHANNEL}}"
 VOICE_PAGE = "{{VOICE_PAGE}}"
 
-# 要換 MQTT 伺服器時，語音控制頁的進階設定也要改成同一台
+# 要換 MQTT 伺服器時，語音控制頁的進階設定也要改成同一臺
 # 這裡用未加密的 TCP 連接埠（通常是 1883），語音控制頁則用 WSS 連接埠
 BROKER = "broker.emqx.io"
 MQTT_PORT = 1883
-# 伺服器要求登入時才填。1883 連接埠不加密，請用這台伺服器專用的密碼，不要和其他帳號共用
+# 伺服器要求登入時才填。1883 連接埠不加密，請用這臺伺服器專用的密碼，不要和其他帳號共用
 MQTT_USER = ""
 MQTT_PASSWORD = ""
 

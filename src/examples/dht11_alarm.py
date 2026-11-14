@@ -30,7 +30,7 @@ body{font-family:Arial,sans-serif;text-align:center;background:#f0f2f5;padding:2
 button{padding:12px 24px;font-size:16px;background:#28a745;color:#fff;border:0;border-radius:10px}
 </style></head><body>
 <h2>🌡 ESP32 溫濕度監測</h2>
-<button id="sound" onclick="enableAudio()">🔊 點擊啟用聲音警報</button>
+<button id="sound" onclick="enableAudio()">🔊 按這裡啟用聲音警報</button>
 <div class="cards">
   <div class="card"><div>溫度</div><div class="val"><span id="temp">--</span> °C</div></div>
   <div class="card" id="humCard"><div>濕度</div><div class="val"><span id="hum">--</span> %</div></div>

@@ -90,7 +90,7 @@
         </ol>
         <p>語音不能用時，可以按開燈、關燈按鈕，或在文字指令欄用手機鍵盤的麥克風輸入。Windows 電腦也可以按 <kbd>Win</kbd> + <kbd>H</kbd> 語音輸入。</p>
         <p><strong>主題名稱和 MQTT Topic：</strong>你輸入的名稱會組成兩個 Topic。以 <code>led-1</code> 為例，指令走 <code>esp32-mp-class/led-1/command</code>，開發板回報走 <code>esp32-mp-class/led-1/state</code>，其他 MQTT 工具也可以訂閱或發布這兩個 Topic。</p>
-        <p><strong>使用自己的 MQTT 伺服器：</strong>打開語音控制頁的「進階」，填入伺服器位址、WSS 連接埠、路徑、帳號和密碼；程式裡的 <code>BROKER</code>、<code>MQTT_PORT</code>、<code>MQTT_USER</code>、<code>MQTT_PASSWORD</code> 也要改成同一台。語音控制頁不會儲存密碼，重新整理後要再輸入一次。開發板預設走不加密的 1883 連接埠，帳號密碼可能被同網路的人看到，請使用這台伺服器專用的密碼。</p>
+        <p><strong>使用自己的 MQTT 伺服器：</strong>打開語音控制頁的「進階」，填入伺服器位址、WSS 連接埠、路徑、帳號和密碼；程式裡的 <code>BROKER</code>、<code>MQTT_PORT</code>、<code>MQTT_USER</code>、<code>MQTT_PASSWORD</code> 也要改成同一臺。語音控制頁不會儲存密碼，重新整理後要再輸入一次。開發板預設走不加密的 1883 連接埠，帳號密碼可能被同網路的人看到，請使用這臺伺服器專用的密碼。</p>
 
         <h3 id="telegram">Telegram 機器人</h3>
         <ol>
@@ -144,10 +144,10 @@
         <p><strong>方向鍵、搖桿和手機傾斜的安全設計：</strong>按住方向鍵或搖桿時，手機每 0.4 秒重送一次；手機傾斜開啟時每 0.2 秒送一次。板子超過 1 秒沒收到、或是斷線，方向鍵的 <code>.value</code> 會自動變回 <code>""</code>，搖桿和傾斜的 <code>.x</code>、<code>.y</code> 會回到 0。手機切到別的畫面時也會自動放開。所以手機當機、沒電或離開 Wi-Fi，遙控車都會停下來。第一次測試時，先把車子架高，讓輪子懸空。</p>
         <p><strong>手機傾斜：</strong>手機只在 https 網址上提供傾斜感測器，所以要用正式網站，或掃描 QR code 打開的網址。iPhone 第一次按「開始傾斜控制」時會詢問能不能使用動作感測器，請選「允許」。手機平放是 0，傾斜 45 度就是最大。請直拿手機，橫拿時左右和前後會對調。電腦通常沒有傾斜感測器。</p>
         <p><strong>紀錄表：</strong>紀錄只存在手機頁上，手機頁打開時才收得到，最多保留最近 1000 筆（每 5 秒一筆約可記 83 分鐘）；記滿時筆數會變成紅字提醒，之後最舊的會被刪除。重新整理或關掉就會清空，記得先按「下載 CSV」。CSV 的前兩欄是手機收到的日期和時間（時間到秒），Excel 和 Google 試算表都能直接打開。要長時間記錄、手機不用一直開著時，請用 <a href="#google-sheets">Google 試算表</a>。</p>
-        <p><strong>板子資訊：</strong>手機儀表板頁會在「開發板：在線」下面顯示板子的 Wi-Fi 訊號、已執行時間和剩餘記憶體，每 10 秒更新，不用寫程式。訊號 -60 dBm 以上是強，-70 dBm 以下是弱，弱的時候操作可能會延遲。剩餘記憶體一直變少時，表示程式裡可能有東西一直累積。板子的 IP 位址不會送出。</p>
+        <p><strong>板子資訊：</strong>手機儀表板頁會在「開發板：已連線」下面顯示板子的 Wi-Fi 訊號、已執行時間和剩餘記憶體，每 10 秒更新，不用寫程式。訊號 -60 dBm 以上是強，-70 dBm 以下是弱，弱的時候操作可能會延遲。剩餘記憶體一直變少時，表示程式裡可能有東西一直累積。板子的 IP 位址不會送出。</p>
         <p><strong>提醒的聲音：</strong>瀏覽器規定網頁要先被點過一次才能出聲音，所以手機儀表板的提醒卡片上有「開啟提醒聲音」按鈕，打開頁面後先按一下。提醒不會保留在伺服器上，手機晚一點才打開時，不會收到以前的提醒。</p>
         <p><strong>請 Gemini 寫儀表板程式：</strong>「Gemini 提示詞」選單的「寫手機儀表板程式」會附上全部元件的寫法，見 <a href="./help-tools.html#gemini">Gemini 提示詞</a>。</p>
-        <p><strong>主題名稱和 MQTT Topic：</strong>以主題名稱 <code>dash-1</code> 為例，所有資料都在 <code>esp32-mp-class/dash-1/dash/</code> 底下：<code>layout</code> 是畫面上有哪些元件、<code>state</code> 是板子在不在線、<code>info</code> 是板子資訊、<code>out/…</code> 是板子送出的值、<code>in/…</code> 是手機的操作。</p>
+        <p><strong>主題名稱和 MQTT Topic：</strong>以主題名稱 <code>dash-1</code> 為例，所有資料都在 <code>esp32-mp-class/dash-1/dash/</code> 底下：<code>layout</code> 是畫面上有哪些元件、<code>state</code> 是板子有沒有連線、<code>info</code> 是板子資訊、<code>out/…</code> 是板子送出的值、<code>in/…</code> 是手機的操作。</p>
         <p><strong>使用自己的 MQTT 伺服器：</strong>打開手機儀表板頁的「進階」填入伺服器設定，程式改成 <code>dash.Dashboard(TOPIC_NAME, SSID, PASSWORD, broker="伺服器位址", port=1883, user="帳號", mqtt_password="密碼")</code>。</p>
         <p><strong>關於 dash.py：</strong>不要直接修改板子上的 <code>/lib/dash.py</code>，下次上傳時網站會換回原本的版本。不用這個網站上傳時（例如用 Thonny），可以在<a href="./help-tools.html#files">板上檔案</a>打開 <code>/lib</code> 下載 <code>dash.py</code>，再放到另一塊板子上。手機儀表板頁不需要 Web Serial，手機和電腦的瀏覽器都能開，但還沒在每一種手機上實測。</p>
         <p class="tip warn"><strong>板子連不上時：</strong>學校防火牆擋 1883 連接埠時，監控窗會一直出現「連線失敗，5 秒後重試」，可以改用手機熱點。手機儀表板頁顯示「開發板：離線」或「沒有回應」時，請確認板子上的程式正在執行，而且兩邊的主題名稱一樣。</p>
@@ -194,7 +194,7 @@
     <footer class="footer">
       <div class="copyright">
         <span>© 2026 <a href="https://begin0808.github.io/studio0808/" target="_blank" rel="noopener">Studio0808 智造實驗室</a>. All rights reserved.</span>
-        <span class="contact-note">如有建議或報錯，歡迎來信</span>
+        <span class="contact-note">如有建議或發現錯誤，歡迎來信</span>
         <a class="contact-link" href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=begin0808@gmail.com" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>寫信給我
         </a>

@@ -1,7 +1,7 @@
 # 範例 15｜MAX7219 8×8 LED 點矩陣：輪流顯示笑臉和愛心
 # 接線：VCC 接 5V（VIN）、GND 接 GND、DIN 接 GPIO 23、CLK 接 GPIO 18、CS 接 GPIO 5
 # 韌體沒有內建這個元件的控制程式，下面的 MAX7219 類別已經寫在這個檔案裡，不用另外安裝
-# 模組以 5V 供電時，3.3V 訊號可能不穩定。顯示異常時再加電平轉換模組
+# 模組以 5V 供電時，3.3V 訊號可能不穩定。顯示異常時再加準位轉換模組
 from machine import Pin
 import time
 

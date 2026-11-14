@@ -94,7 +94,7 @@ function runText(text: string): void {
 
 function speechErrorMessage(error: string): string {
   if (error === "not-allowed" || error === "service-not-allowed") return t("麥克風沒有開放，請到瀏覽器的網站設定允許使用麥克風");
-  if (error === "network") return t("語音辨識需要連上網際網路，請確認這台裝置可以上網");
+  if (error === "network") return t("語音辨識需要連上網際網路，請確認這臺裝置可以上網");
   if (error === "no-speech") return t("沒有聽到聲音，請再試一次");
   return t("語音辨識失敗，請再試一次（{error}）", { error });
 }

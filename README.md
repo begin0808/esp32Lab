@@ -54,7 +54,7 @@
 3. 程式用 `board.gauge()`、`board.switch()` 這類寫法建立元件（共 17 種），手機頁會依開發板送出的 `layout` 自動排出來。
 4. 請 Gemini 寫儀表板程式時，用「Gemini 提示詞」→「寫手機儀表板程式」。dash 的寫法說明在 `src/text.ts` 的 `dashGuide`，Gemini 沒看過 `dash.py`，所以提示詞一定要附上它。
 
-全部資料在 `esp32-mp-class/<主題名稱>/dash/` 底下：`layout`（畫面）、`state`（在線狀態）、`out/<id>`（板子送的值）、`in/<id>`（手機的操作）。手機頁把收到的資料都當成不可信的內容處理，只用文字顯示。`dash.py` 在電腦上的測試是 `tests/dash/test_dash.py`，用假的 Wi-Fi、MQTT 和時鐘執行，單元測試會一起跑。
+全部資料在 `esp32-mp-class/<主題名稱>/dash/` 底下：`layout`（畫面）、`state`（連線狀態）、`out/<id>`（板子送的值）、`in/<id>`（手機的操作）。手機頁把收到的資料都當成不可信的內容處理，只用文字顯示。`dash.py` 在電腦上的測試是 `tests/dash/test_dash.py`，用假的 Wi-Fi、MQTT 和時鐘執行，單元測試會一起跑。
 
 ## 使用說明
 
@@ -112,4 +112,4 @@ npm run build      # 輸出到 dist/
 
 © 2026 [Studio0808 智造實驗室](https://begin0808.github.io/studio0808/). All rights reserved.
 
-如有建議或報錯，[歡迎來信](https://mail.google.com/mail/?view=cm&fs=1&to=begin0808@gmail.com)。
+如有建議或發現錯誤，[歡迎來信](https://mail.google.com/mail/?view=cm&fs=1&to=begin0808@gmail.com)。

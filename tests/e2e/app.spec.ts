@@ -562,7 +562,7 @@ for (const path of ["/", "/voice.html", "/dashboard.html", "/help.html"]) {
     await page.goto(path);
     const copyright = page.locator(".copyright");
     await expect(copyright).toContainText("© 2026 Studio0808 智造實驗室. All rights reserved.");
-    await expect(copyright).toContainText("如有建議或報錯，歡迎來信");
+    await expect(copyright).toContainText("如有建議或發現錯誤，歡迎來信");
     await expect(copyright.getByRole("link", { name: "Studio0808 智造實驗室" })).toHaveAttribute("href", "https://begin0808.github.io/studio0808/");
     await expect(copyright.getByRole("link", { name: "寫信給我" })).toHaveAttribute(
       "href",
@@ -616,7 +616,7 @@ test("falls back to the default when a removed style was saved", async ({ page }
   await page.goto("/");
   await expect(page.locator("html")).toHaveAttribute("data-style", "mat");
   await expect(page.locator("#style-picker")).toHaveValue("mat");
-  await expect(page.locator("#style-picker option")).toHaveText(["切割墊工作台", "積木玩具"]);
+  await expect(page.locator("#style-picker option")).toHaveText(["切割墊工作臺", "積木玩具"]);
 });
 
 test("downloads a style's font only when that style is chosen", async ({ page }) => {
@@ -2241,7 +2241,7 @@ test.describe("phone dashboard", () => {
     });
     await page.goto("/dashboard.html?ch=room1");
     await expect(page.locator("#link-status")).toContainText("已連線，主題：room1");
-    await expect(page.locator("#board-status")).toHaveText("開發板：在線");
+    await expect(page.locator("#board-status")).toHaveText("開發板：已連線");
     await expect(page.locator("#empty")).toBeHidden();
     await expect(page.locator(".widget")).toHaveCount(8);
     await expect(page.locator("#topic-preview")).toContainText("esp32-mp-class/room1/dash/");

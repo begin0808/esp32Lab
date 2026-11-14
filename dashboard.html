@@ -70,7 +70,7 @@
             <label for="broker-password">密碼</label>
             <input id="broker-password" type="password" placeholder="公用伺服器不用填" autocomplete="off" />
           </div>
-          <p class="hint">這一頁只能使用加密的 WSS 連線，改完按「連線」生效。開發板程式要指向同一台伺服器，例如 dash.Dashboard(..., broker="伺服器位址", port=1883)，連接埠通常和這裡不同。帳號和密碼填在 user= 和 mqtt_password=。密碼不會儲存，重新整理後要再輸入一次。</p>
+          <p class="hint">這一頁只能使用加密的 WSS 連線，改完按「連線」生效。開發板程式要指向同一臺伺服器，例如 dash.Dashboard(..., broker="伺服器位址", port=1883)，連接埠通常和這裡不同。帳號和密碼填在 user= 和 mqtt_password=。密碼不會儲存，重新整理後要再輸入一次。</p>
           <button id="broker-reset" class="btn" type="button">還原預設</button>
         </details>
       </form>
@@ -89,7 +89,7 @@
         資料會經過 MQTT 伺服器（預設是公用的 broker.emqx.io），知道主題名稱的人都能看到和操作，請勿用於重要設備，也不要在主題名稱填入個人資料。
         <div class="copyright">
           <span>© 2026 <a href="https://begin0808.github.io/studio0808/" target="_blank" rel="noopener">Studio0808 智造實驗室</a>. All rights reserved.</span>
-          <span class="contact-note">如有建議或報錯，歡迎來信</span>
+          <span class="contact-note">如有建議或發現錯誤，歡迎來信</span>
           <a class="contact-link" href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=begin0808@gmail.com" target="_blank" rel="noopener">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>寫信給我
           </a>

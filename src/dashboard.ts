@@ -888,7 +888,7 @@ function onMessage(topic: string, payload: Uint8Array, retained: boolean): void 
   } else if (name === "state") {
     clearTimeout(replyTimer);
     if (text === "online") {
-      setStatus(ui.boardStatus, t("開發板：在線"), "ready");
+      setStatus(ui.boardStatus, t("開發板：已連線"), "ready");
       setBoardOnline(true);
     } else if (text === "offline") {
       setStatus(ui.boardStatus, t("開發板：離線，請確認程式正在執行"), "error");
