@@ -81,7 +81,7 @@ export function setupMqttPage(options: MqttPageOptions): MqttPage {
     const onLost = () => {
       // A client replaced by a new connection must not overwrite the current status.
       if (client !== current) return;
-      setStatus(ui.linkStatus, t("連不上伺服器，正在重試。請確認這臺裝置可以上網，以及伺服器設定正確"), "error");
+      setStatus(ui.linkStatus, t("連不上伺服器，正在重試。請確認這台裝置可以上網，以及伺服器設定正確"), "error");
       options.onLost();
     };
     current.on("offline", onLost);

@@ -1,7 +1,8 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-// The Chinese text is for schools in Taiwan, so it follows Taiwan usage and the Ministry of Education's 臺.
+// The Chinese text is for schools in Taiwan, so it follows Taiwan usage, and place names are written with 臺
+// (臺灣, 臺南). Other words keep 台, as in 這台電腦 or 基地台.
 const chineseFiles = [
   ...readdirSync(".").filter((name) => name.endsWith(".html") && !name.includes(".en.")),
   ...readdirSync("src").filter((name) => name.endsWith(".ts")).map((name) => `src/${name}`),
@@ -9,9 +10,6 @@ const chineseFiles = [
   "src/lib/dash.py",
   "README.md",
 ];
-
-// Product names written the way their makers write them.
-const PRODUCT_NAMES = ["Google 管理控制台"];
 
 // Words used on the mainland, and what Taiwan says instead.
 const MAINLAND_WORDS: Record<string, string> = {
@@ -43,17 +41,15 @@ const MAINLAND_WORDS: Record<string, string> = {
 };
 
 const text = (file: string) => {
-  let content = readFileSync(file, "utf8");
-  for (const name of PRODUCT_NAMES) content = content.replaceAll(name, "");
+  const content = readFileSync(file, "utf8");
   // 「還在線上」 is Taiwan's 線上, not the mainland's 在線, and 「回報錯誤」 is 回報 + 錯誤.
   return content.replaceAll("在線上", "").replaceAll("回報錯誤", "");
 };
 
 describe("Chinese wording", () => {
-  it("writes 臺, not 台", () => {
+  it("writes place names with 臺, such as 臺灣 and 臺南", () => {
     for (const file of chineseFiles) {
-      const lines = text(file).split("\n").filter((line) => line.includes("台"));
-      expect(lines, file).toEqual([]);
+      expect(text(file).match(/台(?:灣|北|中|南|東)/g), file).toBeNull();
     }
   });
 

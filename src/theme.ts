@@ -3,7 +3,7 @@ import { t } from "./i18n";
 const STYLE_KEY = "esp32-mp-style";
 
 export const STYLES = [
-  { id: "mat", name: t("切割墊工作臺") },
+  { id: "mat", name: t("切割墊工作台") },
   { id: "blocks", name: t("積木玩具") },
 ];
 

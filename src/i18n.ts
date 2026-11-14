@@ -94,7 +94,7 @@ const en = {
   "安裝期間請不要拔除 USB 線。": "Do not unplug the USB cable during installation.",
   取消: "Cancel",
   清除並安裝: "Erase and install",
-  "程式碼只會留在這臺電腦的瀏覽器和你的開發板上，不會上傳到任何伺服器。內含": "Your code stays in this browser and on your board, and is never uploaded to a server. Includes ",
+  "程式碼只會留在這台電腦的瀏覽器和你的開發板上，不會上傳到任何伺服器。內含": "Your code stays in this browser and on your board, and is never uploaded to a server. Includes ",
   "韌體（MIT 授權）。腳位圖來源：": " firmware (MIT license). Pinout source: ",
   "（": " (",
   "）。": ").",
@@ -217,7 +217,7 @@ const en = {
   "# 腳位已依 {chip} 調整。不同板子引出的腳位可能不同，請對照板子標示": "# Pins adjusted for {chip}. Boards expose different pins, so check your board's markings",
 
   // Style names and the visit counter
-  切割墊工作臺: "Cutting mat workbench",
+  切割墊工作台: "Cutting mat workbench",
   積木玩具: "Toy blocks",
   "累計瀏覽 {count} 人次": "{count} views",
 
@@ -233,7 +233,7 @@ const en = {
   帳號: "Username",
   密碼: "Password",
   公用伺服器不用填: "Not needed for a public broker",
-  "這一頁只能使用加密的 WSS 連線，改完按「連線」生效。開發板程式的 BROKER、MQTT_PORT 要指向同一臺伺服器，但連接埠通常不同，例如 1883。帳號和密碼也要填進程式的 MQTT_USER、MQTT_PASSWORD。密碼不會儲存，重新整理後要再輸入一次。":
+  "這一頁只能使用加密的 WSS 連線，改完按「連線」生效。開發板程式的 BROKER、MQTT_PORT 要指向同一台伺服器，但連接埠通常不同，例如 1883。帳號和密碼也要填進程式的 MQTT_USER、MQTT_PASSWORD。密碼不會儲存，重新整理後要再輸入一次。":
     'This page can only use encrypted WSS connections. Press "Connect" to apply changes. BROKER and MQTT_PORT in the board\'s program must point to the same broker, usually on a different port such as 1883. The username and password also go into MQTT_USER and MQTT_PASSWORD. The password is not saved, so enter it again after reloading.',
   還原預設: "Reset to default",
   尚未連線: "Not connected",
@@ -255,13 +255,13 @@ const en = {
   "開發板：離線，請確認程式正在執行": "Board: offline. Check that the program is running",
   正在連線: "Connecting",
   "已連線，主題：{name}": "Connected, topic: {name}",
-  "連不上伺服器，正在重試。請確認這臺裝置可以上網，以及伺服器設定正確": "Cannot reach the broker, retrying. Check that this device is online and the broker settings are correct",
+  "連不上伺服器，正在重試。請確認這台裝置可以上網，以及伺服器設定正確": "Cannot reach the broker, retrying. Check that this device is online and the broker settings are correct",
   "MQTT 帳號或密碼不正確，或這個帳號沒有使用權限": "The MQTT username or password is wrong, or this account lacks permission",
   "開發板：沒有回應，請確認主題名稱和程式是否正在執行": "Board: no response. Check the topic name and that the program is running",
   "收到：{text}": "Received: {text}",
   "聽不懂「{text}」，請說開燈、關燈或閃爍": 'Did not understand "{text}". Please say on, off or blink',
   "麥克風沒有開放，請到瀏覽器的網站設定允許使用麥克風": "The microphone is blocked. Allow it in the browser's site settings",
-  "語音辨識需要連上網際網路，請確認這臺裝置可以上網": "Speech recognition needs the internet. Check that this device is online",
+  "語音辨識需要連上網際網路，請確認這台裝置可以上網": "Speech recognition needs the internet. Check that this device is online",
   "沒有聽到聲音，請再試一次": "No speech heard, please try again",
   "語音辨識失敗，請再試一次（{error}）": "Speech recognition failed, please try again ({error})",
   "這個瀏覽器不支援語音辨識，請改用文字指令或鍵盤的麥克風": "This browser has no speech recognition. Please use text commands or your keyboard's microphone",
@@ -277,7 +277,7 @@ const en = {
   "ESP32 手機儀表板": "ESP32 Phone Dashboard",
   "還沒收到開發板的畫面。請在開發板執行用到 dash 的程式（例如範例 27），並確認主題名稱和這裡一樣。":
     "Nothing from the board yet. Run a program that uses dash on the board (such as example 27), and check that the topic name matches this one.",
-  '這一頁只能使用加密的 WSS 連線，改完按「連線」生效。開發板程式要指向同一臺伺服器，例如 dash.Dashboard(..., broker="伺服器位址", port=1883)，連接埠通常和這裡不同。帳號和密碼填在 user= 和 mqtt_password=。密碼不會儲存，重新整理後要再輸入一次。':
+  '這一頁只能使用加密的 WSS 連線，改完按「連線」生效。開發板程式要指向同一台伺服器，例如 dash.Dashboard(..., broker="伺服器位址", port=1883)，連接埠通常和這裡不同。帳號和密碼填在 user= 和 mqtt_password=。密碼不會儲存，重新整理後要再輸入一次。':
     'This page can only use encrypted WSS connections. Press "Connect" to apply changes. The board\'s program must point to the same broker, for example dash.Dashboard(..., broker="broker address", port=1883), usually on a different port from this one. The username and password go into user= and mqtt_password=. The password is not saved, so enter it again after reloading.',
   "資料會經過 MQTT 伺服器（預設是公用的 broker.emqx.io），知道主題名稱的人都能看到和操作，請勿用於重要設備，也不要在主題名稱填入個人資料。":
     "Data passes through an MQTT broker (the public broker.emqx.io by default), and anyone who knows the topic name can see and use it. Do not use this for anything important, and keep personal details out of the topic name.",

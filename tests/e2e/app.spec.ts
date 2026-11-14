@@ -616,7 +616,7 @@ test("falls back to the default when a removed style was saved", async ({ page }
   await page.goto("/");
   await expect(page.locator("html")).toHaveAttribute("data-style", "mat");
   await expect(page.locator("#style-picker")).toHaveValue("mat");
-  await expect(page.locator("#style-picker option")).toHaveText(["切割墊工作臺", "積木玩具"]);
+  await expect(page.locator("#style-picker option")).toHaveText(["切割墊工作台", "積木玩具"]);
 });
 
 test("downloads a style's font only when that style is chosen", async ({ page }) => {

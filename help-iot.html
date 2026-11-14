@@ -90,7 +90,7 @@
         </ol>
         <p>語音不能用時，可以按開燈、關燈按鈕，或在文字指令欄用手機鍵盤的麥克風輸入。Windows 電腦也可以按 <kbd>Win</kbd> + <kbd>H</kbd> 語音輸入。</p>
         <p><strong>主題名稱和 MQTT Topic：</strong>你輸入的名稱會組成兩個 Topic。以 <code>led-1</code> 為例，指令走 <code>esp32-mp-class/led-1/command</code>，開發板回報走 <code>esp32-mp-class/led-1/state</code>，其他 MQTT 工具也可以訂閱或發布這兩個 Topic。</p>
-        <p><strong>使用自己的 MQTT 伺服器：</strong>打開語音控制頁的「進階」，填入伺服器位址、WSS 連接埠、路徑、帳號和密碼；程式裡的 <code>BROKER</code>、<code>MQTT_PORT</code>、<code>MQTT_USER</code>、<code>MQTT_PASSWORD</code> 也要改成同一臺。語音控制頁不會儲存密碼，重新整理後要再輸入一次。開發板預設走不加密的 1883 連接埠，帳號密碼可能被同網路的人看到，請使用這臺伺服器專用的密碼。</p>
+        <p><strong>使用自己的 MQTT 伺服器：</strong>打開語音控制頁的「進階」，填入伺服器位址、WSS 連接埠、路徑、帳號和密碼；程式裡的 <code>BROKER</code>、<code>MQTT_PORT</code>、<code>MQTT_USER</code>、<code>MQTT_PASSWORD</code> 也要改成同一台。語音控制頁不會儲存密碼，重新整理後要再輸入一次。開發板預設走不加密的 1883 連接埠，帳號密碼可能被同網路的人看到，請使用這台伺服器專用的密碼。</p>
 
         <h3 id="telegram">Telegram 機器人</h3>
         <ol>
